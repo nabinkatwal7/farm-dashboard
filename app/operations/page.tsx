@@ -26,44 +26,36 @@ import {
 type Tab = "machinery" | "tasks";
 
 const PRIORITY_COLORS = { high: "#f87171", medium: "#fbbf24", low: "#60a5fa" };
-const STATUS_COLORS = {
-  pending: "#64748b",
-  "in-progress": "#fbbf24",
-  done: "#4ade80",
-};
-
 export default function OperationsPage() {
   const [tab, setTab] = useState<Tab>("machinery");
   const [machines, setMachines] = useState<Machine[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [mounted, setMounted] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [showAddMachine, setShowAddMachine] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
   const [machineForm, setMachineForm] = useState<Partial<Machine>>({});
   const [taskForm, setTaskForm] = useState<Partial<Task>>({});
 
-  const load = useCallback(() => {
-    setMachines(getData<Machine>("machines"));
-    setTasks(getData<Task>("tasks"));
+  const load = useCallback(async () => {
+    setMachines(await getData<Machine>("machines"));
+    setTasks(await getData<Task>("tasks"));
   }, []);
 
   useEffect(() => {
-    load();
-    setMounted(true);
+    void Promise.resolve().then(load);
     const updateOnline = () => setIsOnline(navigator.onLine);
     window.addEventListener("online", updateOnline);
     window.addEventListener("offline", updateOnline);
-    setIsOnline(navigator.onLine);
+    void Promise.resolve().then(() => setIsOnline(navigator.onLine));
     return () => {
       window.removeEventListener("online", updateOnline);
       window.removeEventListener("offline", updateOnline);
     };
   }, [load]);
 
-  const saveMachine = () => {
+  const saveMachine = async () => {
     if (!machineForm.name) return;
-    saveData("machines", {
+    await saveData("machines", {
       id: generateId(),
       status: "operational",
       engineHours: 0,
@@ -71,14 +63,14 @@ export default function OperationsPage() {
       lastService: new Date().toISOString().slice(0, 10),
       ...machineForm,
     } as Machine);
-    load();
+    await load();
     setShowAddMachine(false);
     setMachineForm({});
   };
 
-  const saveTask = () => {
+  const saveTask = async () => {
     if (!taskForm.title) return;
-    saveData("tasks", {
+    await saveData("tasks", {
       id: generateId(),
       status: "pending",
       priority: "medium",
@@ -87,14 +79,14 @@ export default function OperationsPage() {
       description: "",
       ...taskForm,
     } as Task);
-    load();
+    await load();
     setShowAddTask(false);
     setTaskForm({});
   };
 
-  const updateTaskStatus = (task: Task, status: Task["status"]) => {
-    saveData("tasks", { ...task, status });
-    load();
+  const updateTaskStatus = async (task: Task, status: Task["status"]) => {
+    await saveData("tasks", { ...task, status });
+    await load();
   };
 
   const pendingTasks = tasks.filter((t) => t.status === "pending");
@@ -103,8 +95,6 @@ export default function OperationsPage() {
 
   const maintenanceDue = machines.filter((m) => m.nextService < 200);
   const breakdown = machines.filter((m) => m.status === "breakdown");
-
-  if (!mounted) return null;
 
   return (
     <div style={{ padding: "32px 32px 48px" }}>
@@ -451,9 +441,9 @@ export default function OperationsPage() {
                             className="btn-danger"
                             title="Delete machine"
                             style={{ padding: "4px 8px" }}
-                            onClick={() => {
-                              deleteData("machines", m.id);
-                              load();
+                            onClick={async () => {
+                              await deleteData("machines", m.id);
+                              await load();
                             }}
                           >
                             <Trash2 size={14} />
@@ -526,9 +516,9 @@ export default function OperationsPage() {
                     key={task.id}
                     task={task}
                     onUpdateStatus={updateTaskStatus}
-                    onDelete={() => {
-                      deleteData("tasks", task.id);
-                      load();
+                    onDelete={async () => {
+                      await deleteData("tasks", task.id);
+                      await load();
                     }}
                   />
                 ))}
@@ -574,9 +564,9 @@ export default function OperationsPage() {
                     key={task.id}
                     task={task}
                     onUpdateStatus={updateTaskStatus}
-                    onDelete={() => {
-                      deleteData("tasks", task.id);
-                      load();
+                    onDelete={async () => {
+                      await deleteData("tasks", task.id);
+                      await load();
                     }}
                   />
                 ))}
@@ -622,9 +612,9 @@ export default function OperationsPage() {
                     key={task.id}
                     task={task}
                     onUpdateStatus={updateTaskStatus}
-                    onDelete={() => {
-                      deleteData("tasks", task.id);
-                      load();
+                    onDelete={async () => {
+                      await deleteData("tasks", task.id);
+                      await load();
                     }}
                   />
                 ))}
@@ -662,7 +652,7 @@ export default function OperationsPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={(machineForm as any)[key] ?? ""}
+                  value={String((machineForm as Record<string, unknown>)[key] ?? "")}
                   onChange={(e) =>
                     setMachineForm((f) => ({
                       ...f,
@@ -720,7 +710,7 @@ export default function OperationsPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={(taskForm as any)[key] ?? ""}
+                  value={String((taskForm as Record<string, unknown>)[key] ?? "")}
                   onChange={(e) =>
                     setTaskForm((f) => ({
                       ...f,
@@ -964,3 +954,10 @@ function TaskCard({
     </div>
   );
 }
+
+
+
+
+
+
+

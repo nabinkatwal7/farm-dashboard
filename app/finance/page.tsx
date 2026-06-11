@@ -136,7 +136,6 @@ export default function FinancePage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
   const [sales, setSales] = useState<SaleRecord[]>([]);
-  const [mounted, setMounted] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [expenseForm, setExpenseForm] = useState<Partial<ExpenseRecord>>({
     date: new Date().toISOString().slice(0, 10),
@@ -147,19 +146,18 @@ export default function FinancePage() {
     ExpenseRecord["category"] | ""
   >("");
 
-  const load = useCallback(() => {
-    setExpenses(getData<ExpenseRecord>("expenses"));
-    setSales(getData<SaleRecord>("sales"));
+  const load = useCallback(async () => {
+    setExpenses(await getData<ExpenseRecord>("expenses"));
+    setSales(await getData<SaleRecord>("sales"));
   }, []);
 
   useEffect(() => {
-    load();
-    setMounted(true);
+    void Promise.resolve().then(load);
   }, [load]);
 
-  const saveExpense = () => {
+  const saveExpense = async () => {
     if (!expenseForm.description || !expenseForm.amount) return;
-    saveData("expenses", {
+    await saveData("expenses", {
       id: generateId(),
       date: new Date().toISOString().slice(0, 10),
       category: "other" as const,
@@ -167,7 +165,7 @@ export default function FinancePage() {
       amount: 0,
       ...expenseForm,
     } as ExpenseRecord);
-    load();
+    await load();
     setShowAddExpense(false);
     setExpenseForm({
       date: new Date().toISOString().slice(0, 10),
@@ -175,9 +173,9 @@ export default function FinancePage() {
     });
   };
 
-  const handleDeleteExpense = (id: string) => {
-    deleteData("expenses", id);
-    load();
+  const handleDeleteExpense = async (id: string) => {
+    await deleteData("expenses", id);
+    await load();
   };
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
@@ -254,8 +252,6 @@ export default function FinancePage() {
     row.margin = revenue > 0 ? ((revenue - totalExp) / revenue) * 100 : 0;
     return row;
   });
-
-  if (!mounted) return null;
 
   return (
     <div style={{ padding: "32px 32px 48px" }}>
@@ -1240,3 +1236,8 @@ export default function FinancePage() {
     </div>
   );
 }
+
+
+
+
+

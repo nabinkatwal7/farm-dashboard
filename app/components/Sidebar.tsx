@@ -7,12 +7,13 @@ import {
   Leaf,
   Package,
   PoundSterling,
+  ShieldCheck,
   ShoppingCart,
   Wheat,
   Wrench,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -22,10 +23,38 @@ const navItems = [
   { href: "/shop", label: "Shop & POS", icon: ShoppingCart },
   { href: "/operations", label: "Operations", icon: Wrench },
   { href: "/finance", label: "Finance & Costs", icon: PoundSterling },
+  { href: "/users", label: "Users & Roles", icon: ShieldCheck },
 ];
 
-export default function Sidebar() {
+type SidebarUser = {
+  name: string;
+  email: string;
+  role: string;
+  farm: {
+    name: string;
+    location: string | null;
+    acreage: number | null;
+  };
+} | null;
+
+function roleLabel(role: string) {
+  return role
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+export default function Sidebar({ user }: { user: SidebarUser }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const canManageUsers =
+    user?.role === "ADMIN" || user?.role === "FARM_MANAGER";
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/login");
+  }
 
   return (
     <aside
@@ -43,7 +72,6 @@ export default function Sidebar() {
         overflow: "hidden",
       }}
     >
-      {/* Logo */}
       <div
         style={{
           padding: "24px 20px 20px",
@@ -70,7 +98,6 @@ export default function Sidebar() {
                 fontWeight: 800,
                 fontSize: "1.1rem",
                 color: "var(--text-primary)",
-                letterSpacing: "-0.02em",
               }}
             >
               FarmOS
@@ -88,7 +115,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Farm info */}
       <div
         style={{
           padding: "14px 20px",
@@ -113,18 +139,18 @@ export default function Sidebar() {
             color: "var(--text-primary)",
           }}
         >
-          Greenwood Estate
+          {user?.farm.name ?? "Farm workspace"}
         </div>
         <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-          🌍 Yorkshire, UK · 320 acres
+          {user?.farm.location ?? "Location not set"}
+          {user?.farm.acreage ? ` · ${user.farm.acreage} acres` : ""}
         </div>
       </div>
 
-      {/* Nav */}
       <nav
         style={{
           flex: 1,
-          padding: "12px 12px",
+          padding: "12px",
           display: "flex",
           flexDirection: "column",
           gap: 2,
@@ -142,40 +168,42 @@ export default function Sidebar() {
         >
           Modules
         </div>
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive =
-            href === "/" ? pathname === "/" : pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 12px",
-                borderRadius: 8,
-                textDecoration: "none",
-                transition: "all 0.15s",
-                background: isActive ? "rgba(74,222,128,0.12)" : "transparent",
-                border: isActive
-                  ? "1px solid rgba(74,222,128,0.2)"
-                  : "1px solid transparent",
-                color: isActive ? "#4ade80" : "var(--text-secondary)",
-                fontWeight: isActive ? 600 : 400,
-                fontSize: "0.875rem",
-                position: "relative",
-              }}
-            >
-              <Icon size={18} strokeWidth={isActive ? 2.5 : 1.8} />
-              <span style={{ flex: 1 }}>{label}</span>
-              {isActive && <ChevronRight size={14} />}
-            </Link>
-          );
-        })}
+        {navItems
+          .filter((item) => item.href !== "/users" || canManageUsers)
+          .map(({ href, label, icon: Icon }) => {
+            const isActive =
+              href === "/" ? pathname === "/" : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "10px 12px",
+                  borderRadius: 8,
+                  textDecoration: "none",
+                  transition: "all 0.15s",
+                  background: isActive
+                    ? "rgba(74,222,128,0.12)"
+                    : "transparent",
+                  border: isActive
+                    ? "1px solid rgba(74,222,128,0.2)"
+                    : "1px solid transparent",
+                  color: isActive ? "#4ade80" : "var(--text-secondary)",
+                  fontWeight: isActive ? 600 : 400,
+                  fontSize: "0.875rem",
+                }}
+              >
+                <Icon size={18} strokeWidth={isActive ? 2.5 : 1.8} />
+                <span style={{ flex: 1 }}>{label}</span>
+                {isActive && <ChevronRight size={14} />}
+              </Link>
+            );
+          })}
       </nav>
 
-      {/* Footer */}
       <div
         style={{
           padding: "16px 20px",
@@ -183,19 +211,48 @@ export default function Sidebar() {
           background: "rgba(74,222,128,0.04)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div
             style={{
-              width: 8,
-              height: 8,
+              width: 32,
+              height: 32,
               borderRadius: "50%",
-              background: "#4ade80",
-              boxShadow: "0 0 6px #4ade80",
+              background: "rgba(74,222,128,0.15)",
+              color: "#4ade80",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "0.8rem",
+              fontWeight: 800,
+              flexShrink: 0,
             }}
-          />
-          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-            All systems online · Offline ready
-          </span>
+          >
+            {user?.name.charAt(0).toUpperCase() ?? "U"}
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--text-primary)",
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {user?.name ?? "User"}
+            </div>
+            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+              {user ? roleLabel(user.role) : "Not signed in"}
+            </div>
+          </div>
+          <button
+            className="btn-ghost"
+            onClick={logout}
+            style={{ padding: "5px 8px", fontSize: "0.72rem" }}
+          >
+            Logout
+          </button>
         </div>
       </div>
     </aside>

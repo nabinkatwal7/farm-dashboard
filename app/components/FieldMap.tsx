@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { CropField } from "../lib/store";
+import type { Map as LeafletMap } from "leaflet";
 
 interface FieldMapProps {
   fields: CropField[];
@@ -15,7 +16,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function FieldMap({ fields }: FieldMapProps) {
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

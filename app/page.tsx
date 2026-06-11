@@ -73,7 +73,22 @@ const CHART_STYLE = {
   fontSize: "0.75rem",
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type ChartPayloadItem = {
+  dataKey: string;
+  color?: string;
+  name?: string;
+  value: number | string;
+};
+
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: ChartPayloadItem[];
+  label?: string;
+}) {
   if (active && payload?.length) {
     return (
       <div
@@ -94,8 +109,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         >
           {label}
         </div>
-        {payload.map((p: any) => (
-          <div key={p.dataKey} style={{ color: p.color }}>
+        {payload.map((p) => (
+          <div key={p.dataKey} style={{ color: p.color ?? "#94a3b8" }}>
             {p.name}: {p.value} t/ha
           </div>
         ))}
@@ -103,7 +118,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     );
   }
   return null;
-};
+}
 
 export default function DashboardPage() {
   const [fields, setFields] = useState<CropField[]>([]);
@@ -112,23 +127,34 @@ export default function DashboardPage() {
   const [sales, setSales] = useState<SaleRecord[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [yieldRecords, setYieldRecords] = useState<YieldRecord[]>([]);
-  const [mounted, setMounted] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
 
   useEffect(() => {
-    setFields(getData<CropField>("fields"));
-    setAnimals(getData<Animal>("animals"));
-    setStock(getData<StockItem>("stockItems"));
-    setSales(getData<SaleRecord>("sales"));
-    setTasks(getData<Task>("tasks"));
-    setYieldRecords(getData<YieldRecord>("yieldRecords"));
-    setMounted(true);
+    async function load() {
+      const [fieldsData, animalsData, stockData, salesData, tasksData, yieldsData] =
+        await Promise.all([
+          getData<CropField>("fields"),
+          getData<Animal>("animals"),
+          getData<StockItem>("stockItems"),
+          getData<SaleRecord>("sales"),
+          getData<Task>("tasks"),
+          getData<YieldRecord>("yieldRecords"),
+        ]);
+
+      setFields(fieldsData);
+      setAnimals(animalsData);
+      setStock(stockData);
+      setSales(salesData);
+      setTasks(tasksData);
+      setYieldRecords(yieldsData);
+    }
+
+    void load();
   }, []);
 
   useEffect(() => {
-    setWeatherLoading(true);
     fetch(
       "https://api.open-meteo.com/v1/forecast?latitude=53.95&longitude=-1.08&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&forecast_days=5&timezone=Europe%2FLondon",
     )
@@ -189,8 +215,6 @@ export default function DashboardPage() {
       return { day: dayLabel, shop, online };
     });
   })();
-
-  if (!mounted) return null;
 
   return (
     <div style={{ padding: "32px 32px 48px", minHeight: "100vh" }}>
@@ -861,3 +885,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+

@@ -35,7 +35,6 @@ export default function InventoryPage() {
   const [tab, setTab] = useState<Tab>("stock");
   const [stock, setStock] = useState<StockItem[]>([]);
   const [batches, setBatches] = useState<BatchRecord[]>([]);
-  const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState("");
   const [traceSearch, setTraceSearch] = useState("");
   const [showAddStock, setShowAddStock] = useState(false);
@@ -50,19 +49,18 @@ export default function InventoryPage() {
     operator: "",
   });
 
-  const load = useCallback(() => {
-    setStock(getData<StockItem>("stockItems"));
-    setBatches(getData<BatchRecord>("batches"));
+  const load = useCallback(async () => {
+    setStock(await getData<StockItem>("stockItems"));
+    setBatches(await getData<BatchRecord>("batches"));
   }, []);
 
   useEffect(() => {
-    load();
-    setMounted(true);
+    void Promise.resolve().then(load);
   }, [load]);
 
-  const saveStock = () => {
+  const saveStock = async () => {
     if (!stockForm.name) return;
-    saveData("stockItems", {
+    await saveData("stockItems", {
       id: generateId(),
       category: "raw",
       subCategory: "",
@@ -72,44 +70,37 @@ export default function InventoryPage() {
       updatedAt: new Date().toISOString().slice(0, 10),
       ...stockForm,
     } as StockItem);
-    load();
+    await load();
     setShowAddStock(false);
     setStockForm({});
   };
 
-  const saveAdjustment = () => {
+  const saveAdjustment = async () => {
     if (!adjustItem) return;
-    const all = getData<StockItem>("stockItems");
-    const item = all.find((s) => s.id === adjustItem.id);
-    if (!item) return;
-    saveData("stockItems", {
-      ...item,
-      quantity: item.quantity + adjustForm.delta,
-    });
-    saveData<StockAdjustment>("stockAdjustments", {
+    await saveData<StockAdjustment>("stockAdjustments", {
       id: generateId(),
-      stockItemId: item.id,
-      stockItemName: item.name,
+      stockItemId: adjustItem.id,
+      stockItemName: adjustItem.name,
       date: new Date().toISOString().slice(0, 10),
       delta: adjustForm.delta,
       reason: adjustForm.reason,
       operator: adjustForm.operator,
     });
-    load();
+    await load();
     setShowAdjust(false);
     setAdjustItem(null);
     setAdjustForm({ delta: 0, reason: "", operator: "" });
   };
 
-  const saveBatch = () => {
+  const saveBatch = async () => {
     if (!batchForm.batchCode) return;
-    saveData("batches", {
+    await saveData("batches", {
       id: generateId(),
       status: "active",
       processedDate: new Date().toISOString().slice(0, 10),
       ...batchForm,
     } as BatchRecord);
-    load();
+    await load();
     setShowAddBatch(false);
     setBatchForm({});
   };
@@ -131,8 +122,6 @@ export default function InventoryPage() {
 
   const lowStock = stock.filter((s) => s.quantity <= s.minStock);
   const totalValue = stock.reduce((s, item) => s + item.quantity, 0);
-
-  if (!mounted) return null;
 
   return (
     <div style={{ padding: "32px 32px 48px" }}>
@@ -400,9 +389,9 @@ export default function InventoryPage() {
                             className="btn-danger"
                             title="Delete item"
                             style={{ padding: "4px 8px" }}
-                            onClick={() => {
-                              deleteData("stockItems", item.id);
-                              load();
+                            onClick={async () => {
+                              await deleteData("stockItems", item.id);
+                              await load();
                             }}
                           >
                             <Trash2 size={14} />
@@ -550,7 +539,7 @@ export default function InventoryPage() {
                   fontSize: "0.85rem",
                 }}
               >
-                No batch found matching "{traceSearch}"
+                No batch found matching &quot;{traceSearch}&quot;
               </div>
             )}
           </div>
@@ -650,9 +639,9 @@ export default function InventoryPage() {
                         className="btn-danger"
                         title="Delete batch"
                         style={{ padding: "4px 8px" }}
-                        onClick={() => {
-                          deleteData("batches", b.id);
-                          load();
+                        onClick={async () => {
+                          await deleteData("batches", b.id);
+                          await load();
                         }}
                       >
                         <Trash2 size={14} />
@@ -694,7 +683,7 @@ export default function InventoryPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={(stockForm as any)[key] ?? ""}
+                  value={String((stockForm as Record<string, unknown>)[key] ?? "")}
                   onChange={(e) =>
                     setStockForm((f) => ({
                       ...f,
@@ -885,7 +874,7 @@ export default function InventoryPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={(batchForm as any)[key] ?? ""}
+                  value={String((batchForm as Record<string, unknown>)[key] ?? "")}
                   onChange={(e) =>
                     setBatchForm((f) => ({
                       ...f,
@@ -965,3 +954,9 @@ export default function InventoryPage() {
     </div>
   );
 }
+
+
+
+
+
+

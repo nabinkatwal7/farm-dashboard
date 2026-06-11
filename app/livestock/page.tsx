@@ -42,7 +42,6 @@ export default function LivestockPage() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [medical, setMedical] = useState<MedicalRecord[]>([]);
   const [breeding, setBreeding] = useState<BreedingRecord[]>([]);
-  const [mounted, setMounted] = useState(false);
   const [searchAnimal, setSearchAnimal] = useState("");
   const [showAddAnimal, setShowAddAnimal] = useState(false);
   const [showAddMed, setShowAddMed] = useState(false);
@@ -54,33 +53,32 @@ export default function LivestockPage() {
   const [showAddWeight, setShowAddWeight] = useState(false);
   const [weightForm, setWeightForm] = useState<Partial<WeightRecord>>({});
 
-  const load = useCallback(() => {
-    setAnimals(getData<Animal>("animals"));
-    setMedical(getData<MedicalRecord>("medicalRecords"));
-    setBreeding(getData<BreedingRecord>("breedingRecords"));
-    setWeights(getData<WeightRecord>("weightRecords"));
+  const load = useCallback(async () => {
+    setAnimals(await getData<Animal>("animals"));
+    setMedical(await getData<MedicalRecord>("medicalRecords"));
+    setBreeding(await getData<BreedingRecord>("breedingRecords"));
+    setWeights(await getData<WeightRecord>("weightRecords"));
   }, []);
 
   useEffect(() => {
-    load();
-    setMounted(true);
+    void Promise.resolve().then(load);
   }, [load]);
 
-  const saveAnimal = () => {
+  const saveAnimal = async () => {
     if (!animalForm.earTag) return;
-    saveData("animals", {
+    await saveData("animals", {
       id: generateId(),
       status: "healthy",
       species: "cattle",
       sex: "F",
       ...animalForm,
     } as Animal);
-    load();
+    await load();
     setShowAddAnimal(false);
     setAnimalForm({});
   };
 
-  const saveMed = () => {
+  const saveMed = async () => {
     if (!medForm.earTag) return;
     const animal = animals.find((a) => a.earTag === medForm.earTag);
     let withdrawalEnd: string | undefined;
@@ -89,7 +87,7 @@ export default function LivestockPage() {
       d.setDate(d.getDate() + (medForm.withdrawalDays as number));
       withdrawalEnd = d.toISOString().slice(0, 10);
     }
-    saveData("medicalRecords", {
+    await saveData("medicalRecords", {
       id: generateId(),
       date: new Date().toISOString().slice(0, 10),
       animalId: animal?.id ?? "",
@@ -97,36 +95,36 @@ export default function LivestockPage() {
       ...medForm,
       withdrawalEnd,
     } as MedicalRecord);
-    load();
+    await load();
     setShowAddMed(false);
     setMedForm({});
   };
 
-  const saveWeight = () => {
+  const saveWeight = async () => {
     if (!weightForm.earTag || !weightForm.weightKg) return;
-    saveData("weightRecords", {
+    await saveData("weightRecords", {
       id: generateId(),
       animalId: animals.find((a) => a.earTag === weightForm.earTag)?.id ?? "",
       date: new Date().toISOString().slice(0, 10),
       ...weightForm,
     } as WeightRecord);
-    load();
+    await load();
     setShowAddWeight(false);
     setWeightForm({});
   };
 
-  const saveBreed = () => {
+  const saveBreed = async () => {
     if (!breedForm.damEarTag || !breedForm.breedingDate) return;
     // Calculate expected birth based on species
     const breedDate = new Date(breedForm.breedingDate);
     breedDate.setDate(breedDate.getDate() + 283); // Default cattle gestation
-    saveData("breedingRecords", {
+    await saveData("breedingRecords", {
       id: generateId(),
       status: "pregnant",
       expectedBirth: breedDate.toISOString().slice(0, 10),
       ...breedForm,
     } as BreedingRecord);
-    load();
+    await load();
     setShowAddBreed(false);
     setBreedForm({});
   };
@@ -142,8 +140,6 @@ export default function LivestockPage() {
   const activeWithdrawals = medical.filter(
     (m) => m.withdrawalEnd && new Date(m.withdrawalEnd) > new Date(),
   );
-
-  if (!mounted) return null;
 
   return (
     <div style={{ padding: "32px 32px 48px" }}>
@@ -349,9 +345,9 @@ export default function LivestockPage() {
                   </td>
                   <td>
                     <button
-                      onClick={() => {
-                        deleteData("animals", a.id);
-                        load();
+                      onClick={async () => {
+                        await deleteData("animals", a.id);
+                        await load();
                       }}
                       style={{
                         background: "rgba(248,113,113,0.15)",
@@ -569,9 +565,9 @@ export default function LivestockPage() {
                     </td>
                     <td>
                       <button
-                        onClick={() => {
-                          deleteData("medicalRecords", m.id);
-                          load();
+                        onClick={async () => {
+                          await deleteData("medicalRecords", m.id);
+                          await load();
                         }}
                         style={{
                           background: "rgba(248,113,113,0.15)",
@@ -751,9 +747,9 @@ export default function LivestockPage() {
                     }}
                   >
                     <button
-                      onClick={() => {
-                        deleteData("breedingRecords", b.id);
-                        load();
+                      onClick={async () => {
+                        await deleteData("breedingRecords", b.id);
+                        await load();
                       }}
                       style={{
                         background: "rgba(248,113,113,0.15)",
@@ -842,9 +838,9 @@ export default function LivestockPage() {
                   </td>
                   <td>
                     <button
-                      onClick={() => {
-                        deleteData("weightRecords", w.id);
-                        load();
+                      onClick={async () => {
+                        await deleteData("weightRecords", w.id);
+                        await load();
                       }}
                       style={{
                         background: "rgba(248,113,113,0.15)",
@@ -895,7 +891,7 @@ export default function LivestockPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={(animalForm as any)[key] ?? ""}
+                  value={String((animalForm as Record<string, unknown>)[key] ?? "")}
                   onChange={(e) =>
                     setAnimalForm((f) => ({ ...f, [key]: e.target.value }))
                   }
@@ -1074,7 +1070,7 @@ export default function LivestockPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={(medForm as any)[key] ?? ""}
+                  value={String((medForm as Record<string, unknown>)[key] ?? "")}
                   onChange={(e) =>
                     setMedForm((f) => ({
                       ...f,
@@ -1334,3 +1330,9 @@ export default function LivestockPage() {
     </div>
   );
 }
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Sidebar from "./components/Sidebar";
+import AuthShell from "./components/AuthShell";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -25,17 +25,9 @@ export default function RootLayout({
           background: "var(--bg-base)",
         }}
       >
-        <Sidebar />
-        <main
-          style={{
-            flex: 1,
-            marginLeft: "var(--sidebar-width)",
-            minHeight: "100vh",
-            overflow: "auto",
-          }}
-        >
+        <AuthShell>
           {children}
-        </main>
+        </AuthShell>
       </body>
     </html>
   );

@@ -60,7 +60,6 @@ export default function CropsPage() {
   const [fields, setFields] = useState<CropField[]>([]);
   const [inputs, setInputs] = useState<InputLog[]>([]);
   const [yields, setYields] = useState<YieldRecord[]>([]);
-  const [mounted, setMounted] = useState(false);
   const [showAddField, setShowAddField] = useState(false);
   const [showAddInput, setShowAddInput] = useState(false);
   const [showAddYield, setShowAddYield] = useState(false);
@@ -68,51 +67,50 @@ export default function CropsPage() {
   const [inputForm, setInputForm] = useState<Partial<InputLog>>({});
   const [yieldForm, setYieldForm] = useState<Partial<YieldRecord>>({});
 
-  const load = useCallback(() => {
-    setFields(getData<CropField>("fields"));
-    setInputs(getData<InputLog>("inputLogs"));
-    setYields(getData<YieldRecord>("yieldRecords"));
+  const load = useCallback(async () => {
+    setFields(await getData<CropField>("fields"));
+    setInputs(await getData<InputLog>("inputLogs"));
+    setYields(await getData<YieldRecord>("yieldRecords"));
   }, []);
 
   useEffect(() => {
-    load();
-    setMounted(true);
+    void Promise.resolve().then(load);
   }, [load]);
 
-  const saveField = () => {
+  const saveField = async () => {
     if (!fieldForm.name) return;
-    saveData("fields", {
+    await saveData("fields", {
       id: fieldForm.id || generateId(),
       lat: 53.94,
       lng: -1.07,
       rotation: [],
       ...fieldForm,
     } as CropField);
-    load();
+    await load();
     setShowAddField(false);
     setFieldForm({});
   };
 
-  const saveInput = () => {
+  const saveInput = async () => {
     if (!inputForm.product) return;
-    saveData("inputLogs", {
+    await saveData("inputLogs", {
       id: generateId(),
       date: new Date().toISOString().slice(0, 10),
       ...inputForm,
     } as InputLog);
-    load();
+    await load();
     setShowAddInput(false);
     setInputForm({});
   };
 
-  const saveYield = () => {
+  const saveYield = async () => {
     if (!yieldForm.fieldName) return;
-    saveData("yieldRecords", {
+    await saveData("yieldRecords", {
       id: generateId(),
       year: new Date().getFullYear(),
       ...yieldForm,
     } as YieldRecord);
-    load();
+    await load();
     setShowAddYield(false);
     setYieldForm({});
   };
@@ -125,8 +123,6 @@ export default function CropsPage() {
   }));
 
   const totalAcres = fields.reduce((s, f) => s + f.acres, 0);
-
-  if (!mounted) return null;
 
   return (
     <div style={{ padding: "32px 32px 48px" }}>
@@ -388,9 +384,9 @@ export default function CropsPage() {
                     }}
                   >
                     <button
-                      onClick={() => {
-                        deleteData("fields", field.id);
-                        load();
+                      onClick={async () => {
+                        await deleteData("fields", field.id);
+                        await load();
                       }}
                       style={{
                         background: "rgba(248,113,113,0.15)",
@@ -495,9 +491,9 @@ export default function CropsPage() {
                     </td>
                     <td>
                       <button
-                        onClick={() => {
-                          deleteData("inputLogs", log.id);
-                          load();
+                        onClick={async () => {
+                          await deleteData("inputLogs", log.id);
+                          await load();
                         }}
                         style={{
                           background: "rgba(248,113,113,0.15)",
@@ -654,9 +650,9 @@ export default function CropsPage() {
                       </td>
                       <td>
                         <button
-                          onClick={() => {
-                            deleteData("yieldRecords", y.id);
-                            load();
+                          onClick={async () => {
+                            await deleteData("yieldRecords", y.id);
+                            await load();
                           }}
                           style={{
                             background: "rgba(248,113,113,0.15)",
@@ -709,7 +705,7 @@ export default function CropsPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={(fieldForm as any)[key] ?? ""}
+                  value={String((fieldForm as Record<string, unknown>)[key] ?? "")}
                   onChange={(e) =>
                     setFieldForm((f) => ({
                       ...f,
@@ -875,7 +871,7 @@ export default function CropsPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={(inputForm as any)[key] ?? ""}
+                  value={String((inputForm as Record<string, unknown>)[key] ?? "")}
                   onChange={(e) =>
                     setInputForm((f) => ({ ...f, [key]: e.target.value }))
                   }
@@ -958,7 +954,7 @@ export default function CropsPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={(yieldForm as any)[key] ?? ""}
+                  value={String((yieldForm as Record<string, unknown>)[key] ?? "")}
                   onChange={(e) =>
                     setYieldForm((f) => ({
                       ...f,
@@ -990,3 +986,9 @@ export default function CropsPage() {
     </div>
   );
 }
+
+
+
+
+
+

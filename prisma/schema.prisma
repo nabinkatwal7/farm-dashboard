@@ -1,0 +1,299 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Farm {
+  id               String            @id @default(uuid())
+  name             String
+  location         String?
+  acreage          Float?
+  users            User[]
+  fields           CropField[]
+  animals          Animal[]
+  breedingRecords  BreedingRecord[]
+  stockItems       StockItem[]
+  batches          BatchRecord[]
+  products         Product[]
+  sales            SaleRecord[]
+  machines         Machine[]
+  tasks            Task[]
+  expenses         ExpenseRecord[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model User {
+  id             String             @id @default(uuid())
+  email          String             @unique
+  passwordHash   String
+  name           String
+  role           String             @default("FIELD_WORKER")
+  isActive       Boolean            @default(true)
+  farmId         String
+  farm           Farm               @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  sessions       Session[]
+  assignedTasks  Task[]             @relation("TaskAssignee")
+  inputLogs      InputLog[]         @relation("InputOperator")
+  stockMoves     StockAdjustment[]  @relation("StockOperator")
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model CropField {
+  id          String          @id @default(uuid())
+  farmId      String
+  farm        Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name        String
+  acres       Float
+  currentCrop String
+  status      String
+  sowDate     String
+  harvestDate String?
+  lat         Float
+  lng         Float
+  rotation    FieldRotation[]
+  inputs      InputLog[]
+  yields      YieldRecord[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([farmId, name])
+}
+
+model FieldRotation {
+  id      String    @id @default(uuid())
+  year    Int
+  crop    String
+  fieldId String
+  field   CropField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+}
+
+model InputLog {
+  id         String    @id @default(uuid())
+  date       String
+  fieldId    String
+  fieldName  String
+  field      CropField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  type       String
+  product    String
+  quantity   String
+  unit       String
+  operator   String
+  operatorId String?
+  operatorUser User?   @relation("InputOperator", fields: [operatorId], references: [id], onDelete: SetNull)
+  notes      String?
+}
+
+model YieldRecord {
+  id        String    @id @default(uuid())
+  fieldId   String
+  fieldName String
+  field     CropField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  crop      String
+  year      Int
+  projected Float
+  actual    Float
+  unit      String
+}
+
+model Animal {
+  id             String          @id @default(uuid())
+  farmId         String
+  farm           Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  earTag         String
+  species        String
+  breed          String
+  sex            String
+  dob            String
+  group          String?
+  status         String
+  notes          String?
+  medicalRecords MedicalRecord[]
+  weights        WeightRecord[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([farmId, earTag])
+}
+
+model MedicalRecord {
+  id             String  @id @default(uuid())
+  animalId       String
+  earTag         String
+  animal         Animal  @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  date           String
+  type           String
+  product        String?
+  condition      String?
+  vetName        String?
+  withdrawalDays Int?
+  withdrawalEnd  String?
+  notes          String?
+}
+
+model BreedingRecord {
+  id            String @id @default(uuid())
+  farmId        String
+  farm          Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  damEarTag     String
+  sireEarTag    String?
+  breedingDate  String
+  expectedBirth String
+  actualBirth   String?
+  offspring     Int?
+  status        String
+  notes         String?
+}
+
+model WeightRecord {
+  id       String @id @default(uuid())
+  animalId String
+  earTag   String
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  date     String
+  weightKg Float
+  notes    String?
+}
+
+model StockItem {
+  id             String            @id @default(uuid())
+  farmId         String
+  farm           Farm              @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name           String
+  category       String
+  subCategory    String
+  quantity       Float
+  unit           String
+  minStock       Float
+  location       String
+  batchId        String?
+  fieldOrigin    String?
+  animalOrigin   String?
+  updatedAt      String
+  adjustments    StockAdjustment[]
+}
+
+model StockAdjustment {
+  id            String    @id @default(uuid())
+  stockItemId   String
+  stockItemName String
+  stockItem     StockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+  date          String
+  delta         Float
+  reason        String
+  operator      String
+  operatorId    String?
+  operatorUser  User?     @relation("StockOperator", fields: [operatorId], references: [id], onDelete: SetNull)
+}
+
+model BatchRecord {
+  id            String @id @default(uuid())
+  farmId        String
+  farm          Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  batchCode     String
+  product       String
+  origin        String
+  originType    String
+  processedDate String
+  quantity      Float
+  unit          String
+  status        String
+
+  @@unique([farmId, batchCode])
+}
+
+model Product {
+  id       String     @id @default(uuid())
+  farmId   String
+  farm     Farm       @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name     String
+  category String
+  price    Float
+  cost     Float
+  stock    Float
+  unit     String
+  batchId  String?
+  sales    SaleItem[]
+}
+
+model SaleRecord {
+  id            String     @id @default(uuid())
+  farmId        String
+  farm          Farm       @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  date          String
+  channel       String
+  total         Float
+  paymentMethod String
+  items         SaleItem[]
+}
+
+model SaleItem {
+  id        String     @id @default(uuid())
+  saleId    String
+  sale      SaleRecord @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+  name      String
+  qty       Int
+  price     Float
+}
+
+model Machine {
+  id          String @id @default(uuid())
+  farmId      String
+  farm        Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name        String
+  type        String
+  make        String
+  model       String
+  year        Int
+  engineHours Float
+  lastService String
+  nextService Float
+  status      String
+}
+
+model Task {
+  id          String  @id @default(uuid())
+  farmId      String
+  farm        Farm    @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  fieldName   String?
+  lat         Float?
+  lng         Float?
+  assignee    String
+  assigneeId  String?
+  assigneeUser User?  @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  dueDate     String
+  status      String
+  priority    String
+}
+
+model ExpenseRecord {
+  id          String  @id @default(uuid())
+  farmId      String
+  farm        Farm    @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  date        String
+  category    String
+  description String
+  amount      Float
+  supplier    String?
+  fieldName   String?
+  invoiceRef  String?
+  notes       String?
+}

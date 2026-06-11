@@ -45,7 +45,6 @@ export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<SaleRecord[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [mounted, setMounted] = useState(false);
   const [checkoutDone, setCheckoutDone] = useState(false);
   const [showEditProduct, setShowEditProduct] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -54,14 +53,13 @@ export default function ShopPage() {
   >("card");
   const [channel, setChannel] = useState<"shop" | "online">("shop");
 
-  const load = useCallback(() => {
-    setProducts(getData<Product>("products"));
-    setSales(getData<SaleRecord>("sales"));
+  const load = useCallback(async () => {
+    setProducts(await getData<Product>("products"));
+    setSales(await getData<SaleRecord>("sales"));
   }, []);
 
   useEffect(() => {
-    load();
-    setMounted(true);
+    void Promise.resolve().then(load);
   }, [load]);
 
   const addToCart = (product: Product) => {
@@ -85,15 +83,15 @@ export default function ShopPage() {
     0,
   );
 
-  const saveEditProduct = () => {
+  const saveEditProduct = async () => {
     if (!editProduct) return;
-    saveData("products", editProduct);
-    load();
+    await saveData("products", editProduct);
+    await load();
     setShowEditProduct(false);
     setEditProduct(null);
   };
 
-  const checkout = () => {
+  const checkout = async () => {
     if (cart.length === 0) return;
     const sale: SaleRecord = {
       id: generateId(),
@@ -108,37 +106,14 @@ export default function ShopPage() {
       total: cartTotal,
       paymentMethod,
     };
-    saveData("sales", sale);
-    // Update stock
-    cart.forEach((item) => {
-      const updated = {
-        ...item.product,
-        stock: Math.max(0, item.product.stock - item.qty),
-      };
-      saveData("products", updated);
-    });
+    await saveData("sales", sale);
     setCart([]);
     setCheckoutDone(true);
     setTimeout(() => setCheckoutDone(false), 3000);
-    load();
+    await load();
   };
 
   // Analytics data
-  const categoryData = products
-    .map((p) => ({
-      name: p.category,
-      revenue: sales
-        .flatMap((s) => s.items)
-        .filter((i) => i.productId === p.id)
-        .reduce((s, i) => s + i.qty * i.price, 0),
-      cost: sales
-        .flatMap((s) => s.items)
-        .filter((i) => i.productId === p.id)
-        .reduce((s, i) => s + i.qty * p.cost, 0),
-    }))
-    .filter((c) => c.revenue > 0);
-
-  // Unique categories
   const categoryMap = new Map<string, { revenue: number; cost: number }>();
   products.forEach((p) => {
     const rev = sales
@@ -171,8 +146,6 @@ export default function ShopPage() {
   const onlineSales = sales
     .filter((s) => s.channel === "online")
     .reduce((s, r) => s + r.total, 0);
-
-  if (!mounted) return null;
 
   return (
     <div style={{ padding: "32px 32px 48px" }}>
@@ -440,9 +413,9 @@ export default function ShopPage() {
                         justifyContent: "center",
                         gap: 4,
                       }}
-                      onClick={() => {
-                        deleteData("products", product.id);
-                        load();
+                      onClick={async () => {
+                        await deleteData("products", product.id);
+                        await load();
                       }}
                     >
                       <Trash2 size={12} /> Delete
@@ -967,3 +940,8 @@ export default function ShopPage() {
     </div>
   );
 }
+
+
+
+
+
