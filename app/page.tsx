@@ -31,7 +31,42 @@ import {
   type SaleRecord,
   type StockItem,
   type Task,
+  type YieldRecord,
 } from "./lib/store";
+
+type WeatherData = {
+  current: {
+    temperature_2m: number;
+    weather_code: number;
+    wind_speed_10m: number;
+    relative_humidity_2m: number;
+    precipitation: number;
+  };
+  daily: {
+    time: string[];
+    weather_code: number[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
+    precipitation_sum: number[];
+  };
+};
+
+function weatherInfo(code: number): { emoji: string; description: string } {
+  if (code === 0) return { emoji: "☀️", description: "Clear sky" };
+  if (code <= 2) return { emoji: "⛅", description: "Partly cloudy" };
+  if (code === 3) return { emoji: "☁️", description: "Overcast" };
+  if (code === 45 || code === 48) return { emoji: "🌫️", description: "Foggy" };
+  if (code >= 51 && code <= 55) return { emoji: "🌦️", description: "Drizzle" };
+  if (code >= 61 && code <= 65) return { emoji: "🌧️", description: "Rain" };
+  if (code >= 71 && code <= 75) return { emoji: "❄️", description: "Snow" };
+  if (code >= 80 && code <= 82) return { emoji: "🌦️", description: "Showers" };
+  if (code === 85 || code === 86)
+    return { emoji: "🌨️", description: "Snow showers" };
+  if (code === 95) return { emoji: "⛈️", description: "Thunderstorm" };
+  if (code === 96 || code === 99)
+    return { emoji: "⛈️", description: "Thunderstorm + hail" };
+  return { emoji: "🌤️", description: "Variable" };
+}
 
 const CHART_STYLE = {
   background: "transparent",
@@ -76,7 +111,11 @@ export default function DashboardPage() {
   const [stock, setStock] = useState<StockItem[]>([]);
   const [sales, setSales] = useState<SaleRecord[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [yieldRecords, setYieldRecords] = useState<YieldRecord[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
 
   useEffect(() => {
     setFields(getData<CropField>("fields"));
@@ -84,7 +123,24 @@ export default function DashboardPage() {
     setStock(getData<StockItem>("stockItems"));
     setSales(getData<SaleRecord>("sales"));
     setTasks(getData<Task>("tasks"));
+    setYieldRecords(getData<YieldRecord>("yieldRecords"));
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setWeatherLoading(true);
+    fetch(
+      "https://api.open-meteo.com/v1/forecast?latitude=53.95&longitude=-1.08&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&forecast_days=5&timezone=Europe%2FLondon",
+    )
+      .then((r) => r.json())
+      .then((data: WeatherData) => {
+        setWeather(data);
+        setWeatherLoading(false);
+      })
+      .catch(() => {
+        setWeatherError("Weather data unavailable");
+        setWeatherLoading(false);
+      });
   }, []);
 
   const todaySales = sales
@@ -99,23 +155,40 @@ export default function DashboardPage() {
     (t) => t.priority === "high" && t.status !== "done",
   );
 
-  // Yield chart data
-  const yieldData = [
-    { field: "N. Meadow", projected: 8.5, actual: 9.2 },
-    { field: "S. Pasture", projected: 6.0, actual: 5.4 },
-    { field: "E. Arable", projected: 3.8, actual: 4.1 },
-    { field: "R. Bottom", projected: 7.0, actual: 6.8 },
-    { field: "Home Field", projected: 70, actual: 74 },
-  ].slice(0, 4);
+  // Yield chart data — most recent record per field, up to 5 fields
+  const yieldData = (() => {
+    const byField = new Map<string, YieldRecord>();
+    for (const r of yieldRecords) {
+      const existing = byField.get(r.fieldName);
+      if (!existing || r.year > existing.year) byField.set(r.fieldName, r);
+    }
+    return Array.from(byField.values())
+      .slice(0, 5)
+      .map((r) => ({
+        field: r.fieldName.split(" ")[0],
+        projected: r.projected,
+        actual: r.actual,
+      }));
+  })();
 
-  // Sales by channel
-  const salesByChannel = [
-    { day: "Mon", shop: 18.5, online: 0 },
-    { day: "Tue", shop: 75.2, online: 35.94 },
-    { day: "Wed", shop: 60.0, online: 31.5 },
-    { day: "Thu", shop: 0, online: 0 },
-    { day: "Fri", shop: 0, online: 0 },
-  ];
+  // Sales by channel — last 7 calendar days from live store
+  const salesByChannel = (() => {
+    const today = new Date();
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - 6 + i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const dayLabel = d.toLocaleDateString("en-GB", { weekday: "short" });
+      const daySales = sales.filter((s) => s.date === dateStr);
+      const shop = daySales
+        .filter((s) => s.channel === "shop")
+        .reduce((sum, s) => sum + s.total, 0);
+      const online = daySales
+        .filter((s) => s.channel === "online")
+        .reduce((sum, s) => sum + s.total, 0);
+      return { day: dayLabel, shop, online };
+    });
+  })();
 
   if (!mounted) return null;
 
@@ -239,6 +312,206 @@ export default function DashboardPage() {
           trend={{ value: 8, label: "vs last week" }}
           delay={240}
         />
+      </div>
+
+      {/* Weather card */}
+      <div
+        style={{
+          background: "var(--bg-card)",
+          border: "1px solid var(--border)",
+          borderRadius: 12,
+          padding: "20px 24px",
+          marginBottom: 24,
+          display: "flex",
+          gap: 32,
+          alignItems: "stretch",
+        }}
+      >
+        {/* Current conditions */}
+        <div style={{ minWidth: 160 }}>
+          <div
+            style={{
+              fontSize: "0.7rem",
+              fontWeight: 600,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              marginBottom: 8,
+            }}
+          >
+            Current Weather · Yorkshire, UK
+          </div>
+          {weatherLoading && (
+            <div
+              style={{
+                color: "var(--text-muted)",
+                fontSize: "0.85rem",
+                paddingTop: 8,
+              }}
+            >
+              Loading weather...
+            </div>
+          )}
+          {weatherError && (
+            <div
+              style={{ color: "#f87171", fontSize: "0.85rem", paddingTop: 8 }}
+            >
+              {weatherError}
+            </div>
+          )}
+          {weather &&
+            !weatherLoading &&
+            (() => {
+              const { emoji, description } = weatherInfo(
+                weather.current.weather_code,
+              );
+              return (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: 8,
+                      marginBottom: 2,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "2.25rem",
+                        fontWeight: 800,
+                        color: "var(--text-primary)",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {Math.round(weather.current.temperature_2m)}°C
+                    </span>
+                    <span style={{ fontSize: "1.5rem" }}>{emoji}</span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "var(--text-muted)",
+                      marginBottom: 12,
+                    }}
+                  >
+                    {description}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                      fontSize: "0.78rem",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    <span>💨 Wind: {weather.current.wind_speed_10m} km/h</span>
+                    <span>
+                      💧 Humidity: {weather.current.relative_humidity_2m}%
+                    </span>
+                    <span>🌧️ Precip: {weather.current.precipitation} mm</span>
+                  </div>
+                </>
+              );
+            })()}
+        </div>
+
+        {/* Divider */}
+        <div
+          style={{
+            width: 1,
+            background: "var(--border)",
+            flexShrink: 0,
+          }}
+        />
+
+        {/* 5-day forecast */}
+        <div style={{ flex: 1 }}>
+          <div
+            style={{
+              fontSize: "0.7rem",
+              fontWeight: 600,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              marginBottom: 8,
+            }}
+          >
+            5-Day Forecast
+          </div>
+          {weatherLoading && (
+            <div
+              style={{
+                color: "var(--text-muted)",
+                fontSize: "0.85rem",
+                paddingTop: 8,
+              }}
+            >
+              Loading...
+            </div>
+          )}
+          {weather && !weatherLoading && (
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                height: "calc(100% - 24px)",
+                alignItems: "center",
+              }}
+            >
+              {weather.daily.time.map((t, i) => {
+                const d = new Date(t + "T12:00:00");
+                const day = d.toLocaleDateString("en-GB", { weekday: "short" });
+                const { emoji } = weatherInfo(weather.daily.weather_code[i]);
+                const hi = Math.round(weather.daily.temperature_2m_max[i]);
+                const lo = Math.round(weather.daily.temperature_2m_min[i]);
+                return (
+                  <div
+                    key={t}
+                    style={{
+                      flex: 1,
+                      textAlign: "center",
+                      padding: "8px 4px",
+                      borderRadius: 8,
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid var(--border)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "0.72rem",
+                        color: "var(--text-muted)",
+                        marginBottom: 4,
+                      }}
+                    >
+                      {day}
+                    </div>
+                    <div style={{ fontSize: "1.25rem", marginBottom: 4 }}>
+                      {emoji}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.8rem",
+                        fontWeight: 700,
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      {hi}°
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.72rem",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {lo}°
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Charts row */}

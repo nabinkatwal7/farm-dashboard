@@ -6,6 +6,7 @@ import {
   Clock,
   MapPin,
   Plus,
+  Trash2,
   Wifi,
   WifiOff,
   Wrench,
@@ -14,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 import Modal from "../components/Modal";
 import StatCard from "../components/StatCard";
 import {
+  deleteData,
   generateId,
   getData,
   saveData,
@@ -341,6 +343,7 @@ export default function OperationsPage() {
                     <th>Last Service</th>
                     <th>Hours to Next Service</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -443,6 +446,19 @@ export default function OperationsPage() {
                             {m.status}
                           </span>
                         </td>
+                        <td>
+                          <button
+                            className="btn-danger"
+                            title="Delete machine"
+                            style={{ padding: "4px 8px" }}
+                            onClick={() => {
+                              deleteData("machines", m.id);
+                              load();
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -510,6 +526,10 @@ export default function OperationsPage() {
                     key={task.id}
                     task={task}
                     onUpdateStatus={updateTaskStatus}
+                    onDelete={() => {
+                      deleteData("tasks", task.id);
+                      load();
+                    }}
                   />
                 ))}
               </div>
@@ -554,6 +574,10 @@ export default function OperationsPage() {
                     key={task.id}
                     task={task}
                     onUpdateStatus={updateTaskStatus}
+                    onDelete={() => {
+                      deleteData("tasks", task.id);
+                      load();
+                    }}
                   />
                 ))}
               </div>
@@ -598,6 +622,10 @@ export default function OperationsPage() {
                     key={task.id}
                     task={task}
                     onUpdateStatus={updateTaskStatus}
+                    onDelete={() => {
+                      deleteData("tasks", task.id);
+                      load();
+                    }}
                   />
                 ))}
               </div>
@@ -756,9 +784,11 @@ export default function OperationsPage() {
 function TaskCard({
   task,
   onUpdateStatus,
+  onDelete,
 }: {
   task: Task;
   onUpdateStatus: (task: Task, status: Task["status"]) => void;
+  onDelete: () => void;
 }) {
   return (
     <div
@@ -861,7 +891,7 @@ function TaskCard({
       >
         👤 {task.assignee}
       </div>
-      <div style={{ display: "flex", gap: 4 }}>
+      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
         {task.status !== "pending" && (
           <button
             onClick={() => onUpdateStatus(task, "pending")}
@@ -913,6 +943,23 @@ function TaskCard({
             Done ✓
           </button>
         )}
+        <button
+          onClick={onDelete}
+          title="Delete task"
+          style={{
+            padding: "5px 7px",
+            borderRadius: 5,
+            border: "1px solid rgba(248,113,113,0.3)",
+            background: "rgba(248,113,113,0.08)",
+            cursor: "pointer",
+            color: "#f87171",
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Trash2 size={12} />
+        </button>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Map, Plus, TrendingUp, Wheat } from "lucide-react";
+import { FileText, Map, Plus, Trash2, TrendingUp, Wheat } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -16,6 +16,7 @@ import {
 import Modal from "../components/Modal";
 import StatCard from "../components/StatCard";
 import {
+  deleteData,
   generateId,
   getData,
   saveData,
@@ -379,6 +380,35 @@ export default function CropsPage() {
                       ))}
                     </div>
                   </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: 8,
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        deleteData("fields", field.id);
+                        load();
+                      }}
+                      style={{
+                        background: "rgba(248,113,113,0.15)",
+                        border: "1px solid rgba(248,113,113,0.3)",
+                        color: "#f87171",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: "0.8rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                      title="Delete field"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -426,6 +456,7 @@ export default function CropsPage() {
                   <th>Quantity</th>
                   <th>Operator</th>
                   <th>Notes</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -461,6 +492,29 @@ export default function CropsPage() {
                       style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}
                     >
                       {log.notes || "—"}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => {
+                          deleteData("inputLogs", log.id);
+                          load();
+                        }}
+                        style={{
+                          background: "rgba(248,113,113,0.15)",
+                          border: "1px solid rgba(248,113,113,0.3)",
+                          color: "#f87171",
+                          borderRadius: 6,
+                          padding: "4px 10px",
+                          fontSize: "0.8rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                        title="Delete record"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -554,6 +608,7 @@ export default function CropsPage() {
                   <th>Projected</th>
                   <th>Actual</th>
                   <th>Variance</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -596,6 +651,29 @@ export default function CropsPage() {
                           {isPositive ? "+" : ""}
                           {variance}%
                         </span>
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => {
+                            deleteData("yieldRecords", y.id);
+                            load();
+                          }}
+                          style={{
+                            background: "rgba(248,113,113,0.15)",
+                            border: "1px solid rgba(248,113,113,0.3)",
+                            color: "#f87171",
+                            borderRadius: 6,
+                            padding: "4px 10px",
+                            fontSize: "0.8rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                          title="Delete record"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </td>
                     </tr>
                   );

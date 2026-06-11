@@ -1,19 +1,21 @@
 "use client";
 
-import { AlertTriangle, Beef, Clock, Heart, Plus } from "lucide-react";
+import { AlertTriangle, Beef, Clock, Heart, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import Modal from "../components/Modal";
 import StatCard from "../components/StatCard";
 import {
+  deleteData,
   generateId,
   getData,
   saveData,
   type Animal,
   type BreedingRecord,
   type MedicalRecord,
+  type WeightRecord,
 } from "../lib/store";
 
-type Tab = "animals" | "medical" | "breeding";
+type Tab = "animals" | "medical" | "breeding" | "weights";
 
 const SPECIES_EMOJI: Record<string, string> = {
   cattle: "🐄",
@@ -48,11 +50,15 @@ export default function LivestockPage() {
   const [animalForm, setAnimalForm] = useState<Partial<Animal>>({});
   const [medForm, setMedForm] = useState<Partial<MedicalRecord>>({});
   const [breedForm, setBreedForm] = useState<Partial<BreedingRecord>>({});
+  const [weights, setWeights] = useState<WeightRecord[]>([]);
+  const [showAddWeight, setShowAddWeight] = useState(false);
+  const [weightForm, setWeightForm] = useState<Partial<WeightRecord>>({});
 
   const load = useCallback(() => {
     setAnimals(getData<Animal>("animals"));
     setMedical(getData<MedicalRecord>("medicalRecords"));
     setBreeding(getData<BreedingRecord>("breedingRecords"));
+    setWeights(getData<WeightRecord>("weightRecords"));
   }, []);
 
   useEffect(() => {
@@ -94,6 +100,19 @@ export default function LivestockPage() {
     load();
     setShowAddMed(false);
     setMedForm({});
+  };
+
+  const saveWeight = () => {
+    if (!weightForm.earTag || !weightForm.weightKg) return;
+    saveData("weightRecords", {
+      id: generateId(),
+      animalId: animals.find((a) => a.earTag === weightForm.earTag)?.id ?? "",
+      date: new Date().toISOString().slice(0, 10),
+      ...weightForm,
+    } as WeightRecord);
+    load();
+    setShowAddWeight(false);
+    setWeightForm({});
   };
 
   const saveBreed = () => {
@@ -216,6 +235,7 @@ export default function LivestockPage() {
             ["animals", "🏷️ Animal Registry"],
             ["medical", "💉 Medical Records"],
             ["breeding", "🍼 Breeding Cycles"],
+            ["weights", "⚖️ Weights"],
           ] as [Tab, string][]
         ).map(([t, label]) => (
           <button
@@ -282,6 +302,7 @@ export default function LivestockPage() {
                 <th>DOB</th>
                 <th>Group</th>
                 <th>Status</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -325,6 +346,29 @@ export default function LivestockPage() {
                     >
                       {a.status}
                     </span>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => {
+                        deleteData("animals", a.id);
+                        load();
+                      }}
+                      style={{
+                        background: "rgba(248,113,113,0.15)",
+                        border: "1px solid rgba(248,113,113,0.3)",
+                        color: "#f87171",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: "0.8rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                      title="Delete animal"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -468,6 +512,7 @@ export default function LivestockPage() {
                   <th>Product / Condition</th>
                   <th>Vet</th>
                   <th>Withdrawal</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -521,6 +566,29 @@ export default function LivestockPage() {
                       ) : (
                         <span style={{ color: "var(--text-muted)" }}>None</span>
                       )}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => {
+                          deleteData("medicalRecords", m.id);
+                          load();
+                        }}
+                        style={{
+                          background: "rgba(248,113,113,0.15)",
+                          border: "1px solid rgba(248,113,113,0.3)",
+                          color: "#f87171",
+                          borderRadius: 6,
+                          padding: "4px 10px",
+                          fontSize: "0.8rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                        title="Delete record"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -675,10 +743,130 @@ export default function LivestockPage() {
                       </span>
                     </div>
                   )}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: 10,
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        deleteData("breedingRecords", b.id);
+                        load();
+                      }}
+                      style={{
+                        background: "rgba(248,113,113,0.15)",
+                        border: "1px solid rgba(248,113,113,0.3)",
+                        color: "#f87171",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: "0.8rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                      title="Delete record"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Weight Records Tab */}
+      {tab === "weights" && (
+        <div
+          style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border)",
+            borderRadius: 12,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              padding: "14px 18px",
+              borderBottom: "1px solid var(--border)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
+              Weight Records
+            </span>
+            <button
+              className="btn-primary"
+              onClick={() => setShowAddWeight(true)}
+            >
+              <Plus size={14} /> Log Weight
+            </button>
+          </div>
+          <table className="farm-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Ear Tag</th>
+                <th>Weight (kg)</th>
+                <th>Notes</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {weights.map((w) => (
+                <tr key={w.id}>
+                  <td>{new Date(w.date).toLocaleDateString("en-GB")}</td>
+                  <td
+                    style={{
+                      fontWeight: 700,
+                      fontFamily: "monospace",
+                      color: "var(--text-primary)",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    {w.earTag}
+                  </td>
+                  <td style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+                    {w.weightKg} kg
+                  </td>
+                  <td
+                    style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}
+                  >
+                    {w.notes || "—"}
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => {
+                        deleteData("weightRecords", w.id);
+                        load();
+                      }}
+                      style={{
+                        background: "rgba(248,113,113,0.15)",
+                        border: "1px solid rgba(248,113,113,0.3)",
+                        color: "#f87171",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: "0.8rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                      title="Delete record"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -908,6 +1096,120 @@ export default function LivestockPage() {
               <button
                 className="btn-ghost"
                 onClick={() => setShowAddMed(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Add Weight Modal */}
+      {showAddWeight && (
+        <Modal
+          title="Log Weight Record"
+          onClose={() => setShowAddWeight(false)}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Animal Ear Tag
+              </label>
+              <select
+                className="farm-input"
+                value={weightForm.earTag ?? ""}
+                onChange={(e) =>
+                  setWeightForm((f) => ({ ...f, earTag: e.target.value }))
+                }
+              >
+                <option value="">Select animal…</option>
+                {animals.map((a) => (
+                  <option key={a.id} value={a.earTag}>
+                    {a.earTag} — {a.breed}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Date
+              </label>
+              <input
+                className="farm-input"
+                type="date"
+                value={weightForm.date ?? new Date().toISOString().slice(0, 10)}
+                onChange={(e) =>
+                  setWeightForm((f) => ({ ...f, date: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Weight (kg)
+              </label>
+              <input
+                className="farm-input"
+                type="number"
+                placeholder="450"
+                value={weightForm.weightKg ?? ""}
+                onChange={(e) =>
+                  setWeightForm((f) => ({ ...f, weightKg: +e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Notes
+              </label>
+              <textarea
+                className="farm-input"
+                placeholder="Optional notes"
+                value={weightForm.notes ?? ""}
+                onChange={(e) =>
+                  setWeightForm((f) => ({ ...f, notes: e.target.value }))
+                }
+                rows={3}
+              />
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button
+                className="btn-primary"
+                style={{ flex: 1 }}
+                onClick={saveWeight}
+              >
+                Save Weight
+              </button>
+              <button
+                className="btn-ghost"
+                onClick={() => setShowAddWeight(false)}
               >
                 Cancel
               </button>

@@ -1,14 +1,24 @@
 "use client";
 
-import { AlertTriangle, ArrowRight, Package, Plus, Search } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Package,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import Modal from "../components/Modal";
 import StatCard from "../components/StatCard";
 import {
+  deleteData,
   generateId,
   getData,
   saveData,
   type BatchRecord,
+  type StockAdjustment,
   type StockItem,
 } from "../lib/store";
 
@@ -32,6 +42,13 @@ export default function InventoryPage() {
   const [showAddBatch, setShowAddBatch] = useState(false);
   const [stockForm, setStockForm] = useState<Partial<StockItem>>({});
   const [batchForm, setBatchForm] = useState<Partial<BatchRecord>>({});
+  const [showAdjust, setShowAdjust] = useState(false);
+  const [adjustItem, setAdjustItem] = useState<StockItem | null>(null);
+  const [adjustForm, setAdjustForm] = useState({
+    delta: 0,
+    reason: "",
+    operator: "",
+  });
 
   const load = useCallback(() => {
     setStock(getData<StockItem>("stockItems"));
@@ -58,6 +75,30 @@ export default function InventoryPage() {
     load();
     setShowAddStock(false);
     setStockForm({});
+  };
+
+  const saveAdjustment = () => {
+    if (!adjustItem) return;
+    const all = getData<StockItem>("stockItems");
+    const item = all.find((s) => s.id === adjustItem.id);
+    if (!item) return;
+    saveData("stockItems", {
+      ...item,
+      quantity: item.quantity + adjustForm.delta,
+    });
+    saveData<StockAdjustment>("stockAdjustments", {
+      id: generateId(),
+      stockItemId: item.id,
+      stockItemName: item.name,
+      date: new Date().toISOString().slice(0, 10),
+      delta: adjustForm.delta,
+      reason: adjustForm.reason,
+      operator: adjustForm.operator,
+    });
+    load();
+    setShowAdjust(false);
+    setAdjustItem(null);
+    setAdjustForm({ delta: 0, reason: "", operator: "" });
   };
 
   const saveBatch = () => {
@@ -272,6 +313,7 @@ export default function InventoryPage() {
                   <th>Location</th>
                   <th>Origin</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -335,6 +377,37 @@ export default function InventoryPage() {
                         ) : (
                           <span className="badge-green">OK</span>
                         )}
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button
+                            className="btn-ghost"
+                            title="Adjust quantity"
+                            style={{ padding: "4px 8px" }}
+                            onClick={() => {
+                              setAdjustItem(item);
+                              setAdjustForm({
+                                delta: 0,
+                                reason: "",
+                                operator: "",
+                              });
+                              setShowAdjust(true);
+                            }}
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            className="btn-danger"
+                            title="Delete item"
+                            style={{ padding: "4px 8px" }}
+                            onClick={() => {
+                              deleteData("stockItems", item.id);
+                              load();
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -520,6 +593,7 @@ export default function InventoryPage() {
                   <th>Processed</th>
                   <th>Quantity</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -570,6 +644,19 @@ export default function InventoryPage() {
                       >
                         {b.status}
                       </span>
+                    </td>
+                    <td>
+                      <button
+                        className="btn-danger"
+                        title="Delete batch"
+                        style={{ padding: "4px 8px" }}
+                        onClick={() => {
+                          deleteData("batches", b.id);
+                          load();
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -666,6 +753,110 @@ export default function InventoryPage() {
       )}
 
       {/* Add Batch Modal */}
+      {showAdjust && adjustItem && (
+        <Modal
+          title={`Adjust Stock: ${adjustItem.name}`}
+          onClose={() => {
+            setShowAdjust(false);
+            setAdjustItem(null);
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Item
+              </label>
+              <input className="farm-input" value={adjustItem.name} readOnly />
+            </div>
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Adjust by (+ to add, - to remove)
+              </label>
+              <input
+                className="farm-input"
+                type="number"
+                value={adjustForm.delta}
+                onChange={(e) =>
+                  setAdjustForm((f) => ({ ...f, delta: +e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Reason
+              </label>
+              <input
+                className="farm-input"
+                placeholder="e.g. Received delivery"
+                value={adjustForm.reason}
+                onChange={(e) =>
+                  setAdjustForm((f) => ({ ...f, reason: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Operator
+              </label>
+              <input
+                className="farm-input"
+                placeholder="Your name"
+                value={adjustForm.operator}
+                onChange={(e) =>
+                  setAdjustForm((f) => ({ ...f, operator: e.target.value }))
+                }
+              />
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button
+                className="btn-primary"
+                style={{ flex: 1 }}
+                onClick={saveAdjustment}
+              >
+                Save Adjustment
+              </button>
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  setShowAdjust(false);
+                  setAdjustItem(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {showAddBatch && (
         <Modal
           title="Create Batch Record"

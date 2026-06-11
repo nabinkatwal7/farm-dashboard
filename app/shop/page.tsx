@@ -5,6 +5,7 @@ import {
   CheckCircle,
   CreditCard,
   Globe,
+  Pencil,
   ShoppingCart,
   Store,
   Trash2,
@@ -21,8 +22,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import Modal from "../components/Modal";
 import StatCard from "../components/StatCard";
 import {
+  deleteData,
   generateId,
   getData,
   saveData,
@@ -44,6 +47,8 @@ export default function ShopPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [mounted, setMounted] = useState(false);
   const [checkoutDone, setCheckoutDone] = useState(false);
+  const [showEditProduct, setShowEditProduct] = useState(false);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<
     "card" | "cash" | "online"
   >("card");
@@ -79,6 +84,14 @@ export default function ShopPage() {
     (s, i) => s + (i.product.price - i.product.cost) * i.qty,
     0,
   );
+
+  const saveEditProduct = () => {
+    if (!editProduct) return;
+    saveData("products", editProduct);
+    load();
+    setShowEditProduct(false);
+    setEditProduct(null);
+  };
 
   const checkout = () => {
     if (cart.length === 0) return;
@@ -318,79 +331,124 @@ export default function ShopPage() {
               }}
             >
               {products.map((product) => (
-                <button
+                <div
                   key={product.id}
-                  onClick={() => addToCart(product)}
-                  disabled={product.stock === 0}
-                  style={{
-                    background:
-                      product.stock === 0
-                        ? "rgba(255,255,255,0.02)"
-                        : "rgba(255,255,255,0.03)",
-                    border: `1px solid ${product.stock === 0 ? "var(--border)" : "rgba(167,139,250,0.2)"}`,
-                    borderRadius: 10,
-                    padding: "14px",
-                    cursor: product.stock === 0 ? "not-allowed" : "pointer",
-                    textAlign: "left",
-                    opacity: product.stock === 0 ? 0.4 : 1,
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (product.stock > 0)
-                      (e.currentTarget as HTMLButtonElement).style.borderColor =
-                        "rgba(167,139,250,0.5)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (product.stock > 0)
-                      (e.currentTarget as HTMLButtonElement).style.borderColor =
-                        "rgba(167,139,250,0.2)";
-                  }}
+                  style={{ display: "flex", flexDirection: "column", gap: 4 }}
                 >
-                  <div
+                  <button
+                    onClick={() => addToCart(product)}
+                    disabled={product.stock === 0}
                     style={{
-                      fontSize: "0.85rem",
-                      fontWeight: 600,
-                      color: "var(--text-primary)",
-                      marginBottom: 4,
+                      background:
+                        product.stock === 0
+                          ? "rgba(255,255,255,0.02)"
+                          : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${product.stock === 0 ? "var(--border)" : "rgba(167,139,250,0.2)"}`,
+                      borderRadius: 10,
+                      padding: "14px",
+                      cursor: product.stock === 0 ? "not-allowed" : "pointer",
+                      textAlign: "left",
+                      opacity: product.stock === 0 ? 0.4 : 1,
+                      transition: "all 0.2s",
+                      width: "100%",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (product.stock > 0)
+                        (
+                          e.currentTarget as HTMLButtonElement
+                        ).style.borderColor = "rgba(167,139,250,0.5)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (product.stock > 0)
+                        (
+                          e.currentTarget as HTMLButtonElement
+                        ).style.borderColor = "rgba(167,139,250,0.2)";
                     }}
                   >
-                    {product.name}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "var(--text-muted)",
-                      marginBottom: 8,
-                    }}
-                  >
-                    {product.category}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-end",
-                    }}
-                  >
-                    <span
+                    <div
                       style={{
-                        fontSize: "1rem",
-                        fontWeight: 700,
-                        color: "#a78bfa",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        color: "var(--text-primary)",
+                        marginBottom: 4,
                       }}
                     >
-                      £{product.price.toFixed(2)}
-                    </span>
-                    <span
+                      {product.name}
+                    </div>
+                    <div
                       style={{
-                        fontSize: "0.72rem",
+                        fontSize: "0.75rem",
                         color: "var(--text-muted)",
+                        marginBottom: 8,
                       }}
                     >
-                      Stock: {product.stock}
-                    </span>
+                      {product.category}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "1rem",
+                          fontWeight: 700,
+                          color: "#a78bfa",
+                        }}
+                      >
+                        £{product.price.toFixed(2)}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "0.72rem",
+                          color: "var(--text-muted)",
+                        }}
+                      >
+                        Stock: {product.stock}
+                      </span>
+                    </div>
+                  </button>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <button
+                      className="btn-ghost"
+                      style={{
+                        flex: 1,
+                        padding: "4px 6px",
+                        fontSize: "0.72rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                      }}
+                      onClick={() => {
+                        setEditProduct({ ...product });
+                        setShowEditProduct(true);
+                      }}
+                    >
+                      <Pencil size={12} /> Edit
+                    </button>
+                    <button
+                      className="btn-danger"
+                      style={{
+                        flex: 1,
+                        padding: "4px 6px",
+                        fontSize: "0.72rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                      }}
+                      onClick={() => {
+                        deleteData("products", product.id);
+                        load();
+                      }}
+                    >
+                      <Trash2 size={12} /> Delete
+                    </button>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -834,6 +892,77 @@ export default function ShopPage() {
             </table>
           </div>
         </div>
+      )}
+      {showEditProduct && editProduct && (
+        <Modal
+          title="Edit Product"
+          onClose={() => {
+            setShowEditProduct(false);
+            setEditProduct(null);
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {(
+              [
+                ["Product Name", "name", "text"],
+                ["Category", "category", "text"],
+                ["Price (£)", "price", "number"],
+                ["Cost (£)", "cost", "number"],
+                ["Stock", "stock", "number"],
+                ["Unit", "unit", "text"],
+              ] as [string, keyof Product, string][]
+            ).map(([label, key, type]) => (
+              <div key={key}>
+                <label
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "var(--text-muted)",
+                    display: "block",
+                    marginBottom: 6,
+                  }}
+                >
+                  {label}
+                </label>
+                <input
+                  className="farm-input"
+                  type={type}
+                  value={editProduct[key] as string | number}
+                  onChange={(e) =>
+                    setEditProduct((p) =>
+                      p
+                        ? {
+                            ...p,
+                            [key]:
+                              type === "number"
+                                ? +e.target.value
+                                : e.target.value,
+                          }
+                        : p,
+                    )
+                  }
+                />
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button
+                className="btn-primary"
+                style={{ flex: 1 }}
+                onClick={saveEditProduct}
+              >
+                Save Product
+              </button>
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  setShowEditProduct(false);
+                  setEditProduct(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );
