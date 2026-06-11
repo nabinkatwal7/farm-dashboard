@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { CropField } from "../lib/store";
+import type { CropField } from "@/app/base/services/farm-client";
 import type { Map as LeafletMap } from "leaflet";
 
 interface FieldMapProps {
@@ -92,3 +92,4 @@ export default function FieldMap({ fields }: FieldMapProps) {
 
   return <div ref={containerRef} style={{ height: 400, width: "100%" }} />;
 }
+

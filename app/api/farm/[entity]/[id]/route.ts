@@ -1,5 +1,8 @@
 import { fail, ok, readJson, requireEntityAccess } from "@/app/lib/api";
-import { deleteFarmEntity, updateFarmEntity } from "@/app/lib/farm-repository";
+import {
+  deleteFarmEntity,
+  updateFarmEntity,
+} from "@/app/server/farm/repository";
 
 export async function PATCH(
   request: Request,

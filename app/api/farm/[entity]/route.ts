@@ -1,5 +1,5 @@
 import { fail, ok, readJson, requireEntityAccess } from "@/app/lib/api";
-import { createFarmEntity, listFarmEntity } from "@/app/lib/farm-repository";
+import { createFarmEntity, listFarmEntity } from "@/app/server/farm/repository";
 
 export async function GET(
   _request: Request,

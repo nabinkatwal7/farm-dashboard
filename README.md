@@ -1,36 +1,170 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FarmOS Dashboard
+
+FarmOS is a modular Next.js farm management dashboard with a Prisma + SQLite backend. It covers crop records, livestock records, inventory, batch traceability, POS sales, operations, finance, authentication, and role-based user management.
+
+## Tech Stack
+
+- Next.js `16.2.9` App Router
+- React `19`
+- TypeScript
+- Prisma ORM
+- SQLite local database
+- bcrypt-backed password hashing
+- HTTP-only database sessions
+- ESLint + TypeScript checks
+
+## Architecture
+
+The project follows a layered modular architecture:
+
+- `app/**/page.tsx` - App layer route wrappers and Next.js routing
+- `app/features/*` - Feature screens such as crops, livestock, inventory, shop, finance, users, and dashboard
+- `app/base/*` - Shared hooks and client-side services
+- `app/abstract/*` - Reusable presentation-only UI components
+- `app/server/*` - Server-only backend modules used by API routes
+- `app/lib/*` - Infrastructure utilities such as auth, Prisma, RBAC, and API helpers
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the detailed layering rules.
+
+## Implemented Modules
+
+- Dashboard KPIs, weather summary, task alerts, and charts
+- Crops and field records with map view, input logs, and yield records
+- Livestock registry, medical records, breeding records, and weight records
+- Inventory stock records, stock adjustments, batch records, and traceability search
+- Shop/POS products, checkout, sales history, and profitability analytics
+- Operations machinery registry, maintenance indicators, and task board
+- Finance expenses, revenue/expense charts, P&L reporting, and category filtering
+- Auth setup, login/logout, user creation, active/inactive users, and role-based access
+
+The long-term enterprise roadmap lives in [feature-plans.md](./feature-plans.md). Checked items in that file represent implemented MVP/foundation coverage.
+
+## Backend API
+
+Auth:
+
+- `POST /api/auth/setup` - create the first farm workspace and admin user
+- `POST /api/auth/login` - create an HTTP-only session
+- `POST /api/auth/logout` - clear the current session
+- `GET /api/auth/me` - read current auth/setup state
+
+Users:
+
+- `GET /api/users` - list users in the current farm
+- `POST /api/users` - create a farm user
+- `PATCH /api/users/[id]` - update role/status/profile/password fields
+
+Farm entities:
+
+- `GET /api/farm/[entity]` - list farm-scoped records
+- `POST /api/farm/[entity]` - create a farm-scoped record
+- `PATCH /api/farm/[entity]/[id]` - update a farm-scoped record
+- `DELETE /api/farm/[entity]/[id]` - delete a farm-scoped record
+
+Current entity keys include `fields`, `inputLogs`, `yieldRecords`, `animals`, `medicalRecords`, `breedingRecords`, `weightRecords`, `stockItems`, `stockAdjustments`, `batches`, `products`, `sales`, `machines`, `tasks`, and `expenses`.
+
+## Roles
+
+Supported roles are:
+
+- `ADMIN`
+- `FARM_MANAGER`
+- `FIELD_WORKER`
+- `LIVESTOCK_MANAGER`
+- `INVENTORY_MANAGER`
+- `SHOP_STAFF`
+- `ACCOUNTANT`
+- `VETERINARY`
+- `VIEWER`
+
+Role permissions are centralized in `app/lib/rbac.ts`.
+
+## Database
+
+Prisma schema:
+
+```text
+prisma/schema.prisma
+```
+
+SQLite database:
+
+```text
+prisma/dev.db
+```
+
+Regenerate Prisma Client:
+
+```bash
+npx prisma generate
+```
+
+Sync schema to SQLite:
+
+```bash
+npx prisma db push
+```
+
+On this Windows workspace, if `npx` is not on PATH, use the local binary:
+
+```powershell
+$env:PATH='C:\Program Files\cursor\resources\app\resources\helpers;' + $env:PATH
+.\node_modules\.bin\prisma.CMD generate
+.\node_modules\.bin\prisma.CMD db push
+```
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies:
+
+```bash
+npm install
+```
+
+Generate Prisma Client and sync the database:
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+Start development:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+On first launch, the app redirects to `/login` and shows setup mode. Create the first farm workspace and admin account there.
 
-## Learn More
+## Quality Checks
 
-To learn more about Next.js, take a look at the following resources:
+Run lint:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run TypeScript:
 
-## Deploy on Vercel
+```bash
+npx tsc --noEmit
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Run production build:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run build
+```
+
+## Notes
+
+- All application persistence should go through Prisma ORM, not direct SQL.
+- Feature modules should not import from sibling feature folders.
+- API routes should stay thin and delegate backend logic to `app/server`.
+- Reusable UI belongs in `app/abstract`; shared client services/hooks belong in `app/base`.
