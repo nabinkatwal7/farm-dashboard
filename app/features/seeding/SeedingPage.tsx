@@ -34,14 +34,13 @@ const SeedingMap = dynamic(() => import("@/app/components/SeedingMap"), {
   ssr: false,
   loading: () => (
     <div
+      className="bg-background text-muted"
       style={{
         height: 450,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "var(--bg-base)",
         borderRadius: 10,
-        color: "var(--text-muted)",
         fontSize: "0.875rem",
       }}
     >
@@ -157,18 +156,18 @@ export default function SeedingPage() {
     <div style={{ padding: "32px 32px 48px" }}>
       <div style={{ marginBottom: 28 }}>
         <h1
+          className="text-primary"
           style={{
             fontSize: "1.6rem",
             fontWeight: 800,
-            color: "var(--text-primary)",
             letterSpacing: "-0.02em",
           }}
         >
           Variable-Rate Precision Seeding
         </h1>
         <p
+          className="text-muted"
           style={{
-            color: "var(--text-muted)",
             fontSize: "0.875rem",
             marginTop: 4,
           }}
@@ -221,12 +220,11 @@ export default function SeedingPage() {
       </div>
 
       <div
+        className="bg-card border border-border"
         style={{
           display: "flex",
           gap: 4,
           marginBottom: 20,
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
           padding: 4,
           borderRadius: 10,
           width: "fit-content",
@@ -262,17 +260,16 @@ export default function SeedingPage() {
       {tab === "maps" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
           >
             <div
+              className="border-b border-border"
               style={{
                 padding: "14px 18px",
-                borderBottom: "1px solid var(--border)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -292,19 +289,18 @@ export default function SeedingPage() {
           </div>
 
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "18px",
             }}
           >
             <div
+              className="text-primary"
               style={{
                 fontWeight: 600,
                 fontSize: "0.9rem",
                 marginBottom: 14,
-                color: "var(--text-primary)",
               }}
             >
               Active Prescriptions
@@ -312,8 +308,8 @@ export default function SeedingPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {prescriptionMaps.filter((m) => m.status === "active" || m.status === "draft").length === 0 && (
                 <div
+                  className="text-muted"
                   style={{
-                    color: "var(--text-muted)",
                     fontSize: "0.85rem",
                     padding: "20px 0",
                     textAlign: "center",
@@ -329,11 +325,11 @@ export default function SeedingPage() {
                   return (
                     <div
                       key={pm.id}
+                      className="border border-border"
                       style={{
                         padding: "12px",
                         borderRadius: 8,
                         background: "rgba(255,255,255,0.02)",
-                        border: "1px solid var(--border)",
                       }}
                     >
                       <div
@@ -345,10 +341,10 @@ export default function SeedingPage() {
                         }}
                       >
                         <span
+                          className="text-primary"
                           style={{
                             fontWeight: 600,
                             fontSize: "0.85rem",
-                            color: "var(--text-primary)",
                           }}
                         >
                           {pm.name}
@@ -368,7 +364,8 @@ export default function SeedingPage() {
                         </span>
                       </div>
                       <div
-                        style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}
+                        className="text-muted"
+                        style={{ fontSize: "0.78rem" }}
                       >
                         {pm.fieldName} · {pm.crop} · {pm.season}
                       </div>
@@ -382,11 +379,11 @@ export default function SeedingPage() {
                           }}
                         >
                           <div
+                            className="text-muted"
                             style={{
                               fontSize: "0.68rem",
                               textTransform: "uppercase",
                               letterSpacing: "0.08em",
-                              color: "var(--text-muted)",
                               width: "100%",
                               marginBottom: 2,
                             }}
@@ -479,17 +476,16 @@ export default function SeedingPage() {
 
       {tab === "prescriptions" && (
         <div
+          className="bg-card border border-border"
           style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
             borderRadius: 12,
             overflow: "hidden",
           }}
         >
           <div
+            className="border-b border-border"
             style={{
               padding: "14px 18px",
-              borderBottom: "1px solid var(--border)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -522,7 +518,7 @@ export default function SeedingPage() {
               <tbody>
                 {prescriptionMaps.length === 0 && (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: "center", color: "var(--text-muted)", padding: 32 }}>
+                    <td colSpan={8} className="text-muted" style={{ textAlign: "center", padding: 32 }}>
                       No prescription maps yet
                     </td>
                   </tr>
@@ -532,7 +528,8 @@ export default function SeedingPage() {
                   return (
                     <tr key={pm.id}>
                       <td
-                        style={{ fontWeight: 500, color: "var(--text-primary)" }}
+                        className="text-primary"
+                        style={{ fontWeight: 500 }}
                       >
                         {pm.name}
                       </td>
@@ -620,9 +617,8 @@ export default function SeedingPage() {
       {tab === "integrations" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "20px",
             }}
@@ -642,8 +638,8 @@ export default function SeedingPage() {
               </button>
             </div>
             <p
+              className="text-muted"
               style={{
-                color: "var(--text-muted)",
                 fontSize: "0.82rem",
                 marginTop: 8,
                 marginBottom: 16,
@@ -655,8 +651,8 @@ export default function SeedingPage() {
 
             {integrations.length === 0 && (
               <div
+                className="text-muted"
                 style={{
-                  color: "var(--text-muted)",
                   fontSize: "0.85rem",
                   padding: "32px 0",
                   textAlign: "center",
@@ -700,18 +696,18 @@ export default function SeedingPage() {
                     </div>
                     <div>
                       <div
+                        className="text-primary"
                         style={{
                           fontWeight: 600,
                           fontSize: "0.9rem",
-                          color: "var(--text-primary)",
                         }}
                       >
                         {int.label}
                       </div>
                       <div
+                        className="text-muted"
                         style={{
                           fontSize: "0.78rem",
-                          color: "var(--text-muted)",
                         }}
                       >
                         {int.provider === "johndeere"
@@ -739,9 +735,9 @@ export default function SeedingPage() {
                     </span>
                     {int.lastSyncAt && (
                       <span
+                        className="text-muted"
                         style={{
                           fontSize: "0.7rem",
-                          color: "var(--text-muted)",
                         }}
                       >
                         Last sync:{" "}
@@ -795,9 +791,8 @@ export default function SeedingPage() {
 
           {activeIntegrations.length > 0 && prescriptionMaps.filter((m) => m.status === "active").length > 0 && (
             <div
+              className="bg-card border border-border"
               style={{
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
                 borderRadius: 12,
                 padding: "20px",
               }}
@@ -823,7 +818,7 @@ export default function SeedingPage() {
                     .filter((m) => m.status === "active" && !m.exportedAt)
                     .map((pm) => (
                       <tr key={pm.id}>
-                        <td style={{ fontWeight: 500, color: "var(--text-primary)" }}>
+                        <td className="text-primary" style={{ fontWeight: 500 }}>
                           {pm.name}
                         </td>
                         <td>{pm.fieldName}</td>
@@ -864,9 +859,9 @@ export default function SeedingPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -885,9 +880,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -917,9 +912,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -938,9 +933,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -959,9 +954,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -983,9 +978,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1003,13 +998,13 @@ export default function SeedingPage() {
               />
             </div>
             <div
+              className="text-muted"
               style={{
                 background: "rgba(34,211,238,0.08)",
                 border: "1px solid rgba(34,211,238,0.2)",
                 borderRadius: 8,
                 padding: "12px",
                 fontSize: "0.78rem",
-                color: "var(--text-muted)",
               }}
             >
               Zones will be auto-generated based on field size with varying seeding
@@ -1042,9 +1037,9 @@ export default function SeedingPage() {
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div
+              className="text-muted"
               style={{
                 fontSize: "0.8rem",
-                color: "var(--text-muted)",
                 marginBottom: 4,
               }}
             >
@@ -1079,19 +1074,19 @@ export default function SeedingPage() {
                       }}
                     />
                     <span
+                      className="text-primary"
                       style={{
                         fontWeight: 600,
                         fontSize: "0.85rem",
-                        color: "var(--text-primary)",
                       }}
                     >
                       {zone.name}
                     </span>
                   </div>
                   <span
+                    className="text-muted"
                     style={{
                       fontSize: "0.78rem",
-                      color: "var(--text-muted)",
                     }}
                   >
                     {zone.areaAcres} acres
@@ -1106,9 +1101,9 @@ export default function SeedingPage() {
                 >
                   <div style={{ flex: 1 }}>
                     <label
+                      className="text-muted"
                       style={{
                         fontSize: "0.72rem",
-                        color: "var(--text-muted)",
                         display: "block",
                         marginBottom: 3,
                       }}
@@ -1133,9 +1128,9 @@ export default function SeedingPage() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <label
+                      className="text-muted"
                       style={{
                         fontSize: "0.72rem",
-                        color: "var(--text-muted)",
                         display: "block",
                         marginBottom: 3,
                       }}
@@ -1154,12 +1149,11 @@ export default function SeedingPage() {
                         };
                         setShowEditMap(updated);
                       }}
+                      className="border border-border bg-background"
                       style={{
                         width: "100%",
                         height: 32,
                         borderRadius: 6,
-                        border: "1px solid var(--border)",
-                        background: "var(--bg-base)",
                         cursor: "pointer",
                       }}
                     />
@@ -1198,9 +1192,9 @@ export default function SeedingPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1230,9 +1224,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1251,9 +1245,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1276,9 +1270,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1297,9 +1291,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1318,9 +1312,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1339,9 +1333,9 @@ export default function SeedingPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}

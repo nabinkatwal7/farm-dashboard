@@ -25,6 +25,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
@@ -147,13 +148,20 @@ export default function FinancePage() {
     date: new Date().toISOString().slice(0, 10),
     category: "other",
   });
+  const [expenseErrors, setExpenseErrors] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<
-    ExpenseRecord["category"] | ""
-  >("");
+  const [categoryFilter, setCategoryFilter] = useState<ExpenseRecord["category"] | "">("");
+
+  const validateExpense = () => {
+    const errors: Record<string, string> = {};
+    if (!expenseForm.description?.trim()) errors.description = "Description is required";
+    if (!expenseForm.amount || expenseForm.amount <= 0) errors.amount = "Valid amount is required";
+    setExpenseErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const saveExpense = async () => {
-    if (!expenseForm.description || !expenseForm.amount) return;
+    if (!validateExpense()) return;
     await saveData("expenses", {
       id: generateId(),
       date: new Date().toISOString().slice(0, 10),
@@ -168,6 +176,7 @@ export default function FinancePage() {
       date: new Date().toISOString().slice(0, 10),
       category: "other",
     });
+    setExpenseErrors({});
   };
 
   const handleDeleteExpense = async (id: string) => {
@@ -255,18 +264,18 @@ export default function FinancePage() {
       {/* ── Page Header ─────────────────────────────────────────────────── */}
       <div style={{ marginBottom: 28 }}>
         <h1
+          className="text-primary"
           style={{
             fontSize: "1.6rem",
             fontWeight: 800,
-            color: "var(--text-primary)",
             letterSpacing: "-0.02em",
           }}
         >
           💰 Finance &amp; Costs
         </h1>
         <p
+          className="text-muted"
           style={{
-            color: "var(--text-muted)",
             fontSize: "0.875rem",
             marginTop: 4,
           }}
@@ -316,12 +325,11 @@ export default function FinancePage() {
 
       {/* ── Tab Bar ─────────────────────────────────────────────────────── */}
       <div
+        className="bg-card border border-border"
         style={{
           display: "flex",
           gap: 4,
           marginBottom: 20,
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
           padding: 4,
           borderRadius: 10,
           width: "fit-content",
@@ -362,9 +370,8 @@ export default function FinancePage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Monthly Revenue vs Expenses */}
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: 20,
             }}
@@ -373,7 +380,8 @@ export default function FinancePage() {
               <div>
                 <div className="section-title">Monthly Revenue vs Expenses</div>
                 <div
-                  style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}
+                  className="text-muted"
+                  style={{ fontSize: "0.75rem" }}
                 >
                   Last 6 months · £
                 </div>
@@ -422,9 +430,8 @@ export default function FinancePage() {
           >
             {/* Pie chart */}
             <div
+              className="bg-card border border-border"
               style={{
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
                 borderRadius: 12,
                 padding: 20,
               }}
@@ -433,7 +440,8 @@ export default function FinancePage() {
                 <div>
                   <div className="section-title">Expenses by Category</div>
                   <div
-                    style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}
+                    className="text-muted"
+                    style={{ fontSize: "0.75rem" }}
                   >
                     Current year · £
                   </div>
@@ -441,8 +449,8 @@ export default function FinancePage() {
               </div>
               {categoryBreakdown.length === 0 ? (
                 <div
+                  className="text-muted"
                   style={{
-                    color: "var(--text-muted)",
                     fontSize: "0.875rem",
                     textAlign: "center",
                     padding: "56px 0",
@@ -495,9 +503,8 @@ export default function FinancePage() {
 
             {/* Category totals list */}
             <div
+              className="bg-card border border-border"
               style={{
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
                 borderRadius: 12,
                 padding: 20,
               }}
@@ -510,8 +517,8 @@ export default function FinancePage() {
               </div>
               {categoryBreakdown.length === 0 ? (
                 <div
+                  className="text-muted"
                   style={{
-                    color: "var(--text-muted)",
                     fontSize: "0.875rem",
                     padding: "56px 0",
                     textAlign: "center",
@@ -560,8 +567,8 @@ export default function FinancePage() {
                                 }}
                               />
                               <span
+                                className="text-secondary"
                                 style={{
-                                  color: "var(--text-secondary)",
                                   textTransform: "capitalize",
                                 }}
                               >
@@ -569,9 +576,9 @@ export default function FinancePage() {
                               </span>
                             </div>
                             <span
+                              className="text-primary"
                               style={{
                                 fontWeight: 600,
-                                color: "var(--text-primary)",
                               }}
                             >
                               £{cat.value.toFixed(2)}
@@ -655,17 +662,16 @@ export default function FinancePage() {
 
           {/* Expenses table */}
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
           >
             <div
+              className="border-b border-border"
               style={{
                 padding: "14px 18px",
-                borderBottom: "1px solid var(--border)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -674,7 +680,7 @@ export default function FinancePage() {
               <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
                 Expense Records
               </span>
-              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+              <span className="text-muted" style={{ fontSize: "0.8rem" }}>
                 {filteredExpenses.length}{" "}
                 {filteredExpenses.length === 1 ? "record" : "records"} ·{" "}
                 <span style={{ color: "#f87171", fontWeight: 600 }}>
@@ -700,9 +706,9 @@ export default function FinancePage() {
                     <tr>
                       <td
                         colSpan={7}
+                        className="text-muted"
                         style={{
                           textAlign: "center",
-                          color: "var(--text-muted)",
                           padding: "36px 0",
                         }}
                       >
@@ -721,18 +727,18 @@ export default function FinancePage() {
                           <CategoryBadge category={e.category} />
                         </td>
                         <td
+                          className="text-primary"
                           style={{
                             fontWeight: 500,
-                            color: "var(--text-primary)",
                             maxWidth: 220,
                           }}
                         >
                           {e.description}
                           {e.fieldName && (
                             <span
+                              className="text-muted"
                               style={{
                                 fontSize: "0.72rem",
-                                color: "var(--text-muted)",
                                 display: "block",
                                 marginTop: 2,
                               }}
@@ -786,9 +792,8 @@ export default function FinancePage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Stacked ComposedChart */}
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: 20,
             }}
@@ -797,7 +802,8 @@ export default function FinancePage() {
               <div>
                 <div className="section-title">Monthly P&amp;L Breakdown</div>
                 <div
-                  style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}
+                  className="text-muted"
+                  style={{ fontSize: "0.75rem" }}
                 >
                   Expenses stacked by category vs Revenue line · £
                 </div>
@@ -805,8 +811,8 @@ export default function FinancePage() {
             </div>
             {plMonthlyData.length === 0 ? (
               <div
+                className="text-muted"
                 style={{
-                  color: "var(--text-muted)",
                   fontSize: "0.875rem",
                   textAlign: "center",
                   padding: "72px 0",
@@ -871,17 +877,16 @@ export default function FinancePage() {
 
           {/* P&L Summary Table */}
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
           >
             <div
+              className="border-b border-border"
               style={{
                 padding: "14px 18px",
-                borderBottom: "1px solid var(--border)",
               }}
             >
               <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
@@ -903,9 +908,9 @@ export default function FinancePage() {
                   <tr>
                     <td
                       colSpan={5}
+                      className="text-muted"
                       style={{
                         textAlign: "center",
-                        color: "var(--text-muted)",
                         padding: "36px 0",
                       }}
                     >
@@ -921,9 +926,9 @@ export default function FinancePage() {
                     return (
                       <tr key={row.month as string}>
                         <td
+                          className="text-primary"
                           style={{
                             fontWeight: 500,
-                            color: "var(--text-primary)",
                           }}
                         >
                           {row.month as string}
@@ -1005,9 +1010,9 @@ export default function FinancePage() {
             >
               <div>
                 <label
+                  className="text-muted"
                   style={{
                     fontSize: "0.8rem",
-                    color: "var(--text-muted)",
                     display: "block",
                     marginBottom: 6,
                   }}
@@ -1027,9 +1032,9 @@ export default function FinancePage() {
               </div>
               <div>
                 <label
+                  className="text-muted"
                   style={{
                     fontSize: "0.8rem",
-                    color: "var(--text-muted)",
                     display: "block",
                     marginBottom: 6,
                   }}
@@ -1055,55 +1060,30 @@ export default function FinancePage() {
               </div>
             </div>
 
-            {/* Description */}
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-muted)",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Description *
-              </label>
-              <input
-                className="farm-input"
-                type="text"
-                placeholder="e.g. Diesel fuel delivery"
-                value={expenseForm.description ?? ""}
-                onChange={(e) =>
-                  setExpenseForm((f) => ({ ...f, description: e.target.value }))
-                }
-              />
-            </div>
+            <FormField
+              label="Description"
+              name="expense-desc"
+              type="text"
+              placeholder="e.g. Diesel fuel delivery"
+              required
+              error={expenseErrors.description}
+              value={String(expenseForm.description ?? "")}
+              onChange={(e) => setExpenseForm((f) => ({ ...f, description: e.target.value }))}
+            />
 
-            {/* Amount */}
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-muted)",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Amount (£) *
-              </label>
-              <input
-                className="farm-input"
-                type="number"
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                value={expenseForm.amount ?? ""}
-                onChange={(e) =>
-                  setExpenseForm((f) => ({ ...f, amount: +e.target.value }))
-                }
-              />
-            </div>
+            <FormField
+              label="Amount (£)"
+              name="expense-amount"
+              type="number"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              required
+              error={expenseErrors.amount}
+              value={String(expenseForm.amount ?? "")}
+              onChange={(e) => setExpenseForm((f) => ({ ...f, amount: +e.target.value }))}
+            />
 
-            {/* Supplier + Invoice Ref */}
             <div
               style={{
                 display: "grid",
@@ -1113,9 +1093,9 @@ export default function FinancePage() {
             >
               <div>
                 <label
+                  className="text-muted"
                   style={{
                     fontSize: "0.8rem",
-                    color: "var(--text-muted)",
                     display: "block",
                     marginBottom: 6,
                   }}
@@ -1134,9 +1114,9 @@ export default function FinancePage() {
               </div>
               <div>
                 <label
+                  className="text-muted"
                   style={{
                     fontSize: "0.8rem",
-                    color: "var(--text-muted)",
                     display: "block",
                     marginBottom: 6,
                   }}
@@ -1161,9 +1141,9 @@ export default function FinancePage() {
             {/* Field / Area */}
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1184,9 +1164,9 @@ export default function FinancePage() {
             {/* Notes */}
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}

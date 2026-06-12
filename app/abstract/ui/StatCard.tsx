@@ -1,4 +1,7 @@
-import { LucideIcon } from "lucide-react";
+"use client";
+
+import { Card, Group, Text } from "@mantine/core";
+import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   label: string;
@@ -17,130 +20,62 @@ export default function StatCard({
   icon: Icon,
   color = "#4ade80",
   trend,
-  delay = 0,
 }: StatCardProps) {
   return (
-    <div
-      className="animate-fadeInUp"
+    <Card
+      padding="lg"
+      radius="md"
+      className="border border-border"
       style={{
-        background: "var(--bg-card)",
-        border: "1px solid var(--border)",
-        borderRadius: 12,
-        padding: "20px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-        animationDelay: `${delay}ms`,
-        position: "relative",
-        overflow: "hidden",
+        animationDelay: "0ms",
         transition: "transform 0.2s, box-shadow 0.2s",
         cursor: "default",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform =
-          "translateY(-2px)";
-        (e.currentTarget as HTMLDivElement).style.boxShadow =
-          `0 8px 24px rgba(0,0,0,0.3)`;
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-        (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "none";
       }}
     >
-      {/* Background accent */}
-      <div
-        style={{
-          position: "absolute",
-          top: -20,
-          right: -20,
-          width: 80,
-          height: 80,
-          borderRadius: "50%",
-          background: color,
-          opacity: 0.06,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-        }}
-      >
+      <div className="absolute -top-5 -right-5 w-20 h-20 rounded-full pointer-events-none" style={{ background: color, opacity: 0.06 }} />
+      <Group justify="space-between" align="flex-start">
         <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            background: `${color}18`,
-            border: `1px solid ${color}30`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: `${color}18`, border: `1px solid ${color}30` }}
         >
           <Icon size={20} color={color} strokeWidth={2} />
         </div>
-
         {trend && (
-          <div
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              color: trend.value >= 0 ? "#4ade80" : "#f87171",
-              background:
-                trend.value >= 0
-                  ? "rgba(74,222,128,0.1)"
-                  : "rgba(248,113,113,0.1)",
-              padding: "2px 8px",
-              borderRadius: 6,
-            }}
+          <Text
+            size="xs"
+            fw={600}
+            className={`px-2 py-0.5 rounded-md ${
+              trend.value >= 0
+                ? "bg-[rgba(74,222,128,0.1)] text-green"
+                : "bg-[rgba(248,113,113,0.1)] text-red"
+            }`}
           >
             {trend.value >= 0 ? "↑" : "↓"} {Math.abs(trend.value)}%
-          </div>
+          </Text>
         )}
-      </div>
-
-      <div>
-        <div
-          style={{
-            fontSize: "1.75rem",
-            fontWeight: 700,
-            color: "var(--text-primary)",
-            lineHeight: 1,
-          }}
-        >
+      </Group>
+      <div className="mt-3">
+        <Text size="28px" fw={700} className="text-primary leading-none">
           {value}
-        </div>
-        <div
-          style={{
-            fontSize: "0.8rem",
-            color: "var(--text-muted)",
-            marginTop: 4,
-          }}
-        >
+        </Text>
+        <Text size="sm" className="text-muted mt-1">
           {label}
-        </div>
+        </Text>
         {sub && (
-          <div
-            style={{
-              fontSize: "0.75rem",
-              color: "var(--text-muted)",
-              marginTop: 2,
-            }}
-          >
+          <Text size="xs" className="text-muted mt-0.5">
             {sub}
-          </div>
+          </Text>
         )}
       </div>
-
-      {trend && (
-        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-          {trend.label}
-        </div>
-      )}
-    </div>
+      {trend && <Text size="xs" className="text-muted mt-3">{trend.label}</Text>}
+    </Card>
   );
 }

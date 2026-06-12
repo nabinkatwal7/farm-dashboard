@@ -12,6 +12,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
@@ -41,6 +42,8 @@ export default function OperationsPage() {
   const [showAddTask, setShowAddTask] = useState(false);
   const [machineForm, setMachineForm] = useState<Partial<Machine>>({});
   const [taskForm, setTaskForm] = useState<Partial<Task>>({});
+  const [machineErrors, setMachineErrors] = useState<Record<string, string>>({});
+  const [taskErrors, setTaskErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const updateOnline = () => setIsOnline(navigator.onLine);
@@ -53,35 +56,58 @@ export default function OperationsPage() {
     };
   }, []);
 
+  const validateMachine = () => {
+    const errors: Record<string, string> = {};
+    if (!machineForm.name?.trim()) errors.name = "Machine name is required";
+    if (!machineForm.type?.trim()) errors.type = "Type is required";
+    if (!machineForm.make?.trim()) errors.make = "Make is required";
+    if (!machineForm.model?.trim()) errors.model = "Model is required";
+    if (machineForm.year !== undefined && (machineForm.year < 1900 || machineForm.year > 2100)) {
+      errors.year = "Invalid year";
+    }
+    setMachineErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const saveMachine = async () => {
-    if (!machineForm.name) return;
+    if (!validateMachine()) return;
     await saveData("machines", {
       id: generateId(),
-      status: "operational",
-      engineHours: 0,
-      nextService: 500,
-      lastService: new Date().toISOString().slice(0, 10),
+      status: machineForm.status || "operational",
+      engineHours: machineForm.engineHours ?? 0,
+      nextService: machineForm.nextService ?? 500,
+      lastService: machineForm.lastService || new Date().toISOString().slice(0, 10),
       ...machineForm,
     } as Machine);
     await load();
     setShowAddMachine(false);
     setMachineForm({});
+    setMachineErrors({});
+  };
+
+  const validateTask = () => {
+    const errors: Record<string, string> = {};
+    if (!taskForm.title?.trim()) errors.title = "Task title is required";
+    if (!taskForm.dueDate) errors.dueDate = "Due date is required";
+    setTaskErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const saveTask = async () => {
-    if (!taskForm.title) return;
+    if (!validateTask()) return;
     await saveData("tasks", {
       id: generateId(),
-      status: "pending",
-      priority: "medium",
-      dueDate: new Date().toISOString().slice(0, 10),
-      assignee: "Unassigned",
-      description: "",
+      status: taskForm.status || "pending",
+      priority: taskForm.priority || "medium",
+      dueDate: taskForm.dueDate || new Date().toISOString().slice(0, 10),
+      assignee: taskForm.assignee || "Unassigned",
+      description: taskForm.description || "",
       ...taskForm,
     } as Task);
     await load();
     setShowAddTask(false);
     setTaskForm({});
+    setTaskErrors({});
   };
 
   const updateTaskStatus = async (task: Task, status: Task["status"]) => {
@@ -138,18 +164,18 @@ export default function OperationsPage() {
       >
         <div>
           <h1
+            className="text-primary"
             style={{
               fontSize: "1.6rem",
               fontWeight: 800,
-              color: "var(--text-primary)",
               letterSpacing: "-0.02em",
             }}
           >
             ⚙️ Operations & Logistics
           </h1>
           <p
+            className="text-muted"
             style={{
-              color: "var(--text-muted)",
               fontSize: "0.875rem",
               marginTop: 4,
             }}
@@ -230,12 +256,11 @@ export default function OperationsPage() {
 
       {/* Tabs */}
       <div
+        className="bg-card border border-border"
         style={{
           display: "flex",
           gap: 4,
           marginBottom: 20,
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
           padding: 4,
           borderRadius: 10,
           width: "fit-content",
@@ -296,17 +321,16 @@ export default function OperationsPage() {
           )}
 
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
           >
             <div
+              className="border-b border-border"
               style={{
                 padding: "14px 18px",
-                borderBottom: "1px solid var(--border)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -347,30 +371,30 @@ export default function OperationsPage() {
                     return (
                       <tr key={m.id}>
                         <td>
-                          <div
-                            style={{
-                              fontWeight: 600,
-                              color: "var(--text-primary)",
-                              fontSize: "0.85rem",
-                            }}
-                          >
-                            {m.name}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "0.72rem",
-                              color: "var(--text-muted)",
-                            }}
-                          >
-                            {m.make} {m.model}
-                          </div>
+                        <div
+                          className="text-primary"
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          {m.name}
+                        </div>
+                        <div
+                          className="text-muted"
+                          style={{
+                            fontSize: "0.72rem",
+                          }}
+                        >
+                          {m.make} {m.model}
+                        </div>
                         </td>
                         <td>{m.type}</td>
                         <td>{m.year}</td>
                         <td
+                          className="text-primary"
                           style={{
                             fontFamily: "monospace",
-                            color: "var(--text-primary)",
                             fontWeight: 600,
                           }}
                         >
@@ -626,55 +650,106 @@ export default function OperationsPage() {
 
       {/* Add Machine Modal */}
       {showAddMachine && (
-        <Modal title="Add Machine" onClose={() => setShowAddMachine(false)}>
+        <Modal title="Add Machine" onClose={() => { setShowAddMachine(false); setMachineErrors({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {[
-              ["Machine Name", "name", "text", "John Deere 6R 150"],
-              ["Type", "type", "text", "Tractor"],
-              ["Make", "make", "text", "John Deere"],
-              ["Model", "model", "text", "6R 150"],
-              ["Year", "year", "number", "2022"],
-              ["Engine Hours", "engineHours", "number", "0"],
-              ["Hours to Next Service", "nextService", "number", "500"],
-            ].map(([label, key, type, placeholder]) => (
-              <div key={key}>
-                <label
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--text-muted)",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  {label}
-                </label>
-                <input
-                  className="farm-input"
-                  type={type}
-                  placeholder={placeholder}
-                  value={String((machineForm as Record<string, unknown>)[key] ?? "")}
-                  onChange={(e) =>
-                    setMachineForm((f) => ({
-                      ...f,
-                      [key]:
-                        type === "number" ? +e.target.value : e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            ))}
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveMachine}
+            <FormField
+              label="Machine Name"
+              name="name"
+              type="text"
+              placeholder="John Deere 6R 150"
+              required
+              error={machineErrors.name}
+              value={String(machineForm.name ?? "")}
+              onChange={(e) => setMachineForm((f) => ({ ...f, name: e.target.value }))}
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <FormField
+                label="Type"
+                name="type"
+                type="text"
+                placeholder="Tractor"
+                required
+                error={machineErrors.type}
+                value={String(machineForm.type ?? "")}
+                onChange={(e) => setMachineForm((f) => ({ ...f, type: e.target.value }))}
+              />
+              <FormField
+                label="Year"
+                name="year"
+                type="number"
+                placeholder="2022"
+                error={machineErrors.year}
+                value={String(machineForm.year ?? "")}
+                onChange={(e) => setMachineForm((f) => ({ ...f, year: +e.target.value }))}
+              />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <FormField
+                label="Make"
+                name="make"
+                type="text"
+                placeholder="John Deere"
+                required
+                error={machineErrors.make}
+                value={String(machineForm.make ?? "")}
+                onChange={(e) => setMachineForm((f) => ({ ...f, make: e.target.value }))}
+              />
+              <FormField
+                label="Model"
+                name="model"
+                type="text"
+                placeholder="6R 150"
+                required
+                error={machineErrors.model}
+                value={String(machineForm.model ?? "")}
+                onChange={(e) => setMachineForm((f) => ({ ...f, model: e.target.value }))}
+              />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <FormField
+                label="Engine Hours"
+                name="engineHours"
+                type="number"
+                placeholder="0"
+                value={String(machineForm.engineHours ?? "")}
+                onChange={(e) => setMachineForm((f) => ({ ...f, engineHours: +e.target.value }))}
+              />
+              <FormField
+                label="Hours to Next Service"
+                name="nextService"
+                type="number"
+                placeholder="500"
+                helperText="Hours until maintenance due"
+                value={String(machineForm.nextService ?? "")}
+                onChange={(e) => setMachineForm((f) => ({ ...f, nextService: +e.target.value }))}
+              />
+            </div>
+            <FormField
+              label="Last Service Date"
+              name="lastService"
+              type="date"
+              value={String(machineForm.lastService ?? new Date().toISOString().slice(0, 10))}
+              onChange={(e) => setMachineForm((f) => ({ ...f, lastService: e.target.value }))}
+            />
+            <div>
+              <label className="text-muted" style={{ fontSize: "0.8rem", display: "block", marginBottom: 6, fontWeight: 500 }}>
+                Status
+              </label>
+              <select
+                className="farm-input"
+                value={machineForm.status ?? "operational"}
+                onChange={(e) => setMachineForm((f) => ({ ...f, status: e.target.value as Machine["status"] }))}
               >
+                {["operational", "maintenance", "breakdown"].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button className="btn-primary" style={{ flex: 1 }} onClick={saveMachine}>
                 Add Machine
               </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setShowAddMachine(false)}
-              >
+              <button className="btn-ghost" onClick={() => { setShowAddMachine(false); setMachineErrors({}); }}>
                 Cancel
               </button>
             </div>
@@ -684,83 +759,107 @@ export default function OperationsPage() {
 
       {/* Add Task Modal */}
       {showAddTask && (
-        <Modal title="Create Task" onClose={() => setShowAddTask(false)}>
+        <Modal title="Create Task" onClose={() => { setShowAddTask(false); setTaskErrors({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {[
-              ["Task Title", "title", "text", "Spray North Meadow"],
-              ["Description", "description", "text", "Optional details…"],
-              ["Field / Location", "fieldName", "text", "North Meadow"],
-              ["GPS Lat", "lat", "number", "53.95"],
-              ["GPS Lng", "lng", "number", "-1.08"],
-              ["Assignee", "assignee", "text", "Tom Greene"],
-              ["Due Date", "dueDate", "date", ""],
-            ].map(([label, key, type, placeholder]) => (
-              <div key={key}>
-                <label
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--text-muted)",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  {label}
+            <FormField
+              label="Task Title"
+              name="title"
+              type="text"
+              placeholder="Spray North Meadow"
+              required
+              error={taskErrors.title}
+              value={String(taskForm.title ?? "")}
+              onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))}
+            />
+            <FormField
+              label="Description"
+              name="description"
+              as="textarea"
+              placeholder="Optional details…"
+              rows={2}
+              value={String(taskForm.description ?? "")}
+              onChange={(e) => setTaskForm((f) => ({ ...f, description: e.target.value }))}
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <FormField
+                label="Field / Location"
+                name="fieldName"
+                type="text"
+                placeholder="North Meadow"
+                value={String(taskForm.fieldName ?? "")}
+                onChange={(e) => setTaskForm((f) => ({ ...f, fieldName: e.target.value }))}
+              />
+              <FormField
+                label="Assignee"
+                name="assignee"
+                type="text"
+                placeholder="Tom Greene"
+                value={String(taskForm.assignee ?? "")}
+                onChange={(e) => setTaskForm((f) => ({ ...f, assignee: e.target.value }))}
+              />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <FormField
+                label="GPS Lat"
+                name="lat"
+                type="number"
+                placeholder="53.95"
+                value={String(taskForm.lat ?? "")}
+                onChange={(e) => setTaskForm((f) => ({ ...f, lat: +e.target.value }))}
+              />
+              <FormField
+                label="GPS Lng"
+                name="lng"
+                type="number"
+                placeholder="-1.08"
+                value={String(taskForm.lng ?? "")}
+                onChange={(e) => setTaskForm((f) => ({ ...f, lng: +e.target.value }))}
+              />
+            </div>
+            <FormField
+              label="Due Date"
+              name="dueDate"
+              type="date"
+              required
+              error={taskErrors.dueDate}
+              value={String(taskForm.dueDate ?? "")}
+              onChange={(e) => setTaskForm((f) => ({ ...f, dueDate: e.target.value }))}
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label className="text-muted" style={{ fontSize: "0.8rem", display: "block", marginBottom: 6, fontWeight: 500 }}>
+                  Priority
                 </label>
-                <input
+                <select
                   className="farm-input"
-                  type={type}
-                  placeholder={placeholder}
-                  value={String((taskForm as Record<string, unknown>)[key] ?? "")}
-                  onChange={(e) =>
-                    setTaskForm((f) => ({
-                      ...f,
-                      [key]:
-                        type === "number" ? +e.target.value : e.target.value,
-                    }))
-                  }
-                />
+                  value={taskForm.priority ?? "medium"}
+                  onChange={(e) => setTaskForm((f) => ({ ...f, priority: e.target.value as Task["priority"] }))}
+                >
+                  {["low", "medium", "high"].map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
               </div>
-            ))}
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-muted)",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Priority
-              </label>
-              <select
-                className="farm-input"
-                value={taskForm.priority ?? "medium"}
-                onChange={(e) =>
-                  setTaskForm((f) => ({
-                    ...f,
-                    priority: e.target.value as Task["priority"],
-                  }))
-                }
-              >
-                {["low", "medium", "high"].map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
+              <div>
+                <label className="text-muted" style={{ fontSize: "0.8rem", display: "block", marginBottom: 6, fontWeight: 500 }}>
+                  Status
+                </label>
+                <select
+                  className="farm-input"
+                  value={taskForm.status ?? "pending"}
+                  onChange={(e) => setTaskForm((f) => ({ ...f, status: e.target.value as Task["status"] }))}
+                >
+                  {["pending", "in-progress", "done"].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveTask}
-              >
+              <button className="btn-primary" style={{ flex: 1 }} onClick={saveTask}>
                 Create Task
               </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setShowAddTask(false)}
-              >
+              <button className="btn-ghost" onClick={() => { setShowAddTask(false); setTaskErrors({}); }}>
                 Cancel
               </button>
             </div>
@@ -782,8 +881,8 @@ function TaskCard({
 }) {
   return (
     <div
+      className="bg-card"
       style={{
-        background: "var(--bg-card)",
         border: `1px solid ${task.priority === "high" ? "rgba(248,113,113,0.2)" : task.priority === "medium" ? "rgba(251,191,36,0.15)" : "var(--border)"}`,
         borderRadius: 10,
         padding: "14px",
@@ -799,10 +898,10 @@ function TaskCard({
         }}
       >
         <span
+          className="text-primary"
           style={{
             fontWeight: 600,
             fontSize: "0.82rem",
-            color: "var(--text-primary)",
             lineHeight: 1.3,
           }}
         >
@@ -826,9 +925,9 @@ function TaskCard({
       </div>
       {task.description && (
         <div
+          className="text-muted"
           style={{
             fontSize: "0.75rem",
-            color: "var(--text-muted)",
             marginBottom: 8,
             lineHeight: 1.4,
           }}
@@ -852,17 +951,17 @@ function TaskCard({
           >
             <MapPin size={10} /> {task.fieldName}
             {task.lat && (
-              <span style={{ color: "var(--text-muted)" }}>
-                {" "}
-                ({task.lat.toFixed(3)}, {task.lng?.toFixed(3)})
-              </span>
+            <span className="text-muted">
+              {" "}
+              ({task.lat.toFixed(3)}, {task.lng?.toFixed(3)})
+            </span>
             )}
           </span>
         )}
         <span
+          className="text-muted"
           style={{
             fontSize: "0.7rem",
-            color: "var(--text-muted)",
             display: "flex",
             alignItems: "center",
             gap: 3,
@@ -873,9 +972,9 @@ function TaskCard({
         </span>
       </div>
       <div
+        className="text-muted"
         style={{
           fontSize: "0.72rem",
-          color: "var(--text-muted)",
           marginBottom: 10,
         }}
       >
@@ -885,15 +984,14 @@ function TaskCard({
         {task.status !== "pending" && (
           <button
             onClick={() => onUpdateStatus(task, "pending")}
+            className="text-muted border border-border"
             style={{
               flex: 1,
               padding: "5px",
               borderRadius: 5,
-              border: "1px solid var(--border)",
               background: "transparent",
               cursor: "pointer",
               fontSize: "0.68rem",
-              color: "var(--text-muted)",
             }}
           >
             Pending

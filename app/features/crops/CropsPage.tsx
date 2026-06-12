@@ -1,5 +1,17 @@
 "use client";
 
+import FormField from "@/app/abstract/ui/FormField";
+import Modal from "@/app/abstract/ui/Modal";
+import StatCard from "@/app/abstract/ui/StatCard";
+import { useFarmData } from "@/app/base/hooks/useFarmData";
+import {
+  deleteData,
+  generateId,
+  saveData,
+  type CropField,
+  type InputLog,
+  type YieldRecord,
+} from "@/app/base/services/farm-client";
 import { FileText, Map, Plus, Trash2, TrendingUp, Wheat } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
@@ -13,17 +25,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import Modal from "@/app/abstract/ui/Modal";
-import StatCard from "@/app/abstract/ui/StatCard";
-import { useFarmData } from "@/app/base/hooks/useFarmData";
-import {
-  deleteData,
-  generateId,
-  saveData,
-  type CropField,
-  type InputLog,
-  type YieldRecord,
-} from "@/app/base/services/farm-client";
 
 const CROP_ENTITIES = {
   fields: "fields",
@@ -36,14 +37,13 @@ const FieldMap = dynamic(() => import("@/app/components/FieldMap"), {
   ssr: false,
   loading: () => (
     <div
+      className="bg-background text-muted"
       style={{
         height: 360,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "var(--bg-base)",
         borderRadius: 10,
-        color: "var(--text-muted)",
         fontSize: "0.875rem",
       }}
     >
@@ -73,9 +73,22 @@ export default function CropsPage() {
   const [fieldForm, setFieldForm] = useState<Partial<CropField>>({});
   const [inputForm, setInputForm] = useState<Partial<InputLog>>({});
   const [yieldForm, setYieldForm] = useState<Partial<YieldRecord>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [inputErrors, setInputErrors] = useState<Record<string, string>>({});
+  const [yieldErrors, setYieldErrors] = useState<Record<string, string>>({});
+
+  const validateField = () => {
+    const errors: Record<string, string> = {};
+    if (!fieldForm.name?.trim()) errors.name = "Field name is required";
+    if (!fieldForm.acres || fieldForm.acres <= 0)
+      errors.acres = "Valid acreage is required";
+    if (!fieldForm.sowDate) errors.sowDate = "Sow date is required";
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const saveField = async () => {
-    if (!fieldForm.name) return;
+    if (!validateField()) return;
     await saveData("fields", {
       id: fieldForm.id || generateId(),
       lat: 53.94,
@@ -86,10 +99,20 @@ export default function CropsPage() {
     await load();
     setShowAddField(false);
     setFieldForm({});
+    setFieldErrors({});
+  };
+
+  const validateInput = () => {
+    const errors: Record<string, string> = {};
+    if (!inputForm.product?.trim()) errors.product = "Product is required";
+    if (!inputForm.fieldId) errors.fieldId = "Field is required";
+    if (!inputForm.quantity) errors.quantity = "Quantity is required";
+    setInputErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const saveInput = async () => {
-    if (!inputForm.product) return;
+    if (!validateInput()) return;
     await saveData("inputLogs", {
       id: generateId(),
       date: new Date().toISOString().slice(0, 10),
@@ -98,10 +121,22 @@ export default function CropsPage() {
     await load();
     setShowAddInput(false);
     setInputForm({});
+    setInputErrors({});
+  };
+
+  const validateYield = () => {
+    const errors: Record<string, string> = {};
+    if (!yieldForm.fieldId) errors.fieldId = "Field is required";
+    if (yieldForm.actual === undefined || yieldForm.actual < 0)
+      errors.actual = "Valid actual yield is required";
+    if (yieldForm.projected === undefined || yieldForm.projected < 0)
+      errors.projected = "Valid projected yield is required";
+    setYieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const saveYield = async () => {
-    if (!yieldForm.fieldName) return;
+    if (!validateYield()) return;
     await saveData("yieldRecords", {
       id: generateId(),
       year: new Date().getFullYear(),
@@ -110,6 +145,7 @@ export default function CropsPage() {
     await load();
     setShowAddYield(false);
     setYieldForm({});
+    setYieldErrors({});
   };
 
   const yieldChartData = yields.map((y) => ({
@@ -126,18 +162,18 @@ export default function CropsPage() {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <h1
+          className="text-primary"
           style={{
             fontSize: "1.6rem",
             fontWeight: 800,
-            color: "var(--text-primary)",
             letterSpacing: "-0.02em",
           }}
         >
           🌾 Arable & Crop Management
         </h1>
         <p
+          className="text-muted"
           style={{
-            color: "var(--text-muted)",
             fontSize: "0.875rem",
             marginTop: 4,
           }}
@@ -168,7 +204,7 @@ export default function CropsPage() {
           label="Active Crops"
           value={
             fields.filter(
-              (f) => f.status === "growing" || f.status === "planted",
+              (f) => f.status === "growing" || f.status === "planted"
             ).length
           }
           icon={Wheat}
@@ -195,12 +231,11 @@ export default function CropsPage() {
 
       {/* Tab bar */}
       <div
+        className="bg-card border border-border"
         style={{
           display: "flex",
           gap: 4,
           marginBottom: 20,
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
           padding: 4,
           borderRadius: 10,
           width: "fit-content",
@@ -239,17 +274,16 @@ export default function CropsPage() {
           style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}
         >
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
           >
             <div
+              className="border-b border-border"
               style={{
                 padding: "14px 18px",
-                borderBottom: "1px solid var(--border)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -269,20 +303,19 @@ export default function CropsPage() {
           </div>
 
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "18px",
               overflow: "hidden",
             }}
           >
             <div
+              className="text-primary"
               style={{
                 fontWeight: 600,
                 fontSize: "0.9rem",
                 marginBottom: 14,
-                color: "var(--text-primary)",
               }}
             >
               Field Registry
@@ -291,11 +324,11 @@ export default function CropsPage() {
               {fields.map((field) => (
                 <div
                   key={field.id}
+                  className="border border-border"
                   style={{
                     padding: "12px",
                     borderRadius: 8,
                     background: "rgba(255,255,255,0.02)",
-                    border: "1px solid var(--border)",
                   }}
                 >
                   <div
@@ -307,10 +340,10 @@ export default function CropsPage() {
                     }}
                   >
                     <span
+                      className="text-primary"
                       style={{
                         fontWeight: 600,
                         fontSize: "0.85rem",
-                        color: "var(--text-primary)",
                       }}
                     >
                       {field.name}
@@ -330,14 +363,15 @@ export default function CropsPage() {
                     </span>
                   </div>
                   <div
-                    style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}
+                    className="text-muted"
+                    style={{ fontSize: "0.78rem" }}
                   >
                     {field.currentCrop} · {field.acres} acres
                   </div>
                   <div
+                    className="text-muted"
                     style={{
                       fontSize: "0.75rem",
-                      color: "var(--text-muted)",
                       marginTop: 3,
                     }}
                   >
@@ -345,11 +379,11 @@ export default function CropsPage() {
                   </div>
                   <div style={{ marginTop: 8 }}>
                     <div
+                      className="text-muted"
                       style={{
                         fontSize: "0.68rem",
                         textTransform: "uppercase",
                         letterSpacing: "0.08em",
-                        color: "var(--text-muted)",
                         marginBottom: 4,
                       }}
                     >
@@ -359,13 +393,11 @@ export default function CropsPage() {
                       {field.rotation.slice(-3).map((r) => (
                         <span
                           key={r.year}
+                          className="bg-background text-secondary border border-border"
                           style={{
                             fontSize: "0.68rem",
-                            background: "var(--bg-base)",
                             padding: "2px 6px",
                             borderRadius: 4,
-                            color: "var(--text-secondary)",
-                            border: "1px solid var(--border)",
                           }}
                         >
                           {r.year}: {r.crop}
@@ -412,17 +444,16 @@ export default function CropsPage() {
       {/* Input Logs Tab */}
       {tab === "inputs" && (
         <div
+          className="bg-card border border-border"
           style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
             borderRadius: 12,
             overflow: "hidden",
           }}
         >
           <div
+            className="border-b border-border"
             style={{
               padding: "14px 18px",
-              borderBottom: "1px solid var(--border)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -457,7 +488,8 @@ export default function CropsPage() {
                   <tr key={log.id}>
                     <td>{new Date(log.date).toLocaleDateString("en-GB")}</td>
                     <td
-                      style={{ color: "var(--text-primary)", fontWeight: 500 }}
+                      className="text-primary"
+                      style={{ fontWeight: 500 }}
                     >
                       {log.fieldName}
                     </td>
@@ -467,14 +499,14 @@ export default function CropsPage() {
                           log.type === "spray"
                             ? "badge-red"
                             : log.type === "fertiliser"
-                              ? "badge-amber"
-                              : "badge-green"
+                            ? "badge-amber"
+                            : "badge-green"
                         }
                       >
                         {log.type}
                       </span>
                     </td>
-                    <td style={{ color: "var(--text-primary)" }}>
+                    <td className="text-primary">
                       {log.product}
                     </td>
                     <td>
@@ -482,7 +514,8 @@ export default function CropsPage() {
                     </td>
                     <td>{log.operator}</td>
                     <td
-                      style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}
+                      className="text-muted"
+                      style={{ fontSize: "0.8rem" }}
                     >
                       {log.notes || "—"}
                     </td>
@@ -521,9 +554,8 @@ export default function CropsPage() {
       {tab === "yields" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "20px",
             }}
@@ -585,9 +617,8 @@ export default function CropsPage() {
           </div>
 
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
@@ -614,9 +645,9 @@ export default function CropsPage() {
                   return (
                     <tr key={y.id}>
                       <td
+                        className="text-primary"
                         style={{
                           fontWeight: 500,
-                          color: "var(--text-primary)",
                         }}
                       >
                         {y.fieldName}
@@ -627,8 +658,8 @@ export default function CropsPage() {
                         {y.projected} {y.unit}
                       </td>
                       <td
+                        className="text-primary"
                         style={{
-                          color: "var(--text-primary)",
                           fontWeight: 600,
                         }}
                       >
@@ -679,47 +710,75 @@ export default function CropsPage() {
 
       {/* Add Field Modal */}
       {showAddField && (
-        <Modal title="Add New Field" onClose={() => setShowAddField(false)}>
+        <Modal
+          title="Add New Field"
+          onClose={() => {
+            setShowAddField(false);
+            setFieldErrors({});
+          }}
+        >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {[
-              ["Field Name", "name", "text", "e.g. North Meadow"],
-              ["Acres", "acres", "number", "42"],
-              ["Current Crop", "currentCrop", "text", "Winter Wheat"],
-              ["Sow Date", "sowDate", "date", ""],
-            ].map(([label, key, type, placeholder]) => (
-              <div key={key}>
-                <label
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--text-muted)",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  {label}
-                </label>
-                <input
-                  className="farm-input"
-                  type={type}
-                  placeholder={placeholder}
-                  value={String((fieldForm as Record<string, unknown>)[key] ?? "")}
-                  onChange={(e) =>
-                    setFieldForm((f) => ({
-                      ...f,
-                      [key]:
-                        type === "number" ? +e.target.value : e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            ))}
+            <FormField
+              label="Field Name"
+              name="name"
+              type="text"
+              placeholder="e.g. North Meadow"
+              required
+              error={fieldErrors.name}
+              value={String(fieldForm.name ?? "")}
+              onChange={(e) =>
+                setFieldForm((f) => ({ ...f, name: e.target.value }))
+              }
+            />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              <FormField
+                label="Acres"
+                name="acres"
+                type="number"
+                placeholder="42"
+                required
+                error={fieldErrors.acres}
+                value={String(fieldForm.acres ?? "")}
+                onChange={(e) =>
+                  setFieldForm((f) => ({ ...f, acres: +e.target.value }))
+                }
+              />
+              <FormField
+                label="Sow Date"
+                name="sowDate"
+                type="date"
+                required
+                error={fieldErrors.sowDate}
+                value={String(fieldForm.sowDate ?? "")}
+                onChange={(e) =>
+                  setFieldForm((f) => ({ ...f, sowDate: e.target.value }))
+                }
+              />
+            </div>
+            <FormField
+              label="Current Crop"
+              name="currentCrop"
+              type="text"
+              placeholder="Winter Wheat"
+              value={String(fieldForm.currentCrop ?? "")}
+              onChange={(e) =>
+                setFieldForm((f) => ({ ...f, currentCrop: e.target.value }))
+              }
+            />
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
+                  fontWeight: 500,
                 }}
               >
                 Status
@@ -751,7 +810,10 @@ export default function CropsPage() {
               </button>
               <button
                 className="btn-ghost"
-                onClick={() => setShowAddField(false)}
+                onClick={() => {
+                  setShowAddField(false);
+                  setFieldErrors({});
+                }}
               >
                 Cancel
               </button>
@@ -764,42 +826,36 @@ export default function CropsPage() {
       {showAddInput && (
         <Modal
           title="Log Input Application"
-          onClose={() => setShowAddInput(false)}
+          onClose={() => {
+            setShowAddInput(false);
+            setInputErrors({});
+          }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <FormField
+              label="Date"
+              name="date"
+              type="date"
+              value={inputForm.date ?? new Date().toISOString().slice(0, 10)}
+              onChange={(e) =>
+                setInputForm((f) => ({ ...f, date: e.target.value }))
+              }
+            />
             <div>
               <label
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
+                  color: inputErrors.fieldId ? "#f87171" : "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
+                  fontWeight: 500,
                 }}
               >
-                Date
-              </label>
-              <input
-                className="farm-input"
-                type="date"
-                value={inputForm.date ?? new Date().toISOString().slice(0, 10)}
-                onChange={(e) =>
-                  setInputForm((f) => ({ ...f, date: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-muted)",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Field
+                Field <span style={{ color: "#f87171", marginLeft: 2 }}>*</span>
               </label>
               <select
                 className="farm-input"
+                style={inputErrors.fieldId ? { borderColor: "#f87171" } : {}}
                 value={inputForm.fieldId ?? ""}
                 onChange={(e) => {
                   const f = fields.find((f) => f.id === e.target.value);
@@ -808,6 +864,12 @@ export default function CropsPage() {
                     fieldId: e.target.value,
                     fieldName: f?.name ?? "",
                   }));
+                  if (inputErrors.fieldId)
+                    setInputErrors((e) => {
+                      const n = { ...e };
+                      delete n.fieldId;
+                      return n;
+                    });
                 }}
               >
                 <option value="">Select field…</option>
@@ -817,64 +879,117 @@ export default function CropsPage() {
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-muted)",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Type
-              </label>
-              <select
-                className="farm-input"
-                value={inputForm.type ?? "seed"}
-                onChange={(e) =>
-                  setInputForm((f) => ({
-                    ...f,
-                    type: e.target.value as InputLog["type"],
-                  }))
-                }
-              >
-                {["seed", "fertiliser", "spray", "other"].map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {[
-              ["Product", "product", "text", "e.g. KWS Zyatt Winter Wheat"],
-              ["Quantity", "quantity", "text", "180"],
-              ["Unit", "unit", "text", "kg/ha"],
-              ["Operator", "operator", "text", "Tom Greene"],
-              ["Notes", "notes", "text", "Optional"],
-            ].map(([label, key, type, placeholder]) => (
-              <div key={key}>
-                <label
+              {inputErrors.fieldId && (
+                <div
                   style={{
-                    fontSize: "0.8rem",
-                    color: "var(--text-muted)",
-                    display: "block",
-                    marginBottom: 6,
+                    fontSize: "0.72rem",
+                    color: "#f87171",
+                    marginTop: 4,
                   }}
                 >
-                  {label}
+                  {inputErrors.fieldId}
+                </div>
+              )}
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              <div>
+                <label
+                  className="text-muted"
+                  style={{
+                    fontSize: "0.8rem",
+                    display: "block",
+                    marginBottom: 6,
+                    fontWeight: 500,
+                  }}
+                >
+                  Type
                 </label>
-                <input
+                <select
                   className="farm-input"
-                  type={type}
-                  placeholder={placeholder}
-                  value={String((inputForm as Record<string, unknown>)[key] ?? "")}
+                  value={inputForm.type ?? "seed"}
                   onChange={(e) =>
-                    setInputForm((f) => ({ ...f, [key]: e.target.value }))
+                    setInputForm((f) => ({
+                      ...f,
+                      type: e.target.value as InputLog["type"],
+                    }))
                   }
-                />
+                >
+                  {["seed", "fertiliser", "spray", "other"].map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
               </div>
-            ))}
+              <FormField
+                label="Product"
+                name="product"
+                type="text"
+                placeholder="e.g. KWS Zyatt Winter Wheat"
+                required
+                error={inputErrors.product}
+                value={String(inputForm.product ?? "")}
+                onChange={(e) =>
+                  setInputForm((f) => ({ ...f, product: e.target.value }))
+                }
+              />
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              <FormField
+                label="Quantity"
+                name="quantity"
+                type="text"
+                placeholder="180"
+                required
+                error={inputErrors.quantity}
+                value={String(inputForm.quantity ?? "")}
+                onChange={(e) =>
+                  setInputForm((f) => ({ ...f, quantity: e.target.value }))
+                }
+              />
+              <FormField
+                label="Unit"
+                name="unit"
+                type="text"
+                placeholder="kg/ha"
+                value={String(inputForm.unit ?? "")}
+                onChange={(e) =>
+                  setInputForm((f) => ({ ...f, unit: e.target.value }))
+                }
+              />
+            </div>
+            <FormField
+              label="Operator"
+              name="operator"
+              type="text"
+              placeholder="Tom Greene"
+              value={String(inputForm.operator ?? "")}
+              onChange={(e) =>
+                setInputForm((f) => ({ ...f, operator: e.target.value }))
+              }
+            />
+            <FormField
+              label="Notes"
+              name="notes"
+              type="text"
+              placeholder="Optional"
+              value={String(inputForm.notes ?? "")}
+              onChange={(e) =>
+                setInputForm((f) => ({ ...f, notes: e.target.value }))
+              }
+            />
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               <button
                 className="btn-primary"
@@ -896,21 +1011,29 @@ export default function CropsPage() {
 
       {/* Add Yield Modal */}
       {showAddYield && (
-        <Modal title="Add Yield Record" onClose={() => setShowAddYield(false)}>
+        <Modal
+          title="Add Yield Record"
+          onClose={() => {
+            setShowAddYield(false);
+            setYieldErrors({});
+          }}
+        >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
+                  color: yieldErrors.fieldId ? "#f87171" : "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
+                  fontWeight: 500,
                 }}
               >
-                Field
+                Field <span style={{ color: "#f87171", marginLeft: 2 }}>*</span>
               </label>
               <select
                 className="farm-input"
+                style={yieldErrors.fieldId ? { borderColor: "#f87171" } : {}}
                 value={yieldForm.fieldId ?? ""}
                 onChange={(e) => {
                   const f = fields.find((f) => f.id === e.target.value);
@@ -919,6 +1042,12 @@ export default function CropsPage() {
                     fieldId: e.target.value,
                     fieldName: f?.name ?? "",
                   }));
+                  if (yieldErrors.fieldId)
+                    setYieldErrors((e) => {
+                      const n = { ...e };
+                      delete n.fieldId;
+                      return n;
+                    });
                 }}
               >
                 <option value="">Select field…</option>
@@ -928,40 +1057,88 @@ export default function CropsPage() {
                   </option>
                 ))}
               </select>
-            </div>
-            {[
-              ["Crop", "crop", "text", "Winter Wheat"],
-              ["Year", "year", "number", "2025"],
-              ["Projected (t/ha)", "projected", "number", "8.5"],
-              ["Actual (t/ha)", "actual", "number", "9.2"],
-              ["Unit", "unit", "text", "t/ha"],
-            ].map(([label, key, type, placeholder]) => (
-              <div key={key}>
-                <label
+              {yieldErrors.fieldId && (
+                <div
                   style={{
-                    fontSize: "0.8rem",
-                    color: "var(--text-muted)",
-                    display: "block",
-                    marginBottom: 6,
+                    fontSize: "0.72rem",
+                    color: "#f87171",
+                    marginTop: 4,
                   }}
                 >
-                  {label}
-                </label>
-                <input
-                  className="farm-input"
-                  type={type}
-                  placeholder={placeholder}
-                  value={String((yieldForm as Record<string, unknown>)[key] ?? "")}
-                  onChange={(e) =>
-                    setYieldForm((f) => ({
-                      ...f,
-                      [key]:
-                        type === "number" ? +e.target.value : e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            ))}
+                  {yieldErrors.fieldId}
+                </div>
+              )}
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              <FormField
+                label="Crop"
+                name="crop"
+                type="text"
+                placeholder="Winter Wheat"
+                value={String(yieldForm.crop ?? "")}
+                onChange={(e) =>
+                  setYieldForm((f) => ({ ...f, crop: e.target.value }))
+                }
+              />
+              <FormField
+                label="Year"
+                name="year"
+                type="number"
+                placeholder="2025"
+                value={String(yieldForm.year ?? "")}
+                onChange={(e) =>
+                  setYieldForm((f) => ({ ...f, year: +e.target.value }))
+                }
+              />
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              <FormField
+                label="Projected (t/ha)"
+                name="projected"
+                type="number"
+                placeholder="8.5"
+                required
+                error={yieldErrors.projected}
+                value={String(yieldForm.projected ?? "")}
+                onChange={(e) =>
+                  setYieldForm((f) => ({ ...f, projected: +e.target.value }))
+                }
+              />
+              <FormField
+                label="Actual (t/ha)"
+                name="actual"
+                type="number"
+                placeholder="9.2"
+                required
+                error={yieldErrors.actual}
+                value={String(yieldForm.actual ?? "")}
+                onChange={(e) =>
+                  setYieldForm((f) => ({ ...f, actual: +e.target.value }))
+                }
+              />
+            </div>
+            <FormField
+              label="Unit"
+              name="unit"
+              type="text"
+              placeholder="t/ha"
+              value={String(yieldForm.unit ?? "")}
+              onChange={(e) =>
+                setYieldForm((f) => ({ ...f, unit: e.target.value }))
+              }
+            />
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               <button
                 className="btn-primary"
@@ -972,7 +1149,10 @@ export default function CropsPage() {
               </button>
               <button
                 className="btn-ghost"
-                onClick={() => setShowAddYield(false)}
+                onClick={() => {
+                  setShowAddYield(false);
+                  setYieldErrors({});
+                }}
               >
                 Cancel
               </button>
@@ -983,11 +1163,3 @@ export default function CropsPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-

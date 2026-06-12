@@ -124,18 +124,18 @@ export default function InventoryPage() {
     <div style={{ padding: "32px 32px 48px" }}>
       <div style={{ marginBottom: 28 }}>
         <h1
+          className="text-primary"
           style={{
             fontSize: "1.6rem",
             fontWeight: 800,
-            color: "var(--text-primary)",
             letterSpacing: "-0.02em",
           }}
         >
           📦 Inventory & Traceability
         </h1>
         <p
+          className="text-muted"
           style={{
-            color: "var(--text-muted)",
             fontSize: "0.875rem",
             marginTop: 4,
           }}
@@ -187,12 +187,11 @@ export default function InventoryPage() {
 
       {/* Tabs */}
       <div
+        className="bg-card border border-border"
         style={{
           display: "flex",
           gap: 4,
           marginBottom: 20,
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
           padding: 4,
           borderRadius: 10,
           width: "fit-content",
@@ -250,24 +249,23 @@ export default function InventoryPage() {
                 {lowStock.length} item{lowStock.length !== 1 ? "s" : ""} below
                 minimum stock level:
               </span>
-              <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>
+              <span className="text-muted" style={{ fontSize: "0.8rem" }}>
                 {lowStock.map((s) => s.name).join(", ")}
               </span>
             </div>
           )}
 
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
           >
             <div
+              className="border-b border-border"
               style={{
                 padding: "14px 18px",
-                borderBottom: "1px solid var(--border)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -323,9 +321,9 @@ export default function InventoryPage() {
                         </span>
                       </td>
                       <td
+                        className="text-primary"
                         style={{
                           fontWeight: 500,
-                          color: "var(--text-primary)",
                         }}
                       >
                         {item.name}
@@ -339,16 +337,16 @@ export default function InventoryPage() {
                         {item.quantity.toLocaleString()}
                       </td>
                       <td>{item.unit}</td>
-                      <td style={{ color: "var(--text-muted)" }}>
+                      <td className="text-muted">
                         {item.minStock}
                       </td>
-                      <td style={{ color: "var(--text-muted)" }}>
+                      <td className="text-muted">
                         {item.location}
                       </td>
                       <td
+                        className="text-muted"
                         style={{
                           fontSize: "0.78rem",
-                          color: "var(--text-muted)",
                         }}
                       >
                         {item.fieldOrigin
@@ -409,19 +407,18 @@ export default function InventoryPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Trace search */}
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "20px",
             }}
           >
             <div
+              className="text-primary"
               style={{
                 fontWeight: 600,
                 fontSize: "0.9rem",
                 marginBottom: 12,
-                color: "var(--text-primary)",
               }}
             >
               🔍 Batch Traceability Search
@@ -463,29 +460,29 @@ export default function InventoryPage() {
                   }}
                 >
                   <div>
-                    <span style={{ color: "var(--text-muted)" }}>
+                    <span className="text-muted">
                       Batch Code:{" "}
                     </span>
                     <span
+                      className="text-primary"
                       style={{
                         fontWeight: 700,
                         fontFamily: "monospace",
-                        color: "var(--text-primary)",
                       }}
                     >
                       {traceResult.batchCode}
                     </span>
                   </div>
                   <div>
-                    <span style={{ color: "var(--text-muted)" }}>
+                    <span className="text-muted">
                       Product:{" "}
                     </span>
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span className="text-primary">
                       {traceResult.product}
                     </span>
                   </div>
                   <div>
-                    <span style={{ color: "var(--text-muted)" }}>
+                    <span className="text-muted">
                       Origin Type:{" "}
                     </span>
                     <span
@@ -499,29 +496,30 @@ export default function InventoryPage() {
                     </span>
                   </div>
                   <div>
-                    <span style={{ color: "var(--text-muted)" }}>Origin: </span>
+                    <span className="text-muted">Origin: </span>
                     <span
-                      style={{ color: "var(--text-primary)", fontWeight: 600 }}
+                      className="text-primary"
+                      style={{ fontWeight: 600 }}
                     >
                       {traceResult.originType === "field" ? "🌾" : "🐾"}{" "}
                       {traceResult.origin}
                     </span>
                   </div>
                   <div>
-                    <span style={{ color: "var(--text-muted)" }}>
+                    <span className="text-muted">
                       Processed:{" "}
                     </span>
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span className="text-primary">
                       {new Date(traceResult.processedDate).toLocaleDateString(
                         "en-GB",
                       )}
                     </span>
                   </div>
                   <div>
-                    <span style={{ color: "var(--text-muted)" }}>
+                    <span className="text-muted">
                       Quantity:{" "}
                     </span>
-                    <span style={{ color: "var(--text-primary)" }}>
+                    <span className="text-primary">
                       {traceResult.quantity} {traceResult.unit}
                     </span>
                   </div>
@@ -530,9 +528,9 @@ export default function InventoryPage() {
             )}
             {traceSearch && !traceResult && (
               <div
+                className="text-muted"
                 style={{
                   marginTop: 12,
-                  color: "var(--text-muted)",
                   fontSize: "0.85rem",
                 }}
               >
@@ -543,17 +541,16 @@ export default function InventoryPage() {
 
           {/* Batch list */}
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
           >
             <div
+              className="border-b border-border"
               style={{
                 padding: "14px 18px",
-                borderBottom: "1px solid var(--border)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -595,7 +592,7 @@ export default function InventoryPage() {
                     >
                       {b.batchCode}
                     </td>
-                    <td style={{ color: "var(--text-primary)" }}>
+                    <td className="text-primary">
                       {b.product}
                     </td>
                     <td>
@@ -667,9 +664,9 @@ export default function InventoryPage() {
             ].map(([label, key, type, placeholder]) => (
               <div key={key}>
                 <label
+                  className="text-muted"
                   style={{
                     fontSize: "0.8rem",
-                    color: "var(--text-muted)",
                     display: "block",
                     marginBottom: 6,
                   }}
@@ -693,9 +690,9 @@ export default function InventoryPage() {
             ))}
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -750,9 +747,9 @@ export default function InventoryPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -763,9 +760,9 @@ export default function InventoryPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -783,9 +780,9 @@ export default function InventoryPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -803,9 +800,9 @@ export default function InventoryPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -858,9 +855,9 @@ export default function InventoryPage() {
             ].map(([label, key, type, placeholder]) => (
               <div key={key}>
                 <label
+                  className="text-muted"
                   style={{
                     fontSize: "0.8rem",
-                    color: "var(--text-muted)",
                     display: "block",
                     marginBottom: 6,
                   }}
@@ -884,9 +881,9 @@ export default function InventoryPage() {
             ))}
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -909,9 +906,9 @@ export default function InventoryPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}

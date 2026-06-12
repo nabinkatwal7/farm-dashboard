@@ -1,7 +1,5 @@
 "use client";
 
-import { AlertTriangle, Beef, Clock, Heart, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
@@ -14,6 +12,8 @@ import {
   type MedicalRecord,
   type WeightRecord,
 } from "@/app/base/services/farm-client";
+import { AlertTriangle, Beef, Clock, Heart, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 const LIVESTOCK_ENTITIES = {
   animals: "animals",
@@ -131,29 +131,29 @@ export default function LivestockPage() {
       a.earTag.toLowerCase().includes(searchAnimal.toLowerCase()) ||
       a.breed.toLowerCase().includes(searchAnimal.toLowerCase()) ||
       a.species.toLowerCase().includes(searchAnimal.toLowerCase()) ||
-      (a.group ?? "").toLowerCase().includes(searchAnimal.toLowerCase()),
+      (a.group ?? "").toLowerCase().includes(searchAnimal.toLowerCase())
   );
 
   const activeWithdrawals = medical.filter(
-    (m) => m.withdrawalEnd && new Date(m.withdrawalEnd) > new Date(),
+    (m) => m.withdrawalEnd && new Date(m.withdrawalEnd) > new Date()
   );
 
   return (
     <div style={{ padding: "32px 32px 48px" }}>
       <div style={{ marginBottom: 28 }}>
         <h1
+          className="text-primary"
           style={{
             fontSize: "1.6rem",
             fontWeight: 800,
-            color: "var(--text-primary)",
             letterSpacing: "-0.02em",
           }}
         >
           🐄 Livestock & Herd Management
         </h1>
         <p
+          className="text-muted"
           style={{
-            color: "var(--text-muted)",
             fontSize: "0.875rem",
             marginTop: 4,
           }}
@@ -174,7 +174,7 @@ export default function LivestockPage() {
           label="Total Animals"
           value={
             animals.filter(
-              (a) => a.status !== "sold" && a.status !== "deceased",
+              (a) => a.status !== "sold" && a.status !== "deceased"
             ).length
           }
           icon={Beef}
@@ -185,7 +185,7 @@ export default function LivestockPage() {
           label="Sick / Quarantine"
           value={
             animals.filter(
-              (a) => a.status === "sick" || a.status === "quarantine",
+              (a) => a.status === "sick" || a.status === "quarantine"
             ).length
           }
           icon={AlertTriangle}
@@ -203,7 +203,9 @@ export default function LivestockPage() {
         <StatCard
           label="Pregnancies"
           value={breeding.filter((b) => b.status === "pregnant").length}
-          sub={`${breeding.filter((b) => b.status === "birthed").length} birthed this season`}
+          sub={`${
+            breeding.filter((b) => b.status === "birthed").length
+          } birthed this season`}
           icon={Heart}
           color="#a78bfa"
           delay={180}
@@ -212,12 +214,11 @@ export default function LivestockPage() {
 
       {/* Tab bar */}
       <div
+        className="bg-card border border-border"
         style={{
           display: "flex",
           gap: 4,
           marginBottom: 20,
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
           padding: 4,
           borderRadius: 10,
           width: "fit-content",
@@ -254,17 +255,16 @@ export default function LivestockPage() {
       {/* Animal Registry */}
       {tab === "animals" && (
         <div
+          className="bg-card border border-border"
           style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
             borderRadius: 12,
             overflow: "hidden",
           }}
         >
           <div
+            className="border-b border-border"
             style={{
               padding: "14px 18px",
-              borderBottom: "1px solid var(--border)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -304,16 +304,17 @@ export default function LivestockPage() {
                   <td style={{ fontSize: "1.1rem" }}>
                     {SPECIES_EMOJI[a.species]}{" "}
                     <span
-                      style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}
+                      className="text-muted"
+                      style={{ fontSize: "0.8rem" }}
                     >
                       {a.species}
                     </span>
                   </td>
                   <td
+                    className="text-primary"
                     style={{
                       fontWeight: 700,
                       fontFamily: "monospace",
-                      color: "var(--text-primary)",
                       fontSize: "0.85rem",
                     }}
                   >
@@ -333,8 +334,8 @@ export default function LivestockPage() {
                         a.status === "healthy"
                           ? "badge-green"
                           : a.status === "sick" || a.status === "quarantine"
-                            ? "badge-red"
-                            : "badge-amber"
+                          ? "badge-red"
+                          : "badge-amber"
                       }
                     >
                       {a.status}
@@ -425,17 +426,17 @@ export default function LivestockPage() {
                         {m.earTag}
                       </div>
                       <div
+                        className="text-primary"
                         style={{
                           fontSize: "0.8rem",
-                          color: "var(--text-primary)",
                         }}
                       >
                         {m.product}
                       </div>
                       <div
+                        className="text-muted"
                         style={{
                           fontSize: "0.75rem",
-                          color: "var(--text-muted)",
                           marginTop: 2,
                         }}
                       >
@@ -458,7 +459,10 @@ export default function LivestockPage() {
                             height: "100%",
                             borderRadius: 4,
                             background: days > 7 ? "#fbbf24" : "#f87171",
-                            width: `${Math.max(5, 100 - (days / (m.withdrawalDays ?? 28)) * 100)}%`,
+                            width: `${Math.max(
+                              5,
+                              100 - (days / (m.withdrawalDays ?? 28)) * 100
+                            )}%`,
                           }}
                         />
                       </div>
@@ -470,17 +474,16 @@ export default function LivestockPage() {
           )}
 
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
           >
             <div
+              className="border-b border-border"
               style={{
                 padding: "14px 18px",
-                borderBottom: "1px solid var(--border)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -513,10 +516,10 @@ export default function LivestockPage() {
                   <tr key={m.id}>
                     <td>{new Date(m.date).toLocaleDateString("en-GB")}</td>
                     <td
+                      className="text-primary"
                       style={{
                         fontWeight: 700,
                         fontFamily: "monospace",
-                        color: "var(--text-primary)",
                       }}
                     >
                       {m.earTag}
@@ -527,16 +530,16 @@ export default function LivestockPage() {
                           m.type === "vaccination"
                             ? "badge-green"
                             : m.type === "treatment"
-                              ? "badge-red"
-                              : m.type === "illness"
-                                ? "badge-amber"
-                                : "badge-blue"
+                            ? "badge-red"
+                            : m.type === "illness"
+                            ? "badge-amber"
+                            : "badge-blue"
                         }
                       >
                         {m.type}
                       </span>
                     </td>
-                    <td style={{ color: "var(--text-primary)" }}>
+                    <td className="text-primary">
                       {m.product || m.condition || m.notes || "—"}
                     </td>
                     <td>{m.vetName || "—"}</td>
@@ -557,7 +560,7 @@ export default function LivestockPage() {
                             : "✓"}
                         </span>
                       ) : (
-                        <span style={{ color: "var(--text-muted)" }}>None</span>
+                        <span className="text-muted">None</span>
                       )}
                     </td>
                     <td>
@@ -618,39 +621,43 @@ export default function LivestockPage() {
                 b.status === "pregnant" ? daysUntil(b.expectedBirth) : 0;
               const dam = animals.find((a) => a.earTag === b.damEarTag);
               return (
-                <div
-                  key={b.id}
-                  style={{
-                    background: "var(--bg-card)",
-                    border: `1px solid ${b.status === "pregnant" ? "rgba(167,139,250,0.3)" : "var(--border)"}`,
-                    borderRadius: 12,
-                    padding: "18px",
-                  }}
-                >
                   <div
+                    key={b.id}
+                    className="bg-card"
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: 12,
+                      border: `1px solid ${
+                        b.status === "pregnant"
+                          ? "rgba(167,139,250,0.3)"
+                          : "var(--border)"
+                      }`,
+                      borderRadius: 12,
+                      padding: "18px",
                     }}
                   >
-                    <div>
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          color: "var(--text-primary)",
-                          fontFamily: "monospace",
-                        }}
-                      >
-                        {SPECIES_EMOJI[dam?.species ?? "other"]} {b.damEarTag}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.75rem",
-                          color: "var(--text-muted)",
-                          marginTop: 2,
-                        }}
-                      >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: 12,
+                      }}
+                    >
+                      <div>
+                        <div
+                          className="text-primary"
+                          style={{
+                            fontWeight: 700,
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          {SPECIES_EMOJI[dam?.species ?? "other"]} {b.damEarTag}
+                        </div>
+                        <div
+                          className="text-muted"
+                          style={{
+                            fontSize: "0.75rem",
+                            marginTop: 2,
+                          }}
+                        >
                         Sire: {b.sireEarTag ?? "Unknown"}
                       </div>
                     </div>
@@ -659,34 +666,38 @@ export default function LivestockPage() {
                         b.status === "pregnant"
                           ? "badge-purple"
                           : b.status === "birthed"
-                            ? "badge-green"
-                            : "badge-red"
+                          ? "badge-green"
+                          : "badge-red"
                       }
                     >
                       {b.status}
                     </span>
                   </div>
                   <div
+                    className="text-muted"
                     style={{
                       fontSize: "0.8rem",
-                      color: "var(--text-muted)",
                       marginBottom: 10,
                     }}
                   >
                     Bred: {new Date(b.breedingDate).toLocaleDateString("en-GB")}
                     {" · "}
                     {b.status === "birthed" && b.actualBirth
-                      ? `Birthed: ${new Date(b.actualBirth).toLocaleDateString("en-GB")}`
-                      : `Expected: ${new Date(b.expectedBirth).toLocaleDateString("en-GB")}`}
+                      ? `Birthed: ${new Date(b.actualBirth).toLocaleDateString(
+                          "en-GB"
+                        )}`
+                      : `Expected: ${new Date(
+                          b.expectedBirth
+                        ).toLocaleDateString("en-GB")}`}
                   </div>
                   {b.status === "pregnant" && (
                     <>
                       <div
+                        className="text-muted"
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
                           fontSize: "0.75rem",
-                          color: "var(--text-muted)",
                           marginBottom: 4,
                         }}
                       >
@@ -775,17 +786,16 @@ export default function LivestockPage() {
       {/* Weight Records Tab */}
       {tab === "weights" && (
         <div
+          className="bg-card border border-border"
           style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
             borderRadius: 12,
             overflow: "hidden",
           }}
         >
           <div
+            className="border-b border-border"
             style={{
               padding: "14px 18px",
-              borderBottom: "1px solid var(--border)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -816,20 +826,21 @@ export default function LivestockPage() {
                 <tr key={w.id}>
                   <td>{new Date(w.date).toLocaleDateString("en-GB")}</td>
                   <td
+                    className="text-primary"
                     style={{
                       fontWeight: 700,
                       fontFamily: "monospace",
-                      color: "var(--text-primary)",
                       fontSize: "0.85rem",
                     }}
                   >
                     {w.earTag}
                   </td>
-                  <td style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+                  <td className="text-primary" style={{ fontWeight: 600 }}>
                     {w.weightKg} kg
                   </td>
                   <td
-                    style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}
+                    className="text-muted"
+                    style={{ fontSize: "0.8rem" }}
                   >
                     {w.notes || "—"}
                   </td>
@@ -874,21 +885,23 @@ export default function LivestockPage() {
               ["Group", "group", "text", "Breeding Herd"],
             ].map(([label, key, type, placeholder]) => (
               <div key={key}>
-                <label
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--text-muted)",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  {label}
-                </label>
+              <label
+                className="text-muted"
+                style={{
+                  fontSize: "0.8rem",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Animal Ear Tag
+              </label>
                 <input
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={String((animalForm as Record<string, unknown>)[key] ?? "")}
+                  value={String(
+                    (animalForm as Record<string, unknown>)[key] ?? ""
+                  )}
                   onChange={(e) =>
                     setAnimalForm((f) => ({ ...f, [key]: e.target.value }))
                   }
@@ -897,9 +910,9 @@ export default function LivestockPage() {
             ))}
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -925,9 +938,9 @@ export default function LivestockPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -973,9 +986,9 @@ export default function LivestockPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -999,9 +1012,9 @@ export default function LivestockPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1019,9 +1032,9 @@ export default function LivestockPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1054,9 +1067,9 @@ export default function LivestockPage() {
             ].map(([label, key, type, placeholder]) => (
               <div key={key}>
                 <label
+                  className="text-muted"
                   style={{
                     fontSize: "0.8rem",
-                    color: "var(--text-muted)",
                     display: "block",
                     marginBottom: 6,
                   }}
@@ -1067,7 +1080,9 @@ export default function LivestockPage() {
                   className="farm-input"
                   type={type}
                   placeholder={placeholder}
-                  value={String((medForm as Record<string, unknown>)[key] ?? "")}
+                  value={String(
+                    (medForm as Record<string, unknown>)[key] ?? ""
+                  )}
                   onChange={(e) =>
                     setMedForm((f) => ({
                       ...f,
@@ -1106,9 +1121,9 @@ export default function LivestockPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1132,9 +1147,9 @@ export default function LivestockPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1152,9 +1167,9 @@ export default function LivestockPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1173,9 +1188,9 @@ export default function LivestockPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1220,9 +1235,9 @@ export default function LivestockPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1248,9 +1263,9 @@ export default function LivestockPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1268,9 +1283,9 @@ export default function LivestockPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1288,9 +1303,9 @@ export default function LivestockPage() {
             </div>
             <div>
               <label
+                className="text-muted"
                 style={{
                   fontSize: "0.8rem",
-                  color: "var(--text-muted)",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -1327,11 +1342,3 @@ export default function LivestockPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-

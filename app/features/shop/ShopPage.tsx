@@ -148,18 +148,18 @@ export default function ShopPage() {
     <div style={{ padding: "32px 32px 48px" }}>
       <div style={{ marginBottom: 28 }}>
         <h1
+          className="text-primary"
           style={{
             fontSize: "1.6rem",
             fontWeight: 800,
-            color: "var(--text-primary)",
             letterSpacing: "-0.02em",
           }}
         >
           🛒 Shop Retail & POS
         </h1>
         <p
+          className="text-muted"
           style={{
-            color: "var(--text-muted)",
             fontSize: "0.875rem",
             marginTop: 4,
           }}
@@ -209,12 +209,11 @@ export default function ShopPage() {
 
       {/* Tabs */}
       <div
+        className="bg-card border border-border"
         style={{
           display: "flex",
           gap: 4,
           marginBottom: 20,
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
           padding: 4,
           borderRadius: 10,
           width: "fit-content",
@@ -254,16 +253,15 @@ export default function ShopPage() {
         >
           {/* Product grid */}
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "20px",
             }}
           >
             <div style={{ marginBottom: 14 }}>
               <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                <div className="text-muted" style={{ fontSize: "0.8rem" }}>
                   Channel:
                 </div>
                 {(["shop", "online"] as const).map((ch) => (
@@ -340,19 +338,19 @@ export default function ShopPage() {
                     }}
                   >
                     <div
+                      className="text-primary"
                       style={{
                         fontSize: "0.85rem",
                         fontWeight: 600,
-                        color: "var(--text-primary)",
                         marginBottom: 4,
                       }}
                     >
                       {product.name}
                     </div>
                     <div
+                      className="text-muted"
                       style={{
                         fontSize: "0.75rem",
-                        color: "var(--text-muted)",
                         marginBottom: 8,
                       }}
                     >
@@ -375,9 +373,9 @@ export default function ShopPage() {
                         £{product.price.toFixed(2)}
                       </span>
                       <span
+                        className="text-muted"
                         style={{
                           fontSize: "0.72rem",
-                          color: "var(--text-muted)",
                         }}
                       >
                         Stock: {product.stock}
@@ -429,9 +427,8 @@ export default function ShopPage() {
 
           {/* Cart */}
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "20px",
               display: "flex",
@@ -440,10 +437,10 @@ export default function ShopPage() {
             }}
           >
             <div
+              className="text-primary"
               style={{
                 fontWeight: 700,
                 fontSize: "1rem",
-                color: "var(--text-primary)",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -484,12 +481,12 @@ export default function ShopPage() {
 
             {cart.length === 0 ? (
               <div
+                className="text-muted"
                 style={{
                   flex: 1,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--text-muted)",
                   fontSize: "0.85rem",
                   flexDirection: "column",
                   gap: 8,
@@ -510,6 +507,7 @@ export default function ShopPage() {
                 {cart.map((item) => (
                   <div
                     key={item.product.id}
+                    className="border border-border"
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -517,23 +515,23 @@ export default function ShopPage() {
                       padding: "10px",
                       borderRadius: 8,
                       background: "rgba(255,255,255,0.03)",
-                      border: "1px solid var(--border)",
+
                     }}
                   >
                     <div style={{ flex: 1 }}>
                       <div
+                        className="text-primary"
                         style={{
                           fontSize: "0.82rem",
                           fontWeight: 500,
-                          color: "var(--text-primary)",
                         }}
                       >
                         {item.product.name}
                       </div>
                       <div
+                        className="text-muted"
                         style={{
                           fontSize: "0.75rem",
-                          color: "var(--text-muted)",
                         }}
                       >
                         £{item.product.price.toFixed(2)} × {item.qty}
@@ -562,8 +560,8 @@ export default function ShopPage() {
 
             {cart.length > 0 && (
               <div
+                className="border-t border-border"
                 style={{
-                  borderTop: "1px solid var(--border)",
                   paddingTop: 14,
                   display: "flex",
                   flexDirection: "column",
@@ -571,19 +569,19 @@ export default function ShopPage() {
                 }}
               >
                 <div
+                  className="text-muted"
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
                     fontSize: "0.8rem",
-                    color: "var(--text-muted)",
                   }}
                 >
                   <span>Total</span>
                   <span
+                    className="text-primary"
                     style={{
                       fontSize: "1.1rem",
                       fontWeight: 700,
-                      color: "var(--text-primary)",
                     }}
                   >
                     £{cartTotal.toFixed(2)}
@@ -662,17 +660,16 @@ export default function ShopPage() {
       {/* Sales History */}
       {tab === "sales" && (
         <div
+          className="bg-card border border-border"
           style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
             borderRadius: 12,
             overflow: "hidden",
           }}
         >
           <div
+            className="border-b border-border"
             style={{
               padding: "14px 18px",
-              borderBottom: "1px solid var(--border)",
             }}
           >
             <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
@@ -703,8 +700,8 @@ export default function ShopPage() {
                     </span>
                   </td>
                   <td
+                    className="text-secondary"
                     style={{
-                      color: "var(--text-secondary)",
                       fontSize: "0.8rem",
                     }}
                   >
@@ -727,9 +724,8 @@ export default function ShopPage() {
       {tab === "analytics" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "20px",
             }}
@@ -738,7 +734,8 @@ export default function ShopPage() {
               <div>
                 <div className="section-title">Profit Margin by Category</div>
                 <div
-                  style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}
+                  className="text-muted"
+                  style={{ fontSize: "0.75rem" }}
                 >
                   Revenue vs COGS vs Profit · £
                 </div>
@@ -785,17 +782,16 @@ export default function ShopPage() {
           </div>
 
           <div
+            className="bg-card border border-border"
             style={{
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
               borderRadius: 12,
               overflow: "hidden",
             }}
           >
             <div
+              className="border-b border-border"
               style={{
                 padding: "14px 18px",
-                borderBottom: "1px solid var(--border)",
               }}
             >
               <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
@@ -821,16 +817,16 @@ export default function ShopPage() {
                   return (
                     <tr key={p.id}>
                       <td
+                        className="text-primary"
                         style={{
                           fontWeight: 500,
-                          color: "var(--text-primary)",
                         }}
                       >
                         {p.name}
                       </td>
                       <td>{p.category}</td>
                       <td>£{p.price.toFixed(2)}</td>
-                      <td style={{ color: "var(--text-muted)" }}>
+                      <td className="text-muted">
                         £{p.cost.toFixed(2)}
                       </td>
                       <td style={{ color: "#4ade80", fontWeight: 600 }}>
@@ -852,9 +848,10 @@ export default function ShopPage() {
                         </span>
                       </td>
                       <td
+                        className="text-secondary"
                         style={{
                           color:
-                            p.stock < 20 ? "#f87171" : "var(--text-secondary)",
+                            p.stock < 20 ? "#f87171" : undefined,
                         }}
                       >
                         {p.stock} {p.unit}s
@@ -888,9 +885,9 @@ export default function ShopPage() {
             ).map(([label, key, type]) => (
               <div key={key}>
                 <label
+                  className="text-muted"
                   style={{
                     fontSize: "0.8rem",
-                    color: "var(--text-muted)",
                     display: "block",
                     marginBottom: 6,
                   }}

@@ -2,16 +2,62 @@
 
 import { Leaf } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import {
+  TextInput,
+  PasswordInput,
+  NumberInput,
+  Button,
+  Alert,
+} from "@mantine/core";
 
+const loginSchema = yup.object({
+  email: yup.string().email("Invalid email").required("Email is required"),
+  password: yup
+    .string()
+    .min(8, "At least 8 characters")
+    .required("Password is required"),
+});
+
+const setupSchema = yup.object({
+  farmName: yup.string().required("Farm name is required"),
+  location: yup.string().nullable(),
+  acreage: yup.number().nullable().transform((v) => (Number.isNaN(v) ? null : v)),
+  name: yup.string().required("Name is required"),
+  email: yup.string().email("Invalid email").required("Email is required"),
+  password: yup
+    .string()
+    .min(8, "At least 8 characters")
+    .required("Password is required"),
+});
+
+type LoginData = yup.InferType<typeof loginSchema>;
+type SetupData = yup.InferType<typeof setupSchema>;
 type Mode = "login" | "setup";
 
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isSetup = mode === "setup";
+
+  const schema = isSetup ? setupSchema : loginSchema;
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginData | SetupData>({
+    resolver: yupResolver(schema),
+  });
+
+  const e = errors as Record<string, { message?: string } | undefined>;
 
   useEffect(() => {
     async function checkSetup() {
@@ -24,29 +70,15 @@ export default function LoginPage() {
     void checkSetup();
   }, []);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function submit(data: LoginData | SetupData) {
     setError(null);
-    setSubmitting(true);
 
-    const form = new FormData(event.currentTarget);
-    const payload =
-      mode === "setup"
-        ? {
-            farmName: String(form.get("farmName") ?? ""),
-            location: String(form.get("location") ?? ""),
-            acreage: Number(form.get("acreage") ?? 0) || null,
-            name: String(form.get("name") ?? ""),
-            email: String(form.get("email") ?? ""),
-            password: String(form.get("password") ?? ""),
-          }
-        : {
-            email: String(form.get("email") ?? ""),
-            password: String(form.get("password") ?? ""),
-          };
+    const payload = isSetup
+      ? data
+      : { email: (data as LoginData).email, password: (data as LoginData).password };
 
     const response = await fetch(
-      mode === "setup" ? "/api/auth/setup" : "/api/auth/login",
+      isSetup ? "/api/auth/setup" : "/api/auth/login",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,7 +91,6 @@ export default function LoginPage() {
         error?: string;
       } | null;
       setError(body?.error ?? "Authentication failed");
-      setSubmitting(false);
       return;
     }
 
@@ -69,131 +100,102 @@ export default function LoginPage() {
   if (loading) return null;
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        width: "100%",
-        display: "grid",
-        placeItems: "center",
-        padding: 24,
-      }}
-    >
+    <main className="min-h-screen w-full grid place-items-center p-6">
       <form
-        onSubmit={submit}
-        style={{
-          width: "min(460px, 100%)",
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
-          borderRadius: 12,
-          padding: 28,
-          display: "flex",
-          flexDirection: "column",
-          gap: 14,
-        }}
+        onSubmit={handleSubmit(submit)}
+        className="w-[min(460px,100%)] bg-card border border-border rounded-xl p-7 flex flex-col gap-3.5"
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 10,
-              background: "linear-gradient(135deg, #4ade80, #22d3ee)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
+        <div className="flex items-center gap-3">
+          <div className="w-[42px] h-[42px] rounded-xl bg-gradient-to-br from-[#4ade80] to-[#22d3ee] grid place-items-center">
             <Leaf color="#000" size={22} strokeWidth={2.5} />
           </div>
           <div>
-            <h1
-              style={{
-                fontSize: "1.35rem",
-                fontWeight: 800,
-                color: "var(--text-primary)",
-              }}
-            >
-              {mode === "setup" ? "Create Farm Workspace" : "Sign in"}
+            <h1 className="text-[1.35rem] font-extrabold text-primary">
+              {isSetup ? "Create Farm Workspace" : "Sign in"}
             </h1>
-            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
-              {mode === "setup"
+            <p className="text-muted text-sm">
+              {isSetup
                 ? "Set up the first admin account"
                 : "Use your farm account"}
             </p>
           </div>
         </div>
 
-        {mode === "setup" && (
+        {isSetup && (
           <>
-            <input
-              className="farm-input"
-              name="farmName"
-              placeholder="Farm name"
+            <TextInput
+              label="Farm name"
+              placeholder="Green Acres Farm"
+              {...register("farmName")}
+              error={e.farmName?.message}
               required
             />
-            <input
-              className="farm-input"
-              name="location"
-              placeholder="Location"
+            <TextInput
+              label="Location"
+              placeholder="York, UK"
+              {...register("location")}
+              error={e.location?.message}
             />
-            <input
-              className="farm-input"
+            <Controller
               name="acreage"
-              type="number"
-              placeholder="Acreage"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Acreage"
+                  placeholder="Total acreage"
+                  value={field.value as number}
+                  onChange={(v) => field.onChange(v)}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  error={e.acreage?.message}
+                />
+              )}
             />
-            <input
-              className="farm-input"
-              name="name"
-              placeholder="Admin name"
+            <TextInput
+              label="Admin name"
+              placeholder="Your name"
+              {...register("name")}
+              error={e.name?.message}
               required
             />
           </>
         )}
 
-        <input
-          className="farm-input"
-          name="email"
+        <TextInput
+          label="Email"
+          placeholder="admin@farm.com"
           type="email"
-          placeholder="Email"
+          {...register("email")}
+          error={e.email?.message}
           required
         />
-        <input
-          className="farm-input"
-          name="password"
-          type="password"
-          placeholder="Password"
-          minLength={8}
+        <PasswordInput
+          label="Password"
+          placeholder="At least 8 characters"
+          {...register("password")}
+          error={e.password?.message}
           required
         />
 
         {error && (
-          <div
-            style={{
-              color: "#f87171",
-              fontSize: "0.85rem",
-              background: "rgba(248,113,113,0.08)",
-              border: "1px solid rgba(248,113,113,0.2)",
-              borderRadius: 8,
-              padding: "10px 12px",
-            }}
-          >
+          <Alert color="red" variant="light" p="xs">
             {error}
-          </div>
+          </Alert>
         )}
 
-        <button
-          className="btn-primary"
-          disabled={submitting}
-          style={{ justifyContent: "center" }}
+        <Button
+          type="submit"
+          fullWidth
+          loading={isSubmitting}
+          variant="filled"
         >
-          {submitting
+          {isSubmitting
             ? "Please wait..."
-            : mode === "setup"
-            ? "Create Workspace"
-            : "Sign in"}
-        </button>
+            : isSetup
+              ? "Create Workspace"
+              : "Sign in"}
+        </Button>
       </form>
     </main>
   );
 }
-

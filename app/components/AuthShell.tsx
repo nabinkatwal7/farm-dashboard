@@ -2,22 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import AppTopBar from "./AppTopBar";
 import Sidebar from "./Sidebar";
+import { type CurrentUser, UserProvider } from "@/app/lib/user-context";
 
 type MeResponse = {
   authenticated: boolean;
   setupRequired: boolean;
-  user: null | {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-    farm: {
-      name: string;
-      location: string | null;
-      acreage: number | null;
-    };
-  };
+  user: CurrentUser | null;
 };
 
 export default function AuthShell({ children }: { children: React.ReactNode }) {
@@ -60,18 +52,19 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <>
-      <Sidebar user={me?.user ?? null} />
-      <main
-        style={{
-          flex: 1,
-          marginLeft: "var(--sidebar-width)",
-          minHeight: "100vh",
-          overflow: "auto",
-        }}
-      >
-        {children}
-      </main>
-    </>
+    <UserProvider
+      user={me?.user ?? null}
+      setUser={(user) =>
+        setMe((current) => (current ? { ...current, user } : current))
+      }
+    >
+      <div className="min-h-screen lg:flex">
+        <Sidebar user={me?.user ?? null} />
+        <main className="min-h-screen flex-1 overflow-x-hidden lg:ml-[var(--sidebar-width)]">
+          <AppTopBar user={me?.user ?? null} />
+          {children}
+        </main>
+      </div>
+    </UserProvider>
   );
 }

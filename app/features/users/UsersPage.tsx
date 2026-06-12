@@ -2,6 +2,7 @@
 
 import { Plus, ShieldCheck } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
+import { TextInput, PasswordInput, Select, Button, Group } from "@mantine/core";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import {
@@ -58,55 +59,29 @@ export default function UsersPage() {
   }
 
   return (
-    <div style={{ padding: "32px 32px 48px" }}>
-      <div
-        style={{
-          marginBottom: 28,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-        }}
-      >
+    <div className="p-8 pb-12">
+      <div className="mb-7 flex justify-between items-start">
         <div>
-          <h1
-            style={{
-              fontSize: "1.6rem",
-              fontWeight: 800,
-              color: "var(--text-primary)",
-            }}
-          >
-            Users & Roles
-          </h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>
-            Create farm users and assign role-based access.
-          </p>
+          <h1 className="text-[1.6rem] font-extrabold text-primary">Users & Roles</h1>
+          <p className="text-muted text-sm">Create farm users and assign role-based access.</p>
         </div>
         <button className="btn-primary" onClick={() => setShowCreate(true)}>
           <Plus size={14} /> Create User
         </button>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 14,
-          marginBottom: 24,
-        }}
-      >
+      <div className="grid grid-cols-3 gap-3.5 mb-6">
         <StatCard
           label="Total Users"
           value={users.length}
           icon={ShieldCheck}
           color="#4ade80"
-          delay={0}
         />
         <StatCard
           label="Active Users"
           value={users.filter((user) => user.isActive).length}
           icon={ShieldCheck}
           color="#60a5fa"
-          delay={60}
         />
         <StatCard
           label="Managers/Admins"
@@ -117,18 +92,10 @@ export default function UsersPage() {
           }
           icon={ShieldCheck}
           color="#a78bfa"
-          delay={120}
         />
       </div>
 
-      <div
-        style={{
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
-          borderRadius: 12,
-          overflow: "hidden",
-        }}
-      >
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <table className="farm-table">
           <thead>
             <tr>
@@ -143,9 +110,7 @@ export default function UsersPage() {
           <tbody>
             {users.map((user) => (
               <tr key={user.id}>
-                <td style={{ color: "var(--text-primary)", fontWeight: 600 }}>
-                  {user.name}
-                </td>
+                <td className="text-primary font-semibold">{user.name}</td>
                 <td>{user.email}</td>
                 <td>
                   <span className="badge-blue">{roleLabel(user.role)}</span>
@@ -177,53 +142,29 @@ export default function UsersPage() {
         >
           <form
             onSubmit={createUser}
-            style={{ display: "flex", flexDirection: "column", gap: 14 }}
+            className="flex flex-col gap-3.5"
           >
-            <input className="farm-input" name="name" placeholder="Name" required />
-            <input
-              className="farm-input"
-              name="email"
-              type="email"
-              placeholder="Email"
-              required
+            <TextInput label="Name" name="name" placeholder="Name" required />
+            <TextInput label="Email" name="email" type="email" placeholder="Email" required />
+            <PasswordInput label="Password" name="password" placeholder="Temporary password" required />
+            <Select
+              label="Role"
+              name="role"
+              data={ROLES.map((r) => ({ value: r, label: roleLabel(r) }))}
+              defaultValue="FIELD_WORKER"
             />
-            <input
-              className="farm-input"
-              name="password"
-              type="password"
-              placeholder="Temporary password"
-              minLength={8}
-              required
-            />
-            <select className="farm-input" name="role" defaultValue="FIELD_WORKER">
-              {ROLES.map((role) => (
-                <option key={role} value={role}>
-                  {roleLabel(role)}
-                </option>
-              ))}
-            </select>
             {error && (
-              <div style={{ color: "#f87171", fontSize: "0.85rem" }}>{error}</div>
+              <div className="text-red text-sm">{error}</div>
             )}
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn-primary" style={{ flex: 1 }}>
-                Create User
-              </button>
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => setShowCreate(false)}
-              >
+            <Group gap="sm">
+              <Button type="submit" variant="filled">Create User</Button>
+              <Button type="button" variant="default" onClick={() => setShowCreate(false)}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </form>
         </Modal>
       )}
     </div>
   );
 }
-
-
-
-
