@@ -10,6 +10,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
+import { Button, Group } from "@mantine/core";
+import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
@@ -662,75 +664,46 @@ export default function InventoryPage() {
               ["Field Origin", "fieldOrigin", "text", "e.g. North Meadow"],
               ["Animal Origin", "animalOrigin", "text", "e.g. UK123456"],
             ].map(([label, key, type, placeholder]) => (
-              <div key={key}>
-                <label
-                  className="text-muted"
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  {label}
-                </label>
-                <input
-                  className="farm-input"
-                  type={type}
-                  placeholder={placeholder}
-                  value={String((stockForm as Record<string, unknown>)[key] ?? "")}
-                  onChange={(e) =>
-                    setStockForm((f) => ({
-                      ...f,
-                      [key]:
-                        type === "number" ? +e.target.value : e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            ))}
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Category
-              </label>
-              <select
-                className="farm-input"
-                value={stockForm.category ?? "raw"}
+              <FormField
+                key={key}
+                label={label}
+                name={key}
+                type={type}
+                placeholder={placeholder}
+                value={String((stockForm as Record<string, unknown>)[key] ?? "")}
                 onChange={(e) =>
                   setStockForm((f) => ({
                     ...f,
-                    category: e.target.value as StockItem["category"],
+                    [key]:
+                      type === "number" ? +e.target.value : e.target.value,
                   }))
                 }
-              >
-                {["raw", "processed", "packaging", "supplies"].map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveStock}
-              >
-                Save Item
-              </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setShowAddStock(false)}
-              >
+              />
+            ))}
+            <FormField
+              as="select"
+              label="Stock category"
+              name="category"
+              value={stockForm.category ?? "raw"}
+              onChange={(e) =>
+                setStockForm((f) => ({
+                  ...f,
+                  category: e.target.value as StockItem["category"],
+                }))
+              }
+            >
+              {["raw", "processed", "packaging", "supplies"].map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </FormField>
+            <Group grow mt={4}>
+              <Button onClick={saveStock}>Save Item</Button>
+              <Button variant="default" onClick={() => setShowAddStock(false)}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}
@@ -745,97 +718,52 @@ export default function InventoryPage() {
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Item
-              </label>
-              <input className="farm-input" value={adjustItem.name} readOnly />
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Adjust by (+ to add, - to remove)
-              </label>
-              <input
-                className="farm-input"
-                type="number"
-                value={adjustForm.delta}
-                onChange={(e) =>
-                  setAdjustForm((f) => ({ ...f, delta: +e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Reason
-              </label>
-              <input
-                className="farm-input"
-                placeholder="e.g. Received delivery"
-                value={adjustForm.reason}
-                onChange={(e) =>
-                  setAdjustForm((f) => ({ ...f, reason: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Operator
-              </label>
-              <input
-                className="farm-input"
-                placeholder="Your name"
-                value={adjustForm.operator}
-                onChange={(e) =>
-                  setAdjustForm((f) => ({ ...f, operator: e.target.value }))
-                }
-              />
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveAdjustment}
-              >
-                Save Adjustment
-              </button>
-              <button
-                className="btn-ghost"
+            <FormField
+              label="Stock item"
+              name="stockItem"
+              value={adjustItem.name}
+              readOnly
+            />
+            <FormField
+              label="Quantity adjustment"
+              helperText="Use a positive number to add stock or a negative number to remove stock."
+              name="delta"
+              type="number"
+              value={adjustForm.delta}
+              onChange={(e) =>
+                setAdjustForm((f) => ({ ...f, delta: +e.target.value }))
+              }
+            />
+            <FormField
+              label="Adjustment reason"
+              name="reason"
+              placeholder="Received delivery"
+              value={adjustForm.reason}
+              onChange={(e) =>
+                setAdjustForm((f) => ({ ...f, reason: e.target.value }))
+              }
+            />
+            <FormField
+              label="Operator name"
+              name="operator"
+              placeholder="Tom Greene"
+              value={adjustForm.operator}
+              onChange={(e) =>
+                setAdjustForm((f) => ({ ...f, operator: e.target.value }))
+              }
+            />
+            <Group grow mt={4}>
+              <Button onClick={saveAdjustment}>Save Adjustment</Button>
+              <Button
+                variant="default"
                 onClick={() => {
                   setShowAdjust(false);
                   setAdjustItem(null);
                 }}
               >
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}
@@ -853,95 +781,55 @@ export default function InventoryPage() {
               ["Quantity", "quantity", "number", "50"],
               ["Unit", "unit", "text", "tonnes"],
             ].map(([label, key, type, placeholder]) => (
-              <div key={key}>
-                <label
-                  className="text-muted"
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  {label}
-                </label>
-                <input
-                  className="farm-input"
-                  type={type}
-                  placeholder={placeholder}
-                  value={String((batchForm as Record<string, unknown>)[key] ?? "")}
-                  onChange={(e) =>
-                    setBatchForm((f) => ({
-                      ...f,
-                      [key]:
-                        type === "number" ? +e.target.value : e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            ))}
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Origin Type
-              </label>
-              <select
-                className="farm-input"
-                value={batchForm.originType ?? "field"}
+              <FormField
+                key={key}
+                label={label}
+                name={key}
+                type={type}
+                placeholder={placeholder}
+                value={String((batchForm as Record<string, unknown>)[key] ?? "")}
                 onChange={(e) =>
                   setBatchForm((f) => ({
                     ...f,
-                    originType: e.target.value as "field" | "animal",
+                    [key]:
+                      type === "number" ? +e.target.value : e.target.value,
                   }))
                 }
-              >
-                <option value="field">Field</option>
-                <option value="animal">Animal</option>
-              </select>
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Processed Date
-              </label>
-              <input
-                className="farm-input"
-                type="date"
-                value={
-                  batchForm.processedDate ??
-                  new Date().toISOString().slice(0, 10)
-                }
-                onChange={(e) =>
-                  setBatchForm((f) => ({ ...f, processedDate: e.target.value }))
-                }
               />
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveBatch}
-              >
-                Save Batch
-              </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setShowAddBatch(false)}
-              >
+            ))}
+            <FormField
+              as="select"
+              label="Origin type"
+              name="originType"
+              value={batchForm.originType ?? "field"}
+              onChange={(e) =>
+                setBatchForm((f) => ({
+                  ...f,
+                  originType: e.target.value as "field" | "animal",
+                }))
+              }
+            >
+              <option value="field">Field</option>
+              <option value="animal">Animal</option>
+            </FormField>
+            <FormField
+              label="Processed date"
+              name="processedDate"
+              type="date"
+              value={
+                batchForm.processedDate ??
+                new Date().toISOString().slice(0, 10)
+              }
+              onChange={(e) =>
+                setBatchForm((f) => ({ ...f, processedDate: e.target.value }))
+              }
+            />
+            <Group grow mt={4}>
+              <Button onClick={saveBatch}>Save Batch</Button>
+              <Button variant="default" onClick={() => setShowAddBatch(false)}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}

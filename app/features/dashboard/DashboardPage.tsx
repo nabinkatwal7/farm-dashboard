@@ -640,29 +640,28 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-6 text-primary sm:px-6 lg:px-8 lg:py-8">
       <div className="mx-auto flex max-w-[1500px] flex-col gap-8">
-        <header className="flex flex-col gap-5 rounded-2xl border border-border bg-[linear-gradient(135deg,color-mix(in_oklab,var(--canvas-surface-01)_94%,var(--interactive-default)_6%),var(--canvas-surface-02))] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.16)] sm:p-6 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-secondary">
-              <Leaf size={14} className="text-green" />
-              {currentUser?.farm.location ?? "Location not set"}
+        <section className="rounded-2xl border border-border bg-[linear-gradient(135deg,color-mix(in_oklab,var(--canvas-surface-01)_95%,var(--interactive-default)_5%),var(--canvas-surface-02))] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.12)] sm:p-5 xl:flex xl:items-center xl:justify-between xl:gap-6">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-primary">
+              Good morning, {currentUser?.name ?? "there"}
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-primary sm:text-3xl">
-              Good morning, {currentUser?.farm.name ?? "Farm workspace"}
-            </h1>
-            <p className="mt-2 text-sm text-muted">
-              {new Date().toLocaleDateString("en-GB", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-              {currentUser?.farm.acreage
-                ? ` - ${currentUser.farm.acreage} acres under management`
-                : ""}
-            </p>
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+              <span>
+                {new Date().toLocaleDateString("en-GB", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
+              <span>{currentUser?.farm.location ?? "Location not set"}</span>
+              {currentUser?.farm.acreage ? (
+                <span>{currentUser.farm.acreage} acres under management</span>
+              ) : null}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:justify-end">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:mt-0 xl:justify-end">
             {quickActions.map(({ label, href, icon: Icon }) => (
               <Link
                 href={href}
@@ -674,7 +673,7 @@ export default function DashboardPage() {
               </Link>
             ))}
           </div>
-        </header>
+        </section>
 
         <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
           <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_16px_60px_rgba(0,0,0,0.14)] sm:p-6">

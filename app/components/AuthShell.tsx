@@ -16,6 +16,7 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [me, setMe] = useState<MeResponse | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isLogin = pathname === "/login";
 
@@ -59,8 +60,16 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
       }
     >
       <div className="min-h-screen lg:flex">
-        <Sidebar user={me?.user ?? null} />
-        <main className="min-h-screen flex-1 overflow-x-hidden lg:ml-[var(--sidebar-width)]">
+        <Sidebar
+          user={me?.user ?? null}
+          collapsed={sidebarCollapsed}
+          onToggleCollapsed={() => setSidebarCollapsed((current) => !current)}
+        />
+        <main
+          className={`min-h-screen flex-1 overflow-x-hidden transition-[margin] duration-200 ${
+            sidebarCollapsed ? "lg:ml-20" : "lg:ml-[var(--sidebar-width)]"
+          }`}
+        >
           <AppTopBar user={me?.user ?? null} />
           {children}
         </main>

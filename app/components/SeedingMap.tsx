@@ -105,5 +105,10 @@ export default function SeedingMap({ fields, prescriptionMaps }: SeedingMapProps
     };
   }, [fields, prescriptionMaps]);
 
-  return <div ref={containerRef} style={{ height: 450, width: "100%" }} />;
+  return (
+    <div
+      ref={containerRef}
+      style={{ height: 450, width: "100%", position: "relative", zIndex: 0 }}
+    />
+  );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Modal from "@/app/abstract/ui/Modal";
+import FormField from "@/app/abstract/ui/FormField";
 import StatCard from "@/app/abstract/ui/StatCard";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
@@ -13,6 +14,7 @@ import {
   type WeightRecord,
 } from "@/app/base/services/farm-client";
 import { AlertTriangle, Beef, Clock, Heart, Plus, Trash2 } from "lucide-react";
+import { Button, Group } from "@mantine/core";
 import { useState } from "react";
 
 const LIVESTOCK_ENTITIES = {
@@ -876,238 +878,145 @@ export default function LivestockPage() {
 
       {/* Add Animal Modal */}
       {showAddAnimal && (
-        <Modal title="Register Animal" onClose={() => setShowAddAnimal(false)}>
+        <Modal title="Register animal" onClose={() => setShowAddAnimal(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
-              ["Ear Tag", "earTag", "text", "UK123999"],
+              ["Ear tag", "earTag", "text", "UK123999"],
               ["Breed", "breed", "text", "Hereford"],
-              ["Date of Birth", "dob", "date", ""],
-              ["Group", "group", "text", "Breeding Herd"],
+              ["Date of birth", "dob", "date", ""],
+              ["Management group", "group", "text", "Breeding herd"],
             ].map(([label, key, type, placeholder]) => (
-              <div key={key}>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Animal Ear Tag
-              </label>
-                <input
-                  className="farm-input"
-                  type={type}
-                  placeholder={placeholder}
-                  value={String(
-                    (animalForm as Record<string, unknown>)[key] ?? ""
-                  )}
-                  onChange={(e) =>
-                    setAnimalForm((f) => ({ ...f, [key]: e.target.value }))
-                  }
-                />
-              </div>
+              <FormField
+                key={key}
+                label={label}
+                name={key}
+                type={type}
+                placeholder={placeholder}
+                value={String((animalForm as Record<string, unknown>)[key] ?? "")}
+                onChange={(e) =>
+                  setAnimalForm((f) => ({ ...f, [key]: e.target.value }))
+                }
+              />
             ))}
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Species
-              </label>
-              <select
-                className="farm-input"
-                value={animalForm.species ?? "cattle"}
-                onChange={(e) =>
-                  setAnimalForm((f) => ({
-                    ...f,
-                    species: e.target.value as Animal["species"],
-                  }))
-                }
-              >
-                {["cattle", "sheep", "pig", "poultry", "other"].map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Sex
-              </label>
-              <select
-                className="farm-input"
-                value={animalForm.sex ?? "F"}
-                onChange={(e) =>
-                  setAnimalForm((f) => ({
-                    ...f,
-                    sex: e.target.value as "M" | "F",
-                  }))
-                }
-              >
-                <option value="F">Female</option>
-                <option value="M">Male</option>
-              </select>
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveAnimal}
-              >
-                Register
-              </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setShowAddAnimal(false)}
-              >
+            <FormField
+              as="select"
+              label="Species"
+              name="species"
+              value={animalForm.species ?? "cattle"}
+              onChange={(e) =>
+                setAnimalForm((f) => ({
+                  ...f,
+                  species: e.target.value as Animal["species"],
+                }))
+              }
+            >
+              {["cattle", "sheep", "pig", "poultry", "other"].map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              as="select"
+              label="Sex"
+              name="sex"
+              value={animalForm.sex ?? "F"}
+              onChange={(e) =>
+                setAnimalForm((f) => ({
+                  ...f,
+                  sex: e.target.value as "M" | "F",
+                }))
+              }
+            >
+              <option value="F">Female</option>
+              <option value="M">Male</option>
+            </FormField>
+            <Group grow mt={4}>
+              <Button onClick={saveAnimal}>Register</Button>
+              <Button variant="default" onClick={() => setShowAddAnimal(false)}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}
 
       {/* Add Medical Modal */}
       {showAddMed && (
-        <Modal title="Add Medical Record" onClose={() => setShowAddMed(false)}>
+        <Modal title="Add medical record" onClose={() => setShowAddMed(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Animal Ear Tag
-              </label>
-              <select
-                className="farm-input"
-                value={medForm.earTag ?? ""}
-                onChange={(e) =>
-                  setMedForm((f) => ({ ...f, earTag: e.target.value }))
-                }
-              >
-                <option value="">Select animal…</option>
-                {animals.map((a) => (
-                  <option key={a.id} value={a.earTag}>
-                    {a.earTag} — {a.breed}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Date
-              </label>
-              <input
-                className="farm-input"
-                type="date"
-                value={medForm.date ?? new Date().toISOString().slice(0, 10)}
-                onChange={(e) =>
-                  setMedForm((f) => ({ ...f, date: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Type
-              </label>
-              <select
-                className="farm-input"
-                value={medForm.type ?? "vaccination"}
+            <FormField
+              as="select"
+              label="Animal"
+              name="medicalAnimal"
+              value={medForm.earTag ?? ""}
+              onChange={(e) =>
+                setMedForm((f) => ({ ...f, earTag: e.target.value }))
+              }
+            >
+              <option value="">Select animal...</option>
+              {animals.map((a) => (
+                <option key={a.id} value={a.earTag}>
+                  {a.earTag} - {a.breed}
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              label="Record date"
+              name="medicalDate"
+              type="date"
+              value={medForm.date ?? new Date().toISOString().slice(0, 10)}
+              onChange={(e) =>
+                setMedForm((f) => ({ ...f, date: e.target.value }))
+              }
+            />
+            <FormField
+              as="select"
+              label="Record type"
+              name="medicalType"
+              value={medForm.type ?? "vaccination"}
+              onChange={(e) =>
+                setMedForm((f) => ({
+                  ...f,
+                  type: e.target.value as MedicalRecord["type"],
+                }))
+              }
+            >
+              {["vaccination", "treatment", "illness", "checkup"].map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </FormField>
+            {[
+              ["Product or medicine", "product", "text", "Bovilis Bovipast RSP"],
+              ["Condition", "condition", "text", "Pneumonia"],
+              ["Vet name", "vetName", "text", "Dr. Alice James"],
+              ["Withdrawal period", "withdrawalDays", "number", "28"],
+              ["Notes", "notes", "text", "Optional"],
+            ].map(([label, key, type, placeholder]) => (
+              <FormField
+                key={key}
+                label={label}
+                name={key}
+                type={type}
+                placeholder={placeholder}
+                value={String((medForm as Record<string, unknown>)[key] ?? "")}
                 onChange={(e) =>
                   setMedForm((f) => ({
                     ...f,
-                    type: e.target.value as MedicalRecord["type"],
+                    [key]:
+                      type === "number" ? +e.target.value : e.target.value,
                   }))
                 }
-              >
-                {["vaccination", "treatment", "illness", "checkup"].map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {[
-              ["Product / Medicine", "product", "text", "Bovilis Bovipast RSP"],
-              ["Condition", "condition", "text", "e.g. Pneumonia"],
-              ["Vet Name", "vetName", "text", "Dr. Alice James"],
-              ["Withdrawal Days", "withdrawalDays", "number", "28"],
-              ["Notes", "notes", "text", "Optional"],
-            ].map(([label, key, type, placeholder]) => (
-              <div key={key}>
-                <label
-                  className="text-muted"
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  {label}
-                </label>
-                <input
-                  className="farm-input"
-                  type={type}
-                  placeholder={placeholder}
-                  value={String(
-                    (medForm as Record<string, unknown>)[key] ?? ""
-                  )}
-                  onChange={(e) =>
-                    setMedForm((f) => ({
-                      ...f,
-                      [key]:
-                        type === "number" ? +e.target.value : e.target.value,
-                    }))
-                  }
-                />
-              </div>
+              />
             ))}
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveMed}
-              >
-                Save Record
-              </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setShowAddMed(false)}
-              >
+            <Group grow mt={4}>
+              <Button onClick={saveMed}>Save Record</Button>
+              <Button variant="default" onClick={() => setShowAddMed(false)}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}
@@ -1115,113 +1024,63 @@ export default function LivestockPage() {
       {/* Add Weight Modal */}
       {showAddWeight && (
         <Modal
-          title="Log Weight Record"
+          title="Log weight record"
           onClose={() => setShowAddWeight(false)}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Animal Ear Tag
-              </label>
-              <select
-                className="farm-input"
-                value={weightForm.earTag ?? ""}
-                onChange={(e) =>
-                  setWeightForm((f) => ({ ...f, earTag: e.target.value }))
-                }
-              >
-                <option value="">Select animal…</option>
-                {animals.map((a) => (
-                  <option key={a.id} value={a.earTag}>
-                    {a.earTag} — {a.breed}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Date
-              </label>
-              <input
-                className="farm-input"
-                type="date"
-                value={weightForm.date ?? new Date().toISOString().slice(0, 10)}
-                onChange={(e) =>
-                  setWeightForm((f) => ({ ...f, date: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Weight (kg)
-              </label>
-              <input
-                className="farm-input"
-                type="number"
-                placeholder="450"
-                value={weightForm.weightKg ?? ""}
-                onChange={(e) =>
-                  setWeightForm((f) => ({ ...f, weightKg: +e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Notes
-              </label>
-              <textarea
-                className="farm-input"
-                placeholder="Optional notes"
-                value={weightForm.notes ?? ""}
-                onChange={(e) =>
-                  setWeightForm((f) => ({ ...f, notes: e.target.value }))
-                }
-                rows={3}
-              />
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveWeight}
-              >
-                Save Weight
-              </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setShowAddWeight(false)}
-              >
+            <FormField
+              as="select"
+              label="Animal"
+              name="weightAnimal"
+              value={weightForm.earTag ?? ""}
+              onChange={(e) =>
+                setWeightForm((f) => ({ ...f, earTag: e.target.value }))
+              }
+            >
+              <option value="">Select animal...</option>
+              {animals.map((a) => (
+                <option key={a.id} value={a.earTag}>
+                  {a.earTag} - {a.breed}
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              label="Weigh date"
+              name="weightDate"
+              type="date"
+              value={weightForm.date ?? new Date().toISOString().slice(0, 10)}
+              onChange={(e) =>
+                setWeightForm((f) => ({ ...f, date: e.target.value }))
+              }
+            />
+            <FormField
+              label="Weight"
+              name="weightKg"
+              type="number"
+              placeholder="450"
+              helperText="Recorded in kilograms."
+              value={weightForm.weightKg ?? ""}
+              onChange={(e) =>
+                setWeightForm((f) => ({ ...f, weightKg: +e.target.value }))
+              }
+            />
+            <FormField
+              as="textarea"
+              label="Notes"
+              name="weightNotes"
+              placeholder="Optional notes"
+              rows={3}
+              value={weightForm.notes ?? ""}
+              onChange={(e) =>
+                setWeightForm((f) => ({ ...f, notes: e.target.value }))
+              }
+            />
+            <Group grow mt={4}>
+              <Button onClick={saveWeight}>Save Weight</Button>
+              <Button variant="default" onClick={() => setShowAddWeight(false)}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}
@@ -1229,113 +1088,61 @@ export default function LivestockPage() {
       {/* Add Breeding Modal */}
       {showAddBreed && (
         <Modal
-          title="Add Breeding Record"
+          title="Add breeding record"
           onClose={() => setShowAddBreed(false)}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Dam (Female) Ear Tag
-              </label>
-              <select
-                className="farm-input"
-                value={breedForm.damEarTag ?? ""}
-                onChange={(e) =>
-                  setBreedForm((f) => ({ ...f, damEarTag: e.target.value }))
-                }
-              >
-                <option value="">Select female…</option>
-                {animals
-                  .filter((a) => a.sex === "F")
-                  .map((a) => (
-                    <option key={a.id} value={a.earTag}>
-                      {a.earTag} — {a.breed}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Sire (Male) Ear Tag
-              </label>
-              <input
-                className="farm-input"
-                placeholder="UK789050"
-                value={breedForm.sireEarTag ?? ""}
-                onChange={(e) =>
-                  setBreedForm((f) => ({ ...f, sireEarTag: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Breeding Date
-              </label>
-              <input
-                className="farm-input"
-                type="date"
-                value={breedForm.breedingDate ?? ""}
-                onChange={(e) =>
-                  setBreedForm((f) => ({ ...f, breedingDate: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Notes
-              </label>
-              <input
-                className="farm-input"
-                placeholder="Scanning date, AI batch, etc."
-                value={breedForm.notes ?? ""}
-                onChange={(e) =>
-                  setBreedForm((f) => ({ ...f, notes: e.target.value }))
-                }
-              />
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveBreed}
-              >
-                Save Record
-              </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setShowAddBreed(false)}
-              >
+            <FormField
+              as="select"
+              label="Dam"
+              name="damEarTag"
+              value={breedForm.damEarTag ?? ""}
+              onChange={(e) =>
+                setBreedForm((f) => ({ ...f, damEarTag: e.target.value }))
+              }
+            >
+              <option value="">Select female...</option>
+              {animals
+                .filter((a) => a.sex === "F")
+                .map((a) => (
+                  <option key={a.id} value={a.earTag}>
+                    {a.earTag} - {a.breed}
+                  </option>
+                ))}
+            </FormField>
+            <FormField
+              label="Sire ear tag"
+              name="sireEarTag"
+              placeholder="UK789050"
+              value={breedForm.sireEarTag ?? ""}
+              onChange={(e) =>
+                setBreedForm((f) => ({ ...f, sireEarTag: e.target.value }))
+              }
+            />
+            <FormField
+              label="Breeding date"
+              name="breedingDate"
+              type="date"
+              value={breedForm.breedingDate ?? ""}
+              onChange={(e) =>
+                setBreedForm((f) => ({ ...f, breedingDate: e.target.value }))
+              }
+            />
+            <FormField
+              label="Notes"
+              name="breedingNotes"
+              placeholder="Scanning date, AI batch, etc."
+              value={breedForm.notes ?? ""}
+              onChange={(e) =>
+                setBreedForm((f) => ({ ...f, notes: e.target.value }))
+              }
+            />
+            <Group grow mt={4}>
+              <Button onClick={saveBreed}>Save Record</Button>
+              <Button variant="default" onClick={() => setShowAddBreed(false)}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}

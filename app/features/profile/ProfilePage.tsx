@@ -272,7 +272,7 @@ export default function ProfilePage() {
                   label="Name"
                   value={form.name}
                   onChange={(event) =>
-                    setForm((current) => ({ ...current, name: event.currentTarget.value }))
+                    setForm((current) => ({ ...current, name: event.target.value }))
                   }
                   required
                 />
@@ -281,7 +281,7 @@ export default function ProfilePage() {
                   type="email"
                   value={form.email}
                   onChange={(event) =>
-                    setForm((current) => ({ ...current, email: event.currentTarget.value }))
+                    setForm((current) => ({ ...current, email: event.target.value }))
                   }
                   required
                 />
@@ -294,7 +294,7 @@ export default function ProfilePage() {
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      currentPassword: event.currentTarget.value,
+                      currentPassword: event.target.value,
                     }))
                   }
                 />
@@ -305,7 +305,7 @@ export default function ProfilePage() {
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      newPassword: event.currentTarget.value,
+                      newPassword: event.target.value,
                     }))
                   }
                 />
@@ -328,7 +328,7 @@ export default function ProfilePage() {
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        farmName: event.currentTarget.value,
+                        farmName: event.target.value,
                       }))
                     }
                   />
@@ -339,7 +339,7 @@ export default function ProfilePage() {
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        farmLocation: event.currentTarget.value,
+                        farmLocation: event.target.value,
                       }))
                     }
                   />

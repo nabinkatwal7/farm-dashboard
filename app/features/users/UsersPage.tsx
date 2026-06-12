@@ -2,8 +2,14 @@
 
 import { Plus, ShieldCheck } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
-import { TextInput, PasswordInput, Select, Button, Group } from "@mantine/core";
-import Modal from "@/app/abstract/ui/Modal";
+import {
+  TextInput,
+  PasswordInput,
+  Select,
+  Button,
+  Group,
+  Modal,
+} from "@mantine/core";
 import StatCard from "@/app/abstract/ui/StatCard";
 import {
   ROLES,
@@ -132,39 +138,56 @@ export default function UsersPage() {
         </table>
       </div>
 
-      {showCreate && (
-        <Modal
-          title="Create Farm User"
-          onClose={() => {
-            setShowCreate(false);
-            setError(null);
-          }}
-        >
+      <Modal
+        opened={showCreate}
+        title="Create farm user"
+        onClose={() => {
+          setShowCreate(false);
+          setError(null);
+        }}
+        size="lg"
+      >
           <form
             onSubmit={createUser}
             className="flex flex-col gap-3.5"
           >
-            <TextInput label="Name" name="name" placeholder="Name" required />
-            <TextInput label="Email" name="email" type="email" placeholder="Email" required />
-            <PasswordInput label="Password" name="password" placeholder="Temporary password" required />
+            <TextInput
+              label="Full name"
+              name="name"
+              placeholder="Tom Greene"
+              required
+            />
+            <TextInput
+              label="Email address"
+              name="email"
+              type="email"
+              placeholder="tom@fieldpilot.com"
+              required
+            />
+            <PasswordInput
+              label="Temporary password"
+              name="password"
+              placeholder="At least 8 characters"
+              required
+            />
             <Select
-              label="Role"
+              label="Access role"
               name="role"
               data={ROLES.map((r) => ({ value: r, label: roleLabel(r) }))}
               defaultValue="FIELD_WORKER"
+              required
             />
             {error && (
               <div className="text-red text-sm">{error}</div>
             )}
-            <Group gap="sm">
-              <Button type="submit" variant="filled">Create User</Button>
+            <Group gap="sm" justify="flex-end">
               <Button type="button" variant="default" onClick={() => setShowCreate(false)}>
                 Cancel
               </Button>
+              <Button type="submit" variant="filled">Create User</Button>
             </Group>
           </form>
-        </Modal>
-      )}
+      </Modal>
     </div>
   );
 }

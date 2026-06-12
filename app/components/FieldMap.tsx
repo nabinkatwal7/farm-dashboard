@@ -90,6 +90,11 @@ export default function FieldMap({ fields }: FieldMapProps) {
     };
   }, [fields]);
 
-  return <div ref={containerRef} style={{ height: 400, width: "100%" }} />;
+  return (
+    <div
+      ref={containerRef}
+      style={{ height: 400, width: "100%", position: "relative", zIndex: 0 }}
+    />
+  );
 }
 

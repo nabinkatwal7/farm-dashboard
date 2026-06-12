@@ -340,3 +340,19 @@ textarea {
 [data-theme="dark"] .leaflet-tile {
   filter: brightness(0.68) saturate(0.55) hue-rotate(60deg);
 }
+
+.leaflet-container {
+  isolation: isolate;
+  z-index: 0;
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 1 !important;
+}
+
+.leaflet-popup-pane,
+.leaflet-tooltip-pane {
+  z-index: 2 !important;
+}

@@ -18,6 +18,7 @@ type InputFieldProps = BaseProps & {
   type?: string;
   value?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  readOnly?: boolean;
   min?: string;
   max?: string;
   step?: string;
@@ -85,7 +86,7 @@ export default function FormField(props: Props) {
     );
   }
 
-  const { placeholder, type, value, onChange, min, max, step } = rest as InputFieldProps;
+  const { placeholder, type, value, onChange, readOnly, min, max, step } = rest as InputFieldProps;
 
   if (type === "number") {
     return (
@@ -97,8 +98,15 @@ export default function FormField(props: Props) {
         id={fieldId}
         name={name}
         placeholder={placeholder}
-        value={typeof value === "string" ? parseFloat(value) || 0 : (value as number) ?? 0}
+        value={
+          value === "" || value === undefined || value === null
+            ? ""
+            : typeof value === "string"
+              ? parseFloat(value)
+              : (value as number)
+        }
         onChange={(v) => onChange?.({ target: { value: String(v ?? "") } } as React.ChangeEvent<HTMLInputElement>)}
+        readOnly={readOnly}
         min={min ? parseFloat(min) : undefined}
         max={max ? parseFloat(max) : undefined}
         step={step ? parseFloat(step) : undefined}
@@ -118,6 +126,7 @@ export default function FormField(props: Props) {
       type={type}
       value={value}
       onChange={onChange}
+      readOnly={readOnly}
     />
   );
 }

@@ -23,6 +23,7 @@ import {
   type Machine,
   type Task,
 } from "@/app/base/services/farm-client";
+import { Button, Group } from "@mantine/core";
 
 type Tab = "machinery" | "tasks";
 
@@ -731,28 +732,23 @@ export default function OperationsPage() {
               value={String(machineForm.lastService ?? new Date().toISOString().slice(0, 10))}
               onChange={(e) => setMachineForm((f) => ({ ...f, lastService: e.target.value }))}
             />
-            <div>
-              <label className="text-muted" style={{ fontSize: "0.8rem", display: "block", marginBottom: 6, fontWeight: 500 }}>
-                Status
-              </label>
-              <select
-                className="farm-input"
-                value={machineForm.status ?? "operational"}
-                onChange={(e) => setMachineForm((f) => ({ ...f, status: e.target.value as Machine["status"] }))}
-              >
-                {["operational", "maintenance", "breakdown"].map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button className="btn-primary" style={{ flex: 1 }} onClick={saveMachine}>
-                Add Machine
-              </button>
-              <button className="btn-ghost" onClick={() => { setShowAddMachine(false); setMachineErrors({}); }}>
+            <FormField
+              as="select"
+              label="Machine status"
+              name="status"
+              value={machineForm.status ?? "operational"}
+              onChange={(e) => setMachineForm((f) => ({ ...f, status: e.target.value as Machine["status"] }))}
+            >
+              {["operational", "maintenance", "breakdown"].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </FormField>
+            <Group grow mt={4}>
+              <Button onClick={saveMachine}>Add Machine</Button>
+              <Button variant="default" onClick={() => { setShowAddMachine(false); setMachineErrors({}); }}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}
@@ -826,43 +822,35 @@ export default function OperationsPage() {
               onChange={(e) => setTaskForm((f) => ({ ...f, dueDate: e.target.value }))}
             />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <label className="text-muted" style={{ fontSize: "0.8rem", display: "block", marginBottom: 6, fontWeight: 500 }}>
-                  Priority
-                </label>
-                <select
-                  className="farm-input"
-                  value={taskForm.priority ?? "medium"}
-                  onChange={(e) => setTaskForm((f) => ({ ...f, priority: e.target.value as Task["priority"] }))}
-                >
-                  {["low", "medium", "high"].map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-muted" style={{ fontSize: "0.8rem", display: "block", marginBottom: 6, fontWeight: 500 }}>
-                  Status
-                </label>
-                <select
-                  className="farm-input"
-                  value={taskForm.status ?? "pending"}
-                  onChange={(e) => setTaskForm((f) => ({ ...f, status: e.target.value as Task["status"] }))}
-                >
-                  {["pending", "in-progress", "done"].map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
+              <FormField
+                as="select"
+                label="Priority"
+                name="priority"
+                value={taskForm.priority ?? "medium"}
+                onChange={(e) => setTaskForm((f) => ({ ...f, priority: e.target.value as Task["priority"] }))}
+              >
+                {["low", "medium", "high"].map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </FormField>
+              <FormField
+                as="select"
+                label="Task status"
+                name="status"
+                value={taskForm.status ?? "pending"}
+                onChange={(e) => setTaskForm((f) => ({ ...f, status: e.target.value as Task["status"] }))}
+              >
+                {["pending", "in-progress", "done"].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </FormField>
             </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button className="btn-primary" style={{ flex: 1 }} onClick={saveTask}>
-                Create Task
-              </button>
-              <button className="btn-ghost" onClick={() => { setShowAddTask(false); setTaskErrors({}); }}>
+            <Group grow mt={4}>
+              <Button onClick={saveTask}>Create Task</Button>
+              <Button variant="default" onClick={() => { setShowAddTask(false); setTaskErrors({}); }}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}

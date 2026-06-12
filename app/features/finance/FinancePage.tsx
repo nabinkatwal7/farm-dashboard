@@ -36,6 +36,7 @@ import {
   type ExpenseRecord,
   type SaleRecord,
 } from "@/app/base/services/farm-client";
+import { Button, Group } from "@mantine/core";
 
 const FINANCE_ENTITIES = {
   expenses: "expenses",
@@ -1000,71 +1001,37 @@ export default function FinancePage() {
           maxWidth={560}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {/* Date + Category */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 12,
-              }}
-            >
-              <div>
-                <label
-                  className="text-muted"
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  Date
-                </label>
-                <input
-                  className="farm-input"
-                  type="date"
-                  value={
-                    expenseForm.date ?? new Date().toISOString().slice(0, 10)
-                  }
-                  onChange={(e) =>
-                    setExpenseForm((f) => ({ ...f, date: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <label
-                  className="text-muted"
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  Category
-                </label>
-                <select
-                  className="farm-input"
-                  value={expenseForm.category ?? "other"}
-                  onChange={(e) =>
-                    setExpenseForm((f) => ({
-                      ...f,
-                      category: e.target.value as ExpenseRecord["category"],
-                    }))
-                  }
-                >
-                  {EXPENSE_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <FormField
+                label="Expense date"
+                name="expense-date"
+                type="date"
+                value={expenseForm.date ?? new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setExpenseForm((f) => ({ ...f, date: e.target.value }))}
+              />
+              <FormField
+                as="select"
+                label="Expense category"
+                name="expense-category"
+                value={expenseForm.category ?? "other"}
+                onChange={(e) =>
+                  setExpenseForm((f) => ({
+                    ...f,
+                    category: e.target.value as ExpenseRecord["category"],
+                  }))
+                }
+              >
+                {EXPENSE_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </FormField>
             </div>
 
             <FormField
               label="Description"
               name="expense-desc"
               type="text"
-              placeholder="e.g. Diesel fuel delivery"
+              placeholder="Diesel fuel delivery"
               required
               error={expenseErrors.description}
               value={String(expenseForm.description ?? "")}
@@ -1072,7 +1039,8 @@ export default function FinancePage() {
             />
 
             <FormField
-              label="Amount (£)"
+              label="Amount"
+              helperText="Enter the expense amount in GBP."
               name="expense-amount"
               type="number"
               placeholder="0.00"
@@ -1084,118 +1052,45 @@ export default function FinancePage() {
               onChange={(e) => setExpenseForm((f) => ({ ...f, amount: +e.target.value }))}
             />
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 12,
-              }}
-            >
-              <div>
-                <label
-                  className="text-muted"
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  Supplier
-                </label>
-                <input
-                  className="farm-input"
-                  type="text"
-                  placeholder="e.g. AgriSupplies Ltd"
-                  value={expenseForm.supplier ?? ""}
-                  onChange={(e) =>
-                    setExpenseForm((f) => ({ ...f, supplier: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <label
-                  className="text-muted"
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  Invoice Ref
-                </label>
-                <input
-                  className="farm-input"
-                  type="text"
-                  placeholder="e.g. INV-2025-001"
-                  value={expenseForm.invoiceRef ?? ""}
-                  onChange={(e) =>
-                    setExpenseForm((f) => ({
-                      ...f,
-                      invoiceRef: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Field / Area */}
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Field / Area
-              </label>
-              <input
-                className="farm-input"
-                type="text"
-                placeholder="e.g. North Meadow (optional)"
-                value={expenseForm.fieldName ?? ""}
-                onChange={(e) =>
-                  setExpenseForm((f) => ({ ...f, fieldName: e.target.value }))
-                }
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <FormField
+                label="Supplier"
+                name="supplier"
+                placeholder="AgriSupplies Ltd"
+                value={expenseForm.supplier ?? ""}
+                onChange={(e) => setExpenseForm((f) => ({ ...f, supplier: e.target.value }))}
+              />
+              <FormField
+                label="Invoice reference"
+                name="invoiceRef"
+                placeholder="INV-2025-001"
+                value={expenseForm.invoiceRef ?? ""}
+                onChange={(e) => setExpenseForm((f) => ({ ...f, invoiceRef: e.target.value }))}
               />
             </div>
 
-            {/* Notes */}
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Notes
-              </label>
-              <textarea
-                className="farm-input"
-                rows={2}
-                placeholder="Any additional notes…"
-                value={expenseForm.notes ?? ""}
-                onChange={(e) =>
-                  setExpenseForm((f) => ({ ...f, notes: e.target.value }))
-                }
-                style={{ resize: "vertical" }}
-              />
-            </div>
+            <FormField
+              label="Field or area"
+              name="fieldName"
+              placeholder="North Meadow"
+              value={expenseForm.fieldName ?? ""}
+              onChange={(e) => setExpenseForm((f) => ({ ...f, fieldName: e.target.value }))}
+            />
 
-            {/* Actions */}
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveExpense}
-              >
-                Save Expense
-              </button>
-              <button
-                className="btn-ghost"
+            <FormField
+              as="textarea"
+              label="Notes"
+              name="expenseNotes"
+              rows={2}
+              placeholder="Any additional notes"
+              value={expenseForm.notes ?? ""}
+              onChange={(e) => setExpenseForm((f) => ({ ...f, notes: e.target.value }))}
+            />
+
+            <Group grow mt={4}>
+              <Button onClick={saveExpense}>Save Expense</Button>
+              <Button
+                variant="default"
                 onClick={() => {
                   setShowAddExpense(false);
                   setExpenseForm({
@@ -1205,9 +1100,9 @@ export default function FinancePage() {
                 }}
               >
                 Cancel
-              </button>
-            </div>
-          </div>
+              </Button>
+            </Group>
+</div>
         </Modal>
       )}
     </div>

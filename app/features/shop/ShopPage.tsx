@@ -32,6 +32,8 @@ import {
   type Product,
   type SaleRecord,
 } from "@/app/base/services/farm-client";
+import FormField from "@/app/abstract/ui/FormField";
+import { Button, Group } from "@mantine/core";
 
 const SHOP_ENTITIES = {
   products: "products",
@@ -875,63 +877,47 @@ export default function ShopPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {(
               [
-                ["Product Name", "name", "text"],
-                ["Category", "category", "text"],
-                ["Price (£)", "price", "number"],
-                ["Cost (£)", "cost", "number"],
-                ["Stock", "stock", "number"],
-                ["Unit", "unit", "text"],
+                ["Product name", "name", "text"],
+                ["Product category", "category", "text"],
+                ["Sale price", "price", "number"],
+                ["Unit cost", "cost", "number"],
+                ["Stock on hand", "stock", "number"],
+                ["Unit of measure", "unit", "text"],
               ] as [string, keyof Product, string][]
             ).map(([label, key, type]) => (
-              <div key={key}>
-                <label
-                  className="text-muted"
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  {label}
-                </label>
-                <input
-                  className="farm-input"
-                  type={type}
-                  value={editProduct[key] as string | number}
-                  onChange={(e) =>
-                    setEditProduct((p) =>
-                      p
-                        ? {
-                            ...p,
-                            [key]:
-                              type === "number"
-                                ? +e.target.value
-                                : e.target.value,
-                          }
-                        : p
-                    )
-                  }
-                />
-              </div>
+              <FormField
+                key={key}
+                label={label}
+                name={key}
+                type={type}
+                value={editProduct[key] as string | number}
+                onChange={(e) =>
+                  setEditProduct((p) =>
+                    p
+                      ? {
+                          ...p,
+                          [key]:
+                            type === "number"
+                              ? +e.target.value
+                              : e.target.value,
+                        }
+                      : p
+                  )
+                }
+              />
             ))}
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveEditProduct}
-              >
-                Save Product
-              </button>
-              <button
-                className="btn-ghost"
+            <Group grow mt={4}>
+              <Button onClick={saveEditProduct}>Save Product</Button>
+              <Button
+                variant="default"
                 onClick={() => {
                   setShowEditProduct(false);
                   setEditProduct(null);
                 }}
               >
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}

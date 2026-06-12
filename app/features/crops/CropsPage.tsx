@@ -13,6 +13,7 @@ import {
   type YieldRecord,
 } from "@/app/base/services/farm-client";
 import { FileText, Map, Plus, Trash2, TrendingUp, Wheat } from "lucide-react";
+import { Button, Group } from "@mantine/core";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
@@ -771,53 +772,36 @@ export default function CropsPage() {
                 setFieldForm((f) => ({ ...f, currentCrop: e.target.value }))
               }
             />
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                  fontWeight: 500,
-                }}
-              >
-                Status
-              </label>
-              <select
-                className="farm-input"
-                value={fieldForm.status ?? "planted"}
-                onChange={(e) =>
-                  setFieldForm((f) => ({
-                    ...f,
-                    status: e.target.value as CropField["status"],
-                  }))
-                }
-              >
-                {["planted", "growing", "harvested", "fallow"].map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveField}
-              >
-                Save Field
-              </button>
-              <button
-                className="btn-ghost"
+            <FormField
+              as="select"
+              label="Field status"
+              name="status"
+              value={fieldForm.status ?? "planted"}
+              onChange={(e) =>
+                setFieldForm((f) => ({
+                  ...f,
+                  status: e.target.value as CropField["status"],
+                }))
+              }
+            >
+              {["planted", "growing", "harvested", "fallow"].map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </FormField>
+            <Group grow mt={4}>
+              <Button onClick={saveField}>Save Field</Button>
+              <Button
+                variant="default"
                 onClick={() => {
                   setShowAddField(false);
                   setFieldErrors({});
                 }}
               >
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}
@@ -841,56 +825,35 @@ export default function CropsPage() {
                 setInputForm((f) => ({ ...f, date: e.target.value }))
               }
             />
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: inputErrors.fieldId ? "#f87171" : "var(--text-muted)",
-                  display: "block",
-                  marginBottom: 6,
-                  fontWeight: 500,
-                }}
-              >
-                Field <span style={{ color: "#f87171", marginLeft: 2 }}>*</span>
-              </label>
-              <select
-                className="farm-input"
-                style={inputErrors.fieldId ? { borderColor: "#f87171" } : {}}
-                value={inputForm.fieldId ?? ""}
-                onChange={(e) => {
-                  const f = fields.find((f) => f.id === e.target.value);
-                  setInputForm((prev) => ({
-                    ...prev,
-                    fieldId: e.target.value,
-                    fieldName: f?.name ?? "",
-                  }));
-                  if (inputErrors.fieldId)
-                    setInputErrors((e) => {
-                      const n = { ...e };
-                      delete n.fieldId;
-                      return n;
-                    });
-                }}
-              >
-                <option value="">Select field…</option>
-                {fields.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
-              {inputErrors.fieldId && (
-                <div
-                  style={{
-                    fontSize: "0.72rem",
-                    color: "#f87171",
-                    marginTop: 4,
-                  }}
-                >
-                  {inputErrors.fieldId}
-                </div>
-              )}
-            </div>
+            <FormField
+              as="select"
+              label="Field"
+              name="fieldId"
+              required
+              error={inputErrors.fieldId}
+              value={inputForm.fieldId ?? ""}
+              onChange={(e) => {
+                const f = fields.find((f) => f.id === e.target.value);
+                setInputForm((prev) => ({
+                  ...prev,
+                  fieldId: e.target.value,
+                  fieldName: f?.name ?? "",
+                }));
+                if (inputErrors.fieldId)
+                  setInputErrors((e) => {
+                    const n = { ...e };
+                    delete n.fieldId;
+                    return n;
+                  });
+              }}
+            >
+              <option value="">Select field...</option>
+              {fields.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </FormField>
             <div
               style={{
                 display: "grid",
@@ -898,35 +861,24 @@ export default function CropsPage() {
                 gap: 12,
               }}
             >
-              <div>
-                <label
-                  className="text-muted"
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 6,
-                    fontWeight: 500,
-                  }}
-                >
-                  Type
-                </label>
-                <select
-                  className="farm-input"
-                  value={inputForm.type ?? "seed"}
-                  onChange={(e) =>
-                    setInputForm((f) => ({
-                      ...f,
-                      type: e.target.value as InputLog["type"],
-                    }))
-                  }
-                >
-                  {["seed", "fertiliser", "spray", "other"].map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <FormField
+                as="select"
+                label="Input type"
+                name="type"
+                value={inputForm.type ?? "seed"}
+                onChange={(e) =>
+                  setInputForm((f) => ({
+                    ...f,
+                    type: e.target.value as InputLog["type"],
+                  }))
+                }
+              >
+                {["seed", "fertiliser", "spray", "other"].map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </FormField>
               <FormField
                 label="Product"
                 name="product"
@@ -990,21 +942,12 @@ export default function CropsPage() {
                 setInputForm((f) => ({ ...f, notes: e.target.value }))
               }
             />
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveInput}
-              >
-                Save Log
-              </button>
-              <button
-                className="btn-ghost"
-                onClick={() => setShowAddInput(false)}
-              >
+            <Group grow mt={4}>
+              <Button onClick={saveInput}>Save Log</Button>
+              <Button variant="default" onClick={() => setShowAddInput(false)}>
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}
@@ -1019,56 +962,35 @@ export default function CropsPage() {
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: yieldErrors.fieldId ? "#f87171" : "var(--text-muted)",
-                  display: "block",
-                  marginBottom: 6,
-                  fontWeight: 500,
-                }}
-              >
-                Field <span style={{ color: "#f87171", marginLeft: 2 }}>*</span>
-              </label>
-              <select
-                className="farm-input"
-                style={yieldErrors.fieldId ? { borderColor: "#f87171" } : {}}
-                value={yieldForm.fieldId ?? ""}
-                onChange={(e) => {
-                  const f = fields.find((f) => f.id === e.target.value);
-                  setYieldForm((prev) => ({
-                    ...prev,
-                    fieldId: e.target.value,
-                    fieldName: f?.name ?? "",
-                  }));
-                  if (yieldErrors.fieldId)
-                    setYieldErrors((e) => {
-                      const n = { ...e };
-                      delete n.fieldId;
-                      return n;
-                    });
-                }}
-              >
-                <option value="">Select field…</option>
-                {fields.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
-              {yieldErrors.fieldId && (
-                <div
-                  style={{
-                    fontSize: "0.72rem",
-                    color: "#f87171",
-                    marginTop: 4,
-                  }}
-                >
-                  {yieldErrors.fieldId}
-                </div>
-              )}
-            </div>
+            <FormField
+              as="select"
+              label="Field"
+              name="yieldFieldId"
+              required
+              error={yieldErrors.fieldId}
+              value={yieldForm.fieldId ?? ""}
+              onChange={(e) => {
+                const f = fields.find((f) => f.id === e.target.value);
+                setYieldForm((prev) => ({
+                  ...prev,
+                  fieldId: e.target.value,
+                  fieldName: f?.name ?? "",
+                }));
+                if (yieldErrors.fieldId)
+                  setYieldErrors((e) => {
+                    const n = { ...e };
+                    delete n.fieldId;
+                    return n;
+                  });
+              }}
+            >
+              <option value="">Select field...</option>
+              {fields.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </FormField>
             <div
               style={{
                 display: "grid",
@@ -1139,24 +1061,18 @@ export default function CropsPage() {
                 setYieldForm((f) => ({ ...f, unit: e.target.value }))
               }
             />
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1 }}
-                onClick={saveYield}
-              >
-                Save Record
-              </button>
-              <button
-                className="btn-ghost"
+            <Group grow mt={4}>
+              <Button onClick={saveYield}>Save Record</Button>
+              <Button
+                variant="default"
                 onClick={() => {
                   setShowAddYield(false);
                   setYieldErrors({});
                 }}
               >
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </Group>
           </div>
         </Modal>
       )}

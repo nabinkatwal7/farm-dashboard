@@ -1,6 +1,6 @@
-# FarmOS Dashboard
+# FieldPilot Dashboard
 
-FarmOS is a modular Next.js farm management dashboard with a Prisma + SQLite backend. It covers crop records, livestock records, inventory, batch traceability, POS sales, operations, finance, authentication, and role-based user management.
+FieldPilot is a modular Next.js farm management dashboard with a Prisma + SQLite backend. It covers crop records, livestock records, inventory, batch traceability, POS sales, operations, finance, authentication, and role-based user management.
 
 ## Tech Stack
 

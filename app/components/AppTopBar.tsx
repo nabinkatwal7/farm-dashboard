@@ -9,8 +9,33 @@ import {
 } from "@mantine/core";
 import { LogOut, Moon, Sun, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { CurrentUser } from "@/app/lib/user-context";
+
+const routeMeta = [
+  { href: "/", title: "Dashboard", section: "Operations" },
+  { href: "/operations", title: "Operations", section: "Operations" },
+  { href: "/crops", title: "Crops & Fields", section: "Production" },
+  { href: "/livestock", title: "Livestock", section: "Production" },
+  { href: "/seeding", title: "Precision Farming", section: "Production" },
+  { href: "/inventory", title: "Inventory", section: "Commerce" },
+  { href: "/orders", title: "Orders", section: "Commerce" },
+  { href: "/shop", title: "Shop & POS", section: "Commerce" },
+  { href: "/customers", title: "Customers", section: "Commerce" },
+  { href: "/finance", title: "Finance", section: "Administration" },
+  { href: "/users", title: "Users", section: "Administration" },
+  { href: "/profile", title: "Profile", section: "Account" },
+] as const;
+
+function pageMeta(pathname: string) {
+  if (pathname === "/") return routeMeta[0];
+
+  return (
+    routeMeta.find(
+      (route) => route.href !== "/" && pathname.startsWith(route.href)
+    ) ?? { title: "Workspace", section: "FieldPilot" }
+  );
+}
 
 function initials(name?: string | null) {
   if (!name) return "U";
@@ -33,7 +58,9 @@ function roleLabel(role?: string | null) {
 
 export default function AppTopBar({ user }: { user: CurrentUser | null }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const currentPage = pageMeta(pathname);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -44,11 +71,11 @@ export default function AppTopBar({ user }: { user: CurrentUser | null }) {
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-primary">
-            {user?.farm.name ?? "Farm workspace"}
+          <div className="truncate text-base font-semibold tracking-tight text-primary">
+            {currentPage.title}
           </div>
           <div className="truncate text-xs text-muted">
-            {user?.farm.location ?? "Location not set"}
+            {currentPage.section}
           </div>
         </div>
 

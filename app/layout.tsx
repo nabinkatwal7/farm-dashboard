@@ -7,7 +7,7 @@ import "./globals.css";
 const workSans = Work_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "FarmOS — Farm Management Dashboard",
+  title: "FieldPilot - Farm Management Dashboard",
   description:
     "Complete farm management platform for crop tracking, livestock management, inventory control, retail POS, and field operations.",
 };
