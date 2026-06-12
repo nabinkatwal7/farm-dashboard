@@ -262,13 +262,16 @@ export async function createFarmEntity(
     });
   }
 
-  return farmDb[config.model].create({
-    data:
-      config.scopedBy === "farmId"
-        ? { ...data, farmId: user.farmId }
-        : data,
-    include: config.include,
-  });
+  const model = farmDb[config.model];
+  if (!model) throw new ApiError(500, `Invalid model: ${config.model}`);
+  const createData =
+    config.scopedBy === "farmId"
+      ? { ...data, farmId: user.farmId }
+      : data;
+  if (config.include) {
+    return model.create({ data: createData, include: config.include });
+  }
+  return model.create({ data: createData });
 }
 
 export async function updateFarmEntity(

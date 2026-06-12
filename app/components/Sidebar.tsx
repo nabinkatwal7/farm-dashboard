@@ -7,6 +7,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   ClipboardList,
+  CloudSun,
   LayoutDashboard,
   Leaf,
   Package,
@@ -46,6 +47,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     label: "Production",
     items: [
       { href: "/crops", label: "Crops & Fields", icon: Wheat },
+      { href: "/weather", label: "Weather & GDD", icon: CloudSun },
       { href: "/livestock", label: "Livestock", icon: Beef },
       { href: "/seeding", label: "Precision Farming", icon: Leaf },
     ],

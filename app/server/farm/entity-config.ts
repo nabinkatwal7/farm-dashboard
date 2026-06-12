@@ -109,6 +109,31 @@ const ENTITIES: Record<string, EntityConfig> = {
     scopedBy: "farmId",
     orderBy: { label: "asc" },
   },
+  weatherStations: {
+    model: "weatherStation",
+    scopedBy: "farmId",
+    orderBy: { name: "asc" },
+  },
+  weatherRecords: {
+    model: "weatherRecord",
+    scopedBy: "farmId",
+    orderBy: { timestamp: "desc" },
+  },
+  cropModels: {
+    model: "cropModel",
+    scopedBy: "farmId",
+    orderBy: { crop: "asc" },
+  },
+  gddRecords: {
+    model: "gDDRecord",
+    scopedBy: "farmId",
+    orderBy: { date: "desc" },
+  },
+  growthStageForecasts: {
+    model: "growthStageForecast",
+    scopedBy: "farmId",
+    orderBy: { forecastDate: "asc" },
+  },
 };
 
 export const farmDb = prisma as unknown as Record<string, DynamicModelDelegate>;

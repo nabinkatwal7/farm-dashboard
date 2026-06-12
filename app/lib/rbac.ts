@@ -102,6 +102,26 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     read: ["ADMIN", "FARM_MANAGER", "VIEWER"],
     write: ["ADMIN", "FARM_MANAGER"],
   },
+  weatherStations: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER"],
+  },
+  weatherRecords: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER"],
+  },
+  cropModels: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER"],
+  },
+  gddRecords: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER"],
+  },
+  growthStageForecasts: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER"],
+  },
 };
 
 export function canAccess(user: AuthUser, entity: string, action: "read" | "write") {

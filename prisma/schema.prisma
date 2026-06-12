@@ -8,27 +8,31 @@ generator client {
 }
 
 model Farm {
-  id               String            @id @default(uuid())
-  name             String
-  location         String?
-  lat              Float?
-  lng              Float?
-  acreage          Float?
-  users            User[]
-  fields           CropField[]
-  animals          Animal[]
-  breedingRecords  BreedingRecord[]
-  stockItems       StockItem[]
-  batches          BatchRecord[]
-  products         Product[]
-  sales            SaleRecord[]
-  machines         Machine[]
-  tasks            Task[]
-  expenses         ExpenseRecord[]
-  prescriptionMaps PrescriptionMap[]
-  seedIntegrations SeedIntegration[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                 String               @id @default(uuid())
+  name               String
+  location           String?
+  lat                Float?
+  lng                Float?
+  acreage            Float?
+  users              User[]
+  fields             CropField[]
+  animals            Animal[]
+  breedingRecords    BreedingRecord[]
+  stockItems         StockItem[]
+  batches            BatchRecord[]
+  products           Product[]
+  sales              SaleRecord[]
+  machines           Machine[]
+  tasks              Task[]
+  expenses           ExpenseRecord[]
+  prescriptionMaps   PrescriptionMap[]
+  seedIntegrations   SeedIntegration[]
+  weatherStations    WeatherStation[]
+  cropModels         CropModel[]
+  gddRecords         GDDRecord[]
+  growthStageForecasts GrowthStageForecast[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 }
 
 model User {
@@ -58,24 +62,26 @@ model Session {
 }
 
 model CropField {
-  id          String          @id @default(uuid())
-  farmId      String
-  farm        Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
-  name        String
-  acres       Float
-  currentCrop String
-  status      String
-  sowDate     String
-  harvestDate String?
-  lat         Float
-  lng         Float
-  boundary    String          @default("[]")
-  rotation    FieldRotation[]
-  inputs          InputLog[]
-  yields          YieldRecord[]
-  prescriptionMaps PrescriptionMap[]
-  createdAt       DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id                  String                @id @default(uuid())
+  farmId              String
+  farm                Farm                  @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name                String
+  acres               Float
+  currentCrop         String
+  status              String
+  sowDate             String
+  harvestDate         String?
+  lat                 Float
+  lng                 Float
+  boundary            String                @default("[]")
+  rotation            FieldRotation[]
+  inputs              InputLog[]
+  yields              YieldRecord[]
+  prescriptionMaps    PrescriptionMap[]
+  gddRecords          GDDRecord[]
+  growthStageForecasts GrowthStageForecast[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
   @@unique([farmId, name])
 }
@@ -357,4 +363,101 @@ model SeedIntegration {
   updatedAt           DateTime @updatedAt
 
   @@unique([farmId, provider])
+}
+
+model WeatherStation {
+  id             String          @id @default(uuid())
+  farmId         String
+  farm           Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name           String
+  provider       String
+  apiEndpoint    String?
+  apiKey         String?
+  lat            Float?
+  lng            Float?
+  isActive       Boolean         @default(true)
+  lastSyncAt     String?
+  lastSyncStatus String?
+  records        WeatherRecord[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([farmId, name])
+}
+
+model WeatherRecord {
+  id             String          @id @default(uuid())
+  stationId      String
+  station        WeatherStation  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  timestamp      String
+  temperatureMin Float?
+  temperatureMax Float?
+  temperature    Float?
+  humidity       Float?
+  windSpeed      Float?
+  windDirection  Float?
+  precipitation  Float?
+  solarRadiation Float?
+  soilTemp       Float?
+  soilMoisture   Float?
+  createdAt      DateTime        @default(now())
+
+  @@index([stationId, timestamp])
+}
+
+model CropModel {
+  id                String   @id @default(uuid())
+  farmId            String
+  farm              Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  crop              String
+  baseTemp          Float    @default(0)
+  optimalTemp       Float    @default(25)
+  maxTemp           Float    @default(35)
+  gddToGermination  Float?
+  gddToEmergence    Float?
+  gddToVegetative   Float?
+  gddToFlowering    Float?
+  gddToFruiting     Float?
+  gddToMaturity     Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([farmId, crop])
+}
+
+model GDDRecord {
+  id              String    @id @default(uuid())
+  farmId          String
+  farm            Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldId         String
+  field           CropField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  season          Int
+  date            String
+  dailyGDD        Float
+  cumulativeGDD   Float
+  method          String    @default("standard")
+  createdAt       DateTime  @default(now())
+
+  @@index([fieldId, season, date])
+}
+
+model GrowthStageForecast {
+  id                 String    @id @default(uuid())
+  farmId             String
+  farm               Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldId            String
+  field              CropField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  crop               String
+  season             Int
+  stage              String
+  forecastDate       String
+  confidence         Float     @default(0.8)
+  gddRequired        Float
+  cumulativeGddAtStage Float
+  actualDate         String?
+  actualGdd          Float?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([fieldId, season, stage])
 }

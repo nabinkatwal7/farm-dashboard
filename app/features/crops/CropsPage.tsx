@@ -4,7 +4,6 @@ import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
-import { useCurrentUser } from "@/app/lib/user-context";
 import {
   deleteData,
   generateId,
@@ -14,8 +13,9 @@ import {
   type InputLog,
   type YieldRecord,
 } from "@/app/base/services/farm-client";
-import { FileText, Map, Plus, Trash2, TrendingUp, Wheat } from "lucide-react";
+import { useCurrentUser } from "@/app/lib/user-context";
 import { Alert, Button, Group } from "@mantine/core";
+import { FileText, Map, Plus, Trash2, TrendingUp, Wheat } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
@@ -70,7 +70,7 @@ function boundaryCenter(points: FieldBoundaryPoint[]) {
       lat: center.lat + point.lat / points.length,
       lng: center.lng + point.lng / points.length,
     }),
-    { lat: 0, lng: 0 },
+    { lat: 0, lng: 0 }
   );
 }
 
@@ -165,7 +165,7 @@ export default function CropsPage() {
       setFieldErrors({});
     } catch (error) {
       setFieldSaveError(
-        error instanceof Error ? error.message : "Unable to create field",
+        error instanceof Error ? error.message : "Unable to create field"
       );
     }
   };
@@ -438,10 +438,7 @@ export default function CropsPage() {
                       {field.status}
                     </span>
                   </div>
-                  <div
-                    className="text-muted"
-                    style={{ fontSize: "0.78rem" }}
-                  >
+                  <div className="text-muted" style={{ fontSize: "0.78rem" }}>
                     {field.currentCrop} · {field.acres} acres
                   </div>
                   <div
@@ -563,10 +560,7 @@ export default function CropsPage() {
                 {inputs.map((log) => (
                   <tr key={log.id}>
                     <td>{new Date(log.date).toLocaleDateString("en-GB")}</td>
-                    <td
-                      className="text-primary"
-                      style={{ fontWeight: 500 }}
-                    >
+                    <td className="text-primary" style={{ fontWeight: 500 }}>
                       {log.fieldName}
                     </td>
                     <td>
@@ -582,17 +576,12 @@ export default function CropsPage() {
                         {log.type}
                       </span>
                     </td>
-                    <td className="text-primary">
-                      {log.product}
-                    </td>
+                    <td className="text-primary">{log.product}</td>
                     <td>
                       {log.quantity} {log.unit}
                     </td>
                     <td>{log.operator}</td>
-                    <td
-                      className="text-muted"
-                      style={{ fontSize: "0.8rem" }}
-                    >
+                    <td className="text-muted" style={{ fontSize: "0.8rem" }}>
                       {log.notes || "—"}
                     </td>
                     <td>

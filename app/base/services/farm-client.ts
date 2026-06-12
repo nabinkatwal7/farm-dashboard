@@ -188,6 +188,73 @@ export type SeedIntegration = {
   lastSyncStatus?: string;
 };
 
+export type WeatherStation = {
+  id: string;
+  name: string;
+  provider: string;
+  apiEndpoint?: string;
+  apiKey?: string;
+  lat?: number;
+  lng?: number;
+  isActive: boolean;
+  lastSyncAt?: string;
+  lastSyncStatus?: string;
+};
+
+export type WeatherRecord = {
+  id: string;
+  stationId: string;
+  timestamp: string;
+  temperatureMin?: number;
+  temperatureMax?: number;
+  temperature?: number;
+  humidity?: number;
+  windSpeed?: number;
+  windDirection?: number;
+  precipitation?: number;
+  solarRadiation?: number;
+  soilTemp?: number;
+  soilMoisture?: number;
+};
+
+export type CropModel = {
+  id: string;
+  crop: string;
+  baseTemp: number;
+  optimalTemp: number;
+  maxTemp: number;
+  gddToGermination?: number;
+  gddToEmergence?: number;
+  gddToVegetative?: number;
+  gddToFlowering?: number;
+  gddToFruiting?: number;
+  gddToMaturity?: number;
+};
+
+export type GDDRecord = {
+  id: string;
+  fieldId: string;
+  season: number;
+  date: string;
+  dailyGDD: number;
+  cumulativeGDD: number;
+  method: "standard";
+};
+
+export type GrowthStageForecast = {
+  id: string;
+  fieldId: string;
+  crop: string;
+  season: number;
+  stage: string;
+  forecastDate: string;
+  confidence: number;
+  gddRequired: number;
+  cumulativeGddAtStage: number;
+  actualDate?: string;
+  actualGdd?: number;
+};
+
 export type ExpenseRecord = {
   id: string;
   date: string;
