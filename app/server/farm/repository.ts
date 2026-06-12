@@ -126,6 +126,28 @@ export async function createFarmEntity(
     });
   }
 
+  if (entity === "prescriptionMaps") {
+    const zones = Array.isArray(data.zones) ? data.zones : [];
+    delete data.zones;
+    return prisma.prescriptionMap.create({
+      data: {
+        ...data,
+        farmId: user.farmId,
+        zones: {
+          create: zones.map((z: Record<string, unknown>) => ({
+            name: String(z.name ?? ""),
+            rate: Number(z.rate),
+            areaAcres: Number(z.areaAcres),
+            lat: Number(z.lat),
+            lng: Number(z.lng),
+            color: String(z.color ?? "#4ade80"),
+          })),
+        },
+      } as Prisma.PrescriptionMapUncheckedCreateInput,
+      include: { zones: true },
+    });
+  }
+
   if (entity === "sales") {
     const items = Array.isArray(data.items)
       ? data.items.map(toSaleItemInput)
@@ -179,6 +201,10 @@ export async function updateFarmEntity(
 
   if (entity === "fields") {
     delete data.rotation;
+  }
+
+  if (entity === "prescriptionMaps") {
+    delete data.zones;
   }
 
   return farmDb[config.model].update({

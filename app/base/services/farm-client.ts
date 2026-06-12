@@ -142,6 +142,46 @@ export type WeightRecord = {
   notes?: string;
 };
 
+export type SeedingZone = {
+  id?: string;
+  name: string;
+  rate: number;
+  areaAcres: number;
+  lat: number;
+  lng: number;
+  color: string;
+};
+
+export type PrescriptionMap = {
+  id: string;
+  name: string;
+  fieldId: string;
+  fieldName: string;
+  crop: string;
+  season: string;
+  targetRate?: number;
+  status: "draft" | "active" | "applied" | "archived";
+  notes?: string;
+  zones: SeedingZone[];
+  exportedAt?: string;
+  exportFormat?: string;
+};
+
+export type SeedIntegration = {
+  id: string;
+  provider: "johndeere" | "fendt";
+  label: string;
+  apiEndpoint?: string;
+  apiKey?: string;
+  username?: string;
+  password?: string;
+  machineId?: string;
+  machineName?: string;
+  isActive: boolean;
+  lastSyncAt?: string;
+  lastSyncStatus?: string;
+};
+
 export type ExpenseRecord = {
   id: string;
   date: string;

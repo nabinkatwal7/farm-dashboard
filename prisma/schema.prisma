@@ -23,6 +23,8 @@ model Farm {
   machines         Machine[]
   tasks            Task[]
   expenses         ExpenseRecord[]
+  prescriptionMaps PrescriptionMap[]
+  seedIntegrations SeedIntegration[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 }
@@ -66,9 +68,10 @@ model CropField {
   lat         Float
   lng         Float
   rotation    FieldRotation[]
-  inputs      InputLog[]
-  yields      YieldRecord[]
-  createdAt   DateTime        @default(now())
+  inputs          InputLog[]
+  yields          YieldRecord[]
+  prescriptionMaps PrescriptionMap[]
+  createdAt       DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
   @@unique([farmId, name])
@@ -296,4 +299,59 @@ model ExpenseRecord {
   fieldName   String?
   invoiceRef  String?
   notes       String?
+}
+
+model PrescriptionMap {
+  id          String         @id @default(uuid())
+  farmId      String
+  farm        Farm           @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name        String
+  fieldId     String
+  field       CropField      @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldName   String
+  crop        String
+  season      String
+  targetRate  Float?
+  status      String         @default("draft")
+  notes       String?
+  zones       SeedingZone[]
+  exportedAt  String?
+  exportFormat String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([farmId, name])
+}
+
+model SeedingZone {
+  id                String           @id @default(uuid())
+  prescriptionMapId String
+  prescriptionMap   PrescriptionMap  @relation(fields: [prescriptionMapId], references: [id], onDelete: Cascade)
+  name              String
+  rate              Float
+  areaAcres         Float
+  lat               Float
+  lng               Float
+  color             String           @default("#4ade80")
+}
+
+model SeedIntegration {
+  id                  String  @id @default(uuid())
+  farmId              String
+  farm                Farm    @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  provider            String
+  label               String
+  apiEndpoint         String?
+  apiKey              String?
+  username            String?
+  password            String?
+  machineId           String?
+  machineName         String?
+  isActive            Boolean @default(false)
+  lastSyncAt          String?
+  lastSyncStatus      String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([farmId, provider])
 }

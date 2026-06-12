@@ -22,6 +22,7 @@ const navItems = [
   { href: "/inventory", label: "Inventory", icon: Package },
   { href: "/shop", label: "Shop & POS", icon: ShoppingCart },
   { href: "/operations", label: "Operations", icon: Wrench },
+  { href: "/seeding", label: "Precision Seeding", icon: Wheat },
   { href: "/finance", label: "Finance & Costs", icon: PoundSterling },
   { href: "/users", label: "Users & Roles", icon: ShieldCheck },
 ];

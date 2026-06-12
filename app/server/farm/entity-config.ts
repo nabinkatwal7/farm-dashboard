@@ -98,6 +98,17 @@ const ENTITIES: Record<string, EntityConfig> = {
     scopedBy: "farmId",
     orderBy: { date: "desc" },
   },
+  prescriptionMaps: {
+    model: "prescriptionMap",
+    scopedBy: "field",
+    include: { zones: true },
+    orderBy: { createdAt: "desc" },
+  },
+  seedIntegrations: {
+    model: "seedIntegration",
+    scopedBy: "farmId",
+    orderBy: { label: "asc" },
+  },
 };
 
 export const farmDb = prisma as unknown as Record<string, DynamicModelDelegate>;

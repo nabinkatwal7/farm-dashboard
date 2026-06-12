@@ -93,6 +93,15 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     read: ["ADMIN", "FARM_MANAGER", "ACCOUNTANT", "VIEWER"],
     write: ["ADMIN", "FARM_MANAGER", "ACCOUNTANT"],
   },
+  prescriptionMaps: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
+  },
+
+  seedIntegrations: {
+    read: ["ADMIN", "FARM_MANAGER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER"],
+  },
 };
 
 export function canAccess(user: AuthUser, entity: string, action: "read" | "write") {
