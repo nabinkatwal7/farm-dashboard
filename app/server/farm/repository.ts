@@ -13,13 +13,52 @@ import {
 } from "@/app/server/farm/payload";
 import { whereForScope } from "@/app/server/farm/scope";
 
+type BoundaryPoint = { lat: number; lng: number };
+
+function isBoundaryPoint(value: unknown): value is BoundaryPoint {
+  if (!value || typeof value !== "object") return false;
+  const point = value as Record<string, unknown>;
+  return (
+    typeof point.lat === "number" &&
+    Number.isFinite(point.lat) &&
+    typeof point.lng === "number" &&
+    Number.isFinite(point.lng)
+  );
+}
+
+function serializeBoundary(value: unknown) {
+  if (!Array.isArray(value)) return "[]";
+  return JSON.stringify(value.filter(isBoundaryPoint));
+}
+
+function parseFieldBoundary<T extends Record<string, unknown>>(field: T) {
+  const raw = field.boundary;
+  if (typeof raw !== "string") return { ...field, boundary: [] };
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return {
+      ...field,
+      boundary: Array.isArray(parsed) ? parsed.filter(isBoundaryPoint) : [],
+    };
+  } catch {
+    return { ...field, boundary: [] };
+  }
+}
+
 export async function listFarmEntity(entity: string, user: AuthUser) {
   const config = getEntityConfig(entity);
-  return farmDb[config.model].findMany({
+  const records = await farmDb[config.model].findMany({
     where: whereForScope(config, user.farmId),
     include: config.include,
     orderBy: config.orderBy,
   });
+  if (entity === "fields") {
+    return records.map((record) =>
+      parseFieldBoundary(record as Record<string, unknown>),
+    );
+  }
+  return records;
 }
 
 export async function createFarmEntity(
@@ -32,8 +71,9 @@ export async function createFarmEntity(
 
   if (entity === "fields") {
     const rotation = Array.isArray(data.rotation) ? data.rotation : [];
+    data.boundary = serializeBoundary(data.boundary);
     delete data.rotation;
-    return prisma.cropField.create({
+    const field = await prisma.cropField.create({
       data: {
         ...data,
         farmId: user.farmId,
@@ -43,6 +83,7 @@ export async function createFarmEntity(
       } as Prisma.CropFieldUncheckedCreateInput,
       include: { rotation: true },
     });
+    return parseFieldBoundary(field as unknown as Record<string, unknown>);
   }
 
   if (entity === "inputLogs") {
@@ -200,6 +241,7 @@ export async function updateFarmEntity(
   const data = cleanBody(body);
 
   if (entity === "fields") {
+    data.boundary = serializeBoundary(data.boundary);
     delete data.rotation;
   }
 
@@ -207,11 +249,15 @@ export async function updateFarmEntity(
     delete data.zones;
   }
 
-  return farmDb[config.model].update({
+  const updated = await farmDb[config.model].update({
     where: { id },
     data,
     include: config.include,
   });
+  if (entity === "fields") {
+    return parseFieldBoundary(updated as Record<string, unknown>);
+  }
+  return updated;
 }
 
 export async function deleteFarmEntity(

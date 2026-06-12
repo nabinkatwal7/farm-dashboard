@@ -124,7 +124,7 @@ export default function OperationsPage() {
   const breakdown = machines.filter((m) => m.status === "breakdown");
 
   return (
-    <div style={{ padding: "32px 32px 48px" }}>
+    <div style={{ padding: 24 }}>
       {/* Offline banner */}
       <div
         style={{

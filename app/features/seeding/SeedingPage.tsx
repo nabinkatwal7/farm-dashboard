@@ -153,7 +153,7 @@ export default function SeedingPage() {
   };
 
   return (
-    <div style={{ padding: "32px 32px 48px" }}>
+    <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 28 }}>
         <h1
           className="text-primary"
@@ -518,7 +518,7 @@ export default function SeedingPage() {
               <tbody>
                 {prescriptionMaps.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="text-muted" style={{ textAlign: "center", padding: 32 }}>
+                    <td colSpan={8} className="text-muted" style={{ textAlign: "center", padding: 24 }}>
                       No prescription maps yet
                     </td>
                   </tr>
@@ -654,7 +654,7 @@ export default function SeedingPage() {
                 className="text-muted"
                 style={{
                   fontSize: "0.85rem",
-                  padding: "32px 0",
+                  padding: "24px 0",
                   textAlign: "center",
                 }}
               >

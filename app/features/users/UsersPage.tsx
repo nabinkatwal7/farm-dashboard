@@ -65,7 +65,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="p-8 pb-12">
+    <div className="p-6">
       <div className="mb-7 flex justify-between items-start">
         <div>
           <h1 className="text-[1.6rem] font-extrabold text-primary">Users & Roles</h1>

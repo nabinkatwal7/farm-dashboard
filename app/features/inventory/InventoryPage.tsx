@@ -123,7 +123,7 @@ export default function InventoryPage() {
   const totalValue = stock.reduce((s, item) => s + item.quantity, 0);
 
   return (
-    <div style={{ padding: "32px 32px 48px" }}>
+    <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 28 }}>
         <h1
           className="text-primary"

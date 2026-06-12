@@ -183,7 +183,7 @@ textarea {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-transparent px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-150 disabled:pointer-events-none disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-transparent px-3.5 py-2 text-sm font-semibold text-white transition-colors duration-150 disabled:pointer-events-none disabled:opacity-60;
     background: var(--interactive-default);
   }
 
@@ -210,7 +210,8 @@ textarea {
 
   .farm-input:focus {
     border-color: var(--interactive-default);
-    box-shadow: 0 0 0 2px color-mix(in oklab, var(--interactive-default) 20%, transparent);
+    outline: 2px solid color-mix(in oklab, var(--interactive-default) 28%, transparent);
+    outline-offset: 1px;
   }
 
   .farm-table {
@@ -326,11 +327,8 @@ textarea {
   border-radius: 12px;
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, var(--interactive-default), var(--feedback-info));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.accent-text {
+  color: var(--interactive-default);
 }
 
 [data-theme="dark"] .leaflet-container {

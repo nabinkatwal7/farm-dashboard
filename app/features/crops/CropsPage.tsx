@@ -9,6 +9,7 @@ import {
   generateId,
   saveData,
   type CropField,
+  type FieldBoundaryPoint,
   type InputLog,
   type YieldRecord,
 } from "@/app/base/services/farm-client";
@@ -62,6 +63,16 @@ const STATUS_COLORS: Record<string, string> = {
   fallow: "#64748b",
 };
 
+function boundaryCenter(points: FieldBoundaryPoint[]) {
+  return points.reduce(
+    (center, point) => ({
+      lat: center.lat + point.lat / points.length,
+      lng: center.lng + point.lng / points.length,
+    }),
+    { lat: 0, lng: 0 },
+  );
+}
+
 export default function CropsPage() {
   const [tab, setTab] = useState<Tab>("map");
   const { data, reload: load } = useFarmData(CROP_ENTITIES);
@@ -84,18 +95,23 @@ export default function CropsPage() {
     if (!fieldForm.acres || fieldForm.acres <= 0)
       errors.acres = "Valid acreage is required";
     if (!fieldForm.sowDate) errors.sowDate = "Sow date is required";
+    if (!fieldForm.boundary || fieldForm.boundary.length < 3)
+      errors.boundary = "Mark at least 3 boundary points on the map";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const saveField = async () => {
     if (!validateField()) return;
+    const boundary = fieldForm.boundary ?? [];
+    const center = boundaryCenter(boundary);
     await saveData("fields", {
       id: fieldForm.id || generateId(),
-      lat: 53.94,
-      lng: -1.07,
+      lat: center.lat,
+      lng: center.lng,
       rotation: [],
       ...fieldForm,
+      boundary,
     } as CropField);
     await load();
     setShowAddField(false);
@@ -159,7 +175,7 @@ export default function CropsPage() {
   const totalAcres = fields.reduce((s, f) => s + f.acres, 0);
 
   return (
-    <div style={{ padding: "32px 32px 48px" }}>
+    <div style={{ padding: 24 }}>
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <h1
@@ -715,8 +731,10 @@ export default function CropsPage() {
           title="Add New Field"
           onClose={() => {
             setShowAddField(false);
+            setFieldForm({});
             setFieldErrors({});
           }}
+          maxWidth={760}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
@@ -790,12 +808,84 @@ export default function CropsPage() {
                 </option>
               ))}
             </FormField>
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-medium text-primary">
+                    Field boundary
+                  </div>
+                  <div className="text-xs text-muted">
+                    Click the map to mark the field boundary. Use at least 3
+                    points.
+                  </div>
+                </div>
+                <Group gap="xs">
+                  <Button
+                    size="xs"
+                    variant="default"
+                    onClick={() =>
+                      setFieldForm((current) => ({
+                        ...current,
+                        boundary: current.boundary?.slice(0, -1) ?? [],
+                      }))
+                    }
+                    disabled={!fieldForm.boundary?.length}
+                  >
+                    Undo
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="default"
+                    onClick={() =>
+                      setFieldForm((current) => ({
+                        ...current,
+                        boundary: [],
+                      }))
+                    }
+                    disabled={!fieldForm.boundary?.length}
+                  >
+                    Clear
+                  </Button>
+                </Group>
+              </div>
+              <div
+                className={`overflow-hidden rounded-xl border ${
+                  fieldErrors.boundary ? "border-red" : "border-border"
+                }`}
+              >
+                <FieldMap
+                  fields={fields}
+                  drawingBoundary
+                  draftBoundary={fieldForm.boundary ?? []}
+                  onBoundaryChange={(boundary) => {
+                    setFieldForm((current) => ({ ...current, boundary }));
+                    if (fieldErrors.boundary) {
+                      setFieldErrors((current) => {
+                        const next = { ...current };
+                        delete next.boundary;
+                        return next;
+                      });
+                    }
+                  }}
+                  height={300}
+                />
+              </div>
+              <div
+                className={`mt-1 text-xs ${
+                  fieldErrors.boundary ? "text-red" : "text-muted"
+                }`}
+              >
+                {fieldErrors.boundary ??
+                  `${fieldForm.boundary?.length ?? 0} boundary points marked`}
+              </div>
+            </div>
             <Group grow mt={4}>
               <Button onClick={saveField}>Save Field</Button>
               <Button
                 variant="default"
                 onClick={() => {
                   setShowAddField(false);
+                  setFieldForm({});
                   setFieldErrors({});
                 }}
               >

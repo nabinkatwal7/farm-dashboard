@@ -141,7 +141,7 @@ export default function LivestockPage() {
   );
 
   return (
-    <div style={{ padding: "32px 32px 48px" }}>
+    <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 28 }}>
         <h1
           className="text-primary"
@@ -719,8 +719,7 @@ export default function LivestockPage() {
                           style={{
                             height: "100%",
                             borderRadius: 4,
-                            background:
-                              "linear-gradient(90deg, #a78bfa, #7c3aed)",
+                            background: "#7c3aed",
                             width: `${progress}%`,
                             transition: "width 0.4s",
                           }}

@@ -103,11 +103,11 @@ export default function LoginPage() {
     <main className="min-h-screen w-full grid place-items-center p-6">
       <form
         onSubmit={handleSubmit(submit)}
-        className="w-[min(460px,100%)] bg-card border border-border rounded-xl p-7 flex flex-col gap-3.5"
+        className="w-[min(460px,100%)] bg-card border border-border rounded-xl p-6 flex flex-col gap-3.5"
       >
         <div className="flex items-center gap-3">
-          <div className="w-[42px] h-[42px] rounded-xl bg-gradient-to-br from-[#4ade80] to-[#22d3ee] grid place-items-center">
-            <Leaf color="#000" size={22} strokeWidth={2.5} />
+          <div className="grid h-[42px] w-[42px] place-items-center rounded-xl border border-border bg-card text-green">
+            <Leaf size={22} strokeWidth={2.5} />
           </div>
           <div>
             <h1 className="text-[1.35rem] font-extrabold text-primary">

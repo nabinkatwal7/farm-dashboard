@@ -90,12 +90,10 @@ type PriorityItem = {
 };
 
 const severityStyles: Record<PriorityLevel, string> = {
-  critical:
-    "border-red/30 bg-red/10 text-red shadow-[0_0_0_1px_rgba(239,68,68,0.08)]",
-  high: "border-amber/30 bg-amber/10 text-amber shadow-[0_0_0_1px_rgba(245,158,11,0.08)]",
-  medium:
-    "border-blue/30 bg-blue/10 text-blue shadow-[0_0_0_1px_rgba(96,165,250,0.08)]",
-  low: "border-green/30 bg-green/10 text-green shadow-[0_0_0_1px_rgba(34,197,94,0.08)]",
+  critical: "border-red/40 bg-card text-red",
+  high: "border-amber/40 bg-card text-amber",
+  medium: "border-blue/40 bg-card text-blue",
+  low: "border-green/40 bg-card text-green",
 };
 
 const chartGrid = "color-mix(in oklab, var(--stroke-subtle) 70%, transparent)";
@@ -157,7 +155,7 @@ function EmptyState({
   href: string;
 }) {
   return (
-    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card-hover/40 p-8 text-center">
+    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card-hover/40 p-6 text-center">
       <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl border border-border bg-surface text-green">
         <Leaf size={22} />
       </div>
@@ -638,9 +636,9 @@ export default function DashboardPage() {
     : CloudRain;
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 text-primary sm:px-6 lg:px-8 lg:py-8">
-      <div className="mx-auto flex max-w-[1500px] flex-col gap-8">
-        <section className="rounded-2xl border border-border bg-[linear-gradient(135deg,color-mix(in_oklab,var(--canvas-surface-01)_95%,var(--interactive-default)_5%),var(--canvas-surface-02))] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.12)] sm:p-5 xl:flex xl:items-center xl:justify-between xl:gap-6">
+    <div className="min-h-screen bg-background px-3 py-4 text-primary sm:px-4 lg:px-4 lg:py-4">
+      <div className="flex w-full flex-col gap-6">
+        <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 xl:flex xl:items-center xl:justify-between xl:gap-6">
           <div className="min-w-0">
             <div className="text-sm font-semibold text-primary">
               Good morning, {currentUser?.name ?? "there"}
@@ -676,7 +674,7 @@ export default function DashboardPage() {
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_16px_60px_rgba(0,0,0,0.14)] sm:p-6">
+          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
             <SectionTitle
               eyebrow="Today"
               title="Priorities that need a decision"
@@ -723,7 +721,7 @@ export default function DashboardPage() {
                 })}
               </div>
             ) : (
-              <div className="rounded-xl border border-border bg-card-hover/50 p-8 text-center">
+              <div className="rounded-xl border border-border bg-card-hover/50 p-6 text-center">
                 <CheckCircle2 size={34} className="mx-auto mb-3 text-green" />
                 <div className="text-sm font-semibold text-primary">
                   No urgent exceptions for today
@@ -785,7 +783,7 @@ export default function DashboardPage() {
               href="/crops"
             />
             {weatherLoading && (
-              <div className="rounded-xl border border-border bg-card-hover/40 p-8 text-sm text-muted">
+              <div className="rounded-xl border border-border bg-card-hover/40 p-6 text-sm text-muted">
                 Loading farm weather guidance...
               </div>
             )}

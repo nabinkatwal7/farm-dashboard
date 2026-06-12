@@ -1,3 +1,8 @@
+export type FieldBoundaryPoint = {
+  lat: number;
+  lng: number;
+};
+
 export type CropField = {
   id: string;
   name: string;
@@ -8,6 +13,7 @@ export type CropField = {
   harvestDate?: string;
   lat: number;
   lng: number;
+  boundary?: FieldBoundaryPoint[];
   rotation: Array<{ id?: string; year: number; crop: string }>;
 };
 

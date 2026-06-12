@@ -261,7 +261,7 @@ export default function FinancePage() {
   });
 
   return (
-    <div style={{ padding: "32px 32px 48px" }}>
+    <div style={{ padding: 24 }}>
       {/* ── Page Header ─────────────────────────────────────────────────── */}
       <div style={{ marginBottom: 28 }}>
         <h1
@@ -454,7 +454,7 @@ export default function FinancePage() {
                   style={{
                     fontSize: "0.875rem",
                     textAlign: "center",
-                    padding: "56px 0",
+                    padding: "24px 0",
                   }}
                 >
                   No expense data for this year
@@ -521,7 +521,7 @@ export default function FinancePage() {
                   className="text-muted"
                   style={{
                     fontSize: "0.875rem",
-                    padding: "56px 0",
+                    padding: "24px 0",
                     textAlign: "center",
                   }}
                 >
@@ -710,7 +710,7 @@ export default function FinancePage() {
                         className="text-muted"
                         style={{
                           textAlign: "center",
-                          padding: "36px 0",
+                          padding: "24px 0",
                         }}
                       >
                         {search || categoryFilter
@@ -816,7 +816,7 @@ export default function FinancePage() {
                 style={{
                   fontSize: "0.875rem",
                   textAlign: "center",
-                  padding: "72px 0",
+                  padding: "24px 0",
                 }}
               >
                 No data available yet — add expenses or record sales to populate
@@ -912,7 +912,7 @@ export default function FinancePage() {
                       className="text-muted"
                       style={{
                         textAlign: "center",
-                        padding: "36px 0",
+                        padding: "24px 0",
                       }}
                     >
                       No data available yet

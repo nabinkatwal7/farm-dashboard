@@ -68,7 +68,7 @@ export default function AppTopBar({ user }: { user: CurrentUser | null }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-6">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="truncate text-base font-semibold tracking-tight text-primary">
@@ -79,7 +79,7 @@ export default function AppTopBar({ user }: { user: CurrentUser | null }) {
           </div>
         </div>
 
-        <Menu position="bottom-end" width={260} shadow="lg">
+        <Menu position="bottom-end" width={260} shadow="none">
           <Menu.Target>
             <UnstyledButton className="flex items-center gap-3 rounded-xl border border-border bg-card px-2.5 py-2 transition-colors hover:bg-card-hover">
               <Avatar radius="xl" color="farmGreen" size={34}>

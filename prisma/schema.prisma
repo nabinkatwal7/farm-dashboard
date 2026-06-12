@@ -67,6 +67,7 @@ model CropField {
   harvestDate String?
   lat         Float
   lng         Float
+  boundary    String          @default("[]")
   rotation    FieldRotation[]
   inputs          InputLog[]
   yields          YieldRecord[]
