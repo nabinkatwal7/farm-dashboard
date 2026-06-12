@@ -134,6 +134,26 @@ const ENTITIES: Record<string, EntityConfig> = {
     scopedBy: "farmId",
     orderBy: { forecastDate: "asc" },
   },
+  soilZones: {
+    model: "soilZone",
+    scopedBy: "farmId",
+    orderBy: { name: "asc" },
+  },
+  soilMoistureRecords: {
+    model: "soilMoistureRecord",
+    scopedBy: "farmId",
+    orderBy: { timestamp: "desc" },
+  },
+  waterTableReadings: {
+    model: "waterTableReading",
+    scopedBy: "farmId",
+    orderBy: { timestamp: "desc" },
+  },
+  irrigationEvents: {
+    model: "irrigationEvent",
+    scopedBy: "farmId",
+    orderBy: { date: "desc" },
+  },
 };
 
 export const farmDb = prisma as unknown as Record<string, DynamicModelDelegate>;

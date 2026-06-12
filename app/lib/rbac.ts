@@ -46,11 +46,23 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
   },
   animals: {
-    read: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY", "VIEWER"],
+    read: [
+      "ADMIN",
+      "FARM_MANAGER",
+      "LIVESTOCK_MANAGER",
+      "VETERINARY",
+      "VIEWER",
+    ],
     write: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER"],
   },
   medicalRecords: {
-    read: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY", "VIEWER"],
+    read: [
+      "ADMIN",
+      "FARM_MANAGER",
+      "LIVESTOCK_MANAGER",
+      "VETERINARY",
+      "VIEWER",
+    ],
     write: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY"],
   },
   breedingRecords: {
@@ -58,23 +70,54 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     write: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER"],
   },
   weightRecords: {
-    read: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY", "VIEWER"],
+    read: [
+      "ADMIN",
+      "FARM_MANAGER",
+      "LIVESTOCK_MANAGER",
+      "VETERINARY",
+      "VIEWER",
+    ],
     write: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY"],
   },
   stockItems: {
-    read: ["ADMIN", "FARM_MANAGER", "INVENTORY_MANAGER", "SHOP_STAFF", "VIEWER"],
+    read: [
+      "ADMIN",
+      "FARM_MANAGER",
+      "INVENTORY_MANAGER",
+      "SHOP_STAFF",
+      "VIEWER",
+    ],
     write: ["ADMIN", "FARM_MANAGER", "INVENTORY_MANAGER"],
   },
   stockAdjustments: {
-    read: ["ADMIN", "FARM_MANAGER", "INVENTORY_MANAGER", "SHOP_STAFF", "VIEWER"],
+    read: [
+      "ADMIN",
+      "FARM_MANAGER",
+      "INVENTORY_MANAGER",
+      "SHOP_STAFF",
+      "VIEWER",
+    ],
     write: ["ADMIN", "FARM_MANAGER", "INVENTORY_MANAGER"],
   },
   batches: {
-    read: ["ADMIN", "FARM_MANAGER", "INVENTORY_MANAGER", "SHOP_STAFF", "VIEWER"],
+    read: [
+      "ADMIN",
+      "FARM_MANAGER",
+      "INVENTORY_MANAGER",
+      "SHOP_STAFF",
+      "VIEWER",
+    ],
     write: ["ADMIN", "FARM_MANAGER", "INVENTORY_MANAGER"],
   },
   products: {
-    read: ["ADMIN", "FARM_MANAGER", "INVENTORY_MANAGER", "SHOP_STAFF", "ACCOUNTANT", "VIEWER"],
+    read: [
+      "ADMIN",
+      "FARM_MANAGER",
+      "INVENTORY_MANAGER",
+      "SHOP_STAFF",
+      "ACCOUNTANT",
+      "VIEWER",
+    ],
     write: ["ADMIN", "FARM_MANAGER", "INVENTORY_MANAGER", "SHOP_STAFF"],
   },
   sales: {
@@ -86,8 +129,23 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
   },
   tasks: {
-    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "LIVESTOCK_MANAGER", "INVENTORY_MANAGER", "SHOP_STAFF", "VIEWER"],
-    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "LIVESTOCK_MANAGER", "INVENTORY_MANAGER", "SHOP_STAFF"],
+    read: [
+      "ADMIN",
+      "FARM_MANAGER",
+      "FIELD_WORKER",
+      "LIVESTOCK_MANAGER",
+      "INVENTORY_MANAGER",
+      "SHOP_STAFF",
+      "VIEWER",
+    ],
+    write: [
+      "ADMIN",
+      "FARM_MANAGER",
+      "FIELD_WORKER",
+      "LIVESTOCK_MANAGER",
+      "INVENTORY_MANAGER",
+      "SHOP_STAFF",
+    ],
   },
   expenses: {
     read: ["ADMIN", "FARM_MANAGER", "ACCOUNTANT", "VIEWER"],
@@ -122,9 +180,29 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
     write: ["ADMIN", "FARM_MANAGER"],
   },
+  soilZones: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
+  },
+  soilMoistureRecords: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
+  },
+  waterTableReadings: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
+  },
+  irrigationEvents: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
+  },
 };
 
-export function canAccess(user: AuthUser, entity: string, action: "read" | "write") {
+export function canAccess(
+  user: AuthUser,
+  entity: string,
+  action: "read" | "write"
+) {
   if (user.role === "ADMIN") return true;
   const config = ACCESS[entity];
   if (!config) return false;

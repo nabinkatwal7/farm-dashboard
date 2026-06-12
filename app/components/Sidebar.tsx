@@ -8,6 +8,7 @@ import {
   CircleDollarSign,
   ClipboardList,
   CloudSun,
+  Droplets,
   LayoutDashboard,
   Leaf,
   Package,
@@ -48,6 +49,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: "/crops", label: "Crops & Fields", icon: Wheat },
       { href: "/weather", label: "Weather & GDD", icon: CloudSun },
+      { href: "/soil", label: "Soil & Moisture", icon: Droplets },
       { href: "/livestock", label: "Livestock", icon: Beef },
       { href: "/seeding", label: "Precision Farming", icon: Leaf },
     ],

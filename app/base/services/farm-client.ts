@@ -255,6 +255,49 @@ export type GrowthStageForecast = {
   actualGdd?: number;
 };
 
+export type SoilZone = {
+  id: string;
+  name: string;
+  fieldId: string;
+  depthFrom: number;
+  depthTo: number;
+  lat?: number;
+  lng?: number;
+  soilType?: string;
+  notes?: string;
+};
+
+export type SoilMoistureRecord = {
+  id: string;
+  zoneId: string;
+  timestamp: string;
+  moisturePercent: number;
+  temperature?: number;
+  electricalConductivity?: number;
+};
+
+export type WaterTableReading = {
+  id: string;
+  fieldId?: string;
+  timestamp: string;
+  depthToWater: number;
+  wellName?: string;
+  lat?: number;
+  lng?: number;
+  notes?: string;
+};
+
+export type IrrigationEvent = {
+  id: string;
+  fieldId: string;
+  date: string;
+  amountMm: number;
+  method: "drip" | "sprinkler" | "flood" | "pivot" | "other";
+  source?: string;
+  durationHours?: number;
+  notes?: string;
+};
+
 export type ExpenseRecord = {
   id: string;
   date: string;

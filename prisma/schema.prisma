@@ -31,6 +31,10 @@ model Farm {
   cropModels         CropModel[]
   gddRecords         GDDRecord[]
   growthStageForecasts GrowthStageForecast[]
+  soilZones          SoilZone[]
+  soilMoistureRecords SoilMoistureRecord[]
+  waterTableReadings WaterTableReading[]
+  irrigationEvents   IrrigationEvent[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -80,6 +84,9 @@ model CropField {
   prescriptionMaps    PrescriptionMap[]
   gddRecords          GDDRecord[]
   growthStageForecasts GrowthStageForecast[]
+  soilZones           SoilZone[]
+  waterTableReadings  WaterTableReading[]
+  irrigationEvents    IrrigationEvent[]
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
@@ -460,4 +467,71 @@ model GrowthStageForecast {
   updatedAt          DateTime  @updatedAt
 
   @@index([fieldId, season, stage])
+}
+
+model SoilZone {
+  id        String                @id @default(uuid())
+  farmId    String
+  farm      Farm                  @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldId   String
+  field     CropField             @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  name      String
+  depthFrom Float
+  depthTo   Float
+  lat       Float?
+  lng       Float?
+  soilType  String?
+  notes     String?
+  records   SoilMoistureRecord[]
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+}
+
+model SoilMoistureRecord {
+  id                    String    @id @default(uuid())
+  zoneId                String
+  zone                  SoilZone  @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  farmId                String
+  farm                  Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  timestamp             String
+  moisturePercent       Float
+  temperature           Float?
+  electricalConductivity Float?
+  createdAt             DateTime  @default(now())
+
+  @@index([zoneId, timestamp])
+}
+
+model WaterTableReading {
+  id          String    @id @default(uuid())
+  farmId      String
+  farm        Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldId     String?
+  field       CropField? @relation(fields: [fieldId], references: [id], onDelete: SetNull)
+  timestamp   String
+  depthToWater Float
+  wellName    String?
+  lat         Float?
+  lng         Float?
+  notes       String?
+  createdAt   DateTime  @default(now())
+
+  @@index([farmId, timestamp])
+}
+
+model IrrigationEvent {
+  id             String        @id @default(uuid())
+  farmId         String
+  farm           Farm          @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldId        String
+  field          CropField     @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  date           String
+  amountMm       Float
+  method         String
+  source         String?
+  durationHours  Float?
+  notes          String?
+  createdAt      DateTime      @default(now())
+
+  @@index([fieldId, date])
 }
