@@ -18,6 +18,8 @@ export type AuthUser = {
     id: string;
     name: string;
     location: string | null;
+    lat: number | null;
+    lng: number | null;
     acreage: number | null;
   };
 };

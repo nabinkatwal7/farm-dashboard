@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   CropField,
   FieldBoundaryPoint,
 } from "@/app/base/services/farm-client";
+import { attachMapPanFallback } from "@/app/components/map-pan-fallback";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
 
 interface FieldMapProps {
   fields: CropField[];
+  farmLocation?: string | null;
+  farmCoordinates?: FieldBoundaryPoint | null;
   drawingBoundary?: boolean;
   draftBoundary?: FieldBoundaryPoint[];
   onBoundaryChange?: (points: FieldBoundaryPoint[]) => void;
@@ -21,6 +24,8 @@ const STATUS_COLORS: Record<string, string> = {
   harvested: "#fbbf24",
   fallow: "#64748b",
 };
+
+const geocodeCache = new Map<string, FieldBoundaryPoint | null>();
 
 function fieldCenter(field: CropField): FieldBoundaryPoint {
   const boundary = field.boundary?.filter(
@@ -51,6 +56,8 @@ function fallbackBoundary(field: CropField): FieldBoundaryPoint[] {
 
 export default function FieldMap({
   fields,
+  farmLocation,
+  farmCoordinates,
   drawingBoundary = false,
   draftBoundary = [],
   onBoundaryChange,
@@ -60,6 +67,10 @@ export default function FieldMap({
   const fieldsLayerRef = useRef<LayerGroup | null>(null);
   const draftLayerRef = useRef<LayerGroup | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const initialViewSetRef = useRef(false);
+  const mapDraggedRef = useRef(false);
+  const panCleanupRef = useRef<(() => void) | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -80,18 +91,32 @@ export default function FieldMap({
       }
 
       const map = L.map(container, {
-        center: [53.94, -1.07],
-        zoom: 13,
+        center: [0, 0],
+        dragging: false,
+        zoom: 2,
         zoomControl: true,
+        scrollWheelZoom: true,
+        touchZoom: true,
       });
+      map.dragging.disable();
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "OpenStreetMap contributors",
-      }).addTo(map);
+      L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+          attribution: "Tiles © Esri",
+          maxZoom: 19,
+        },
+      ).addTo(map);
 
       fieldsLayerRef.current = L.layerGroup().addTo(map);
       draftLayerRef.current = L.layerGroup().addTo(map);
+      panCleanupRef.current = attachMapPanFallback(map, {
+        onDrag: () => {
+          mapDraggedRef.current = true;
+        },
+      });
       mapRef.current = map;
+      setMapReady(true);
       window.setTimeout(() => map.invalidateSize(), 0);
     };
 
@@ -99,10 +124,14 @@ export default function FieldMap({
 
     return () => {
       if (mapRef.current) {
+        panCleanupRef.current?.();
+        panCleanupRef.current = null;
         mapRef.current.remove();
         mapRef.current = null;
         fieldsLayerRef.current = null;
         draftLayerRef.current = null;
+        initialViewSetRef.current = false;
+        setMapReady(false);
       }
     };
   }, []);
@@ -110,7 +139,7 @@ export default function FieldMap({
   useEffect(() => {
     const drawFields = async () => {
       const layer = fieldsLayerRef.current;
-      if (!layer) return;
+      if (!mapReady || !layer) return;
 
       const L = (await import("leaflet")).default;
       layer.clearLayers();
@@ -148,15 +177,100 @@ export default function FieldMap({
         });
         L.marker([center.lat, center.lng], { icon }).addTo(layer);
       });
+
+      const points = fields.flatMap((field) =>
+        field.boundary && field.boundary.length >= 3
+          ? field.boundary
+          : [{ lat: field.lat, lng: field.lng }],
+      );
+      const map = mapRef.current;
+      if (map && points.length > 0 && !initialViewSetRef.current) {
+        const bounds = L.latLngBounds(
+          points.map((point) => [point.lat, point.lng]),
+        );
+        map.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
+        initialViewSetRef.current = true;
+      }
     };
 
     void drawFields();
-  }, [fields]);
+  }, [fields, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const location = farmLocation?.trim();
+    if (
+      !mapReady ||
+      !map ||
+      fields.length > 0 ||
+      initialViewSetRef.current
+    ) {
+      return;
+    }
+    const fieldMap = map;
+
+    if (
+      farmCoordinates &&
+      Number.isFinite(farmCoordinates.lat) &&
+      Number.isFinite(farmCoordinates.lng)
+    ) {
+      fieldMap.setView([farmCoordinates.lat, farmCoordinates.lng], 13);
+      initialViewSetRef.current = true;
+      return;
+    }
+
+    if (!location) return;
+    const farmLocationQuery = location;
+
+    let cancelled = false;
+
+    async function centerOnFarmLocation() {
+      const cached = geocodeCache.get(farmLocationQuery);
+      if (cached !== undefined) {
+        if (cached && !cancelled) {
+          fieldMap.setView([cached.lat, cached.lng], 13);
+          initialViewSetRef.current = true;
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(
+            farmLocationQuery,
+          )}`,
+        );
+        const results = (await response.json()) as Array<{
+          lat?: string;
+          lon?: string;
+        }>;
+        const first = results[0];
+        const point =
+          first?.lat && first?.lon
+            ? { lat: Number(first.lat), lng: Number(first.lon) }
+            : null;
+
+        geocodeCache.set(farmLocationQuery, point);
+        if (point && !cancelled) {
+          fieldMap.setView([point.lat, point.lng], 13);
+          initialViewSetRef.current = true;
+        }
+      } catch {
+        geocodeCache.set(farmLocationQuery, null);
+      }
+    }
+
+    void centerOnFarmLocation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [farmCoordinates, farmLocation, fields.length, mapReady]);
 
   useEffect(() => {
     const drawDraft = async () => {
       const layer = draftLayerRef.current;
-      if (!layer) return;
+      if (!mapReady || !layer) return;
 
       const L = (await import("leaflet")).default;
       layer.clearLayers();
@@ -167,6 +281,7 @@ export default function FieldMap({
           color: "#2563eb",
           fillColor: "#2563eb",
           fillOpacity: 1,
+          interactive: false,
           weight: 2,
         })
           .bindTooltip(String(index + 1), {
@@ -180,7 +295,12 @@ export default function FieldMap({
       if (draftBoundary.length >= 2) {
         L.polyline(
           draftBoundary.map((point) => [point.lat, point.lng]),
-          { color: "#2563eb", dashArray: "6 6", weight: 2 },
+          {
+            color: "#2563eb",
+            dashArray: "6 6",
+            interactive: false,
+            weight: 2,
+          },
         ).addTo(layer);
       }
 
@@ -191,6 +311,7 @@ export default function FieldMap({
             color: "#2563eb",
             fillColor: "#2563eb",
             fillOpacity: 0.16,
+            interactive: false,
             weight: 2,
           },
         ).addTo(layer);
@@ -198,13 +319,20 @@ export default function FieldMap({
     };
 
     void drawDraft();
-  }, [draftBoundary]);
+  }, [draftBoundary, mapReady]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !drawingBoundary || !onBoundaryChange) return;
 
+    const handleDragStart = () => {
+      mapDraggedRef.current = true;
+    };
     const handleClick = (event: { latlng: { lat: number; lng: number } }) => {
+      if (mapDraggedRef.current) {
+        mapDraggedRef.current = false;
+        return;
+      }
       onBoundaryChange([
         ...draftBoundary,
         { lat: event.latlng.lat, lng: event.latlng.lng },
@@ -212,9 +340,11 @@ export default function FieldMap({
     };
 
     map.getContainer().style.cursor = "crosshair";
+    map.on("dragstart", handleDragStart);
     map.on("click", handleClick);
 
     return () => {
+      map.off("dragstart", handleDragStart);
       map.off("click", handleClick);
       map.getContainer().style.cursor = "";
     };

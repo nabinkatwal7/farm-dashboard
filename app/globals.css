@@ -342,15 +342,10 @@ textarea {
 .leaflet-container {
   isolation: isolate;
   z-index: 0;
+  cursor: grab;
+  touch-action: none;
 }
 
-.leaflet-pane,
-.leaflet-top,
-.leaflet-bottom {
-  z-index: 1 !important;
-}
-
-.leaflet-popup-pane,
-.leaflet-tooltip-pane {
-  z-index: 2 !important;
+.leaflet-container.leaflet-dragging {
+  cursor: grabbing;
 }

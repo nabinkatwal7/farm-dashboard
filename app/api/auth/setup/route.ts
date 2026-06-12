@@ -14,9 +14,25 @@ export async function POST(request: Request) {
     const name = requireString(body.name, "name");
     const email = requireString(body.email, "email").toLowerCase();
     const password = requireString(body.password, "password");
+    const lat =
+      typeof body.lat === "number" && Number.isFinite(body.lat)
+        ? body.lat
+        : null;
+    const lng =
+      typeof body.lng === "number" && Number.isFinite(body.lng)
+        ? body.lng
+        : null;
 
     if (password.length < 8) {
       throw new ApiError(400, "password must be at least 8 characters");
+    }
+
+    if (lat !== null && (lat < -90 || lat > 90)) {
+      throw new ApiError(400, "latitude is invalid");
+    }
+
+    if (lng !== null && (lng < -180 || lng > 180)) {
+      throw new ApiError(400, "longitude is invalid");
     }
 
     const passwordHash = await hashPassword(password);
@@ -33,6 +49,8 @@ export async function POST(request: Request) {
               typeof body.location === "string" && body.location.trim()
                 ? body.location.trim()
                 : null,
+            lat,
+            lng,
             acreage:
               typeof body.acreage === "number" && Number.isFinite(body.acreage)
                 ? body.acreage

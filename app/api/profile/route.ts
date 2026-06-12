@@ -11,13 +11,15 @@ function serializeProfile(user: {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  farm: {
-    id: string;
-    name: string;
-    location: string | null;
-    acreage: number | null;
-    createdAt: Date;
-    updatedAt: Date;
+    farm: {
+      id: string;
+      name: string;
+      location: string | null;
+      lat: number | null;
+      lng: number | null;
+      acreage: number | null;
+      createdAt: Date;
+      updatedAt: Date;
   };
 }) {
   return {
@@ -32,6 +34,8 @@ function serializeProfile(user: {
       id: user.farm.id,
       name: user.farm.name,
       location: user.farm.location,
+      lat: user.farm.lat,
+      lng: user.farm.lng,
       acreage: user.farm.acreage,
       createdAt: user.farm.createdAt.toISOString(),
       updatedAt: user.farm.updatedAt.toISOString(),
@@ -81,6 +85,8 @@ export async function PATCH(request: Request) {
     const farmData: {
       name?: string;
       location?: string | null;
+      lat?: number | null;
+      lng?: number | null;
       acreage?: number | null;
     } = {};
 
@@ -125,6 +131,10 @@ export async function PATCH(request: Request) {
     const wantsFarmUpdate =
       typeof body.farmName === "string" ||
       typeof body.farmLocation === "string" ||
+      typeof body.farmLat === "number" ||
+      body.farmLat === null ||
+      typeof body.farmLng === "number" ||
+      body.farmLng === null ||
       typeof body.farmAcreage === "number" ||
       body.farmAcreage === null;
 
@@ -148,6 +158,30 @@ export async function PATCH(request: Request) {
         const location = body.farmLocation.trim() || null;
         if (location !== existingUser.farm.location) {
           farmData.location = location;
+        }
+      }
+
+      if (typeof body.farmLat === "number" || body.farmLat === null) {
+        if (
+          typeof body.farmLat === "number" &&
+          (body.farmLat < -90 || body.farmLat > 90)
+        ) {
+          throw new ApiError(400, "Farm latitude is invalid");
+        }
+        if (body.farmLat !== existingUser.farm.lat) {
+          farmData.lat = body.farmLat;
+        }
+      }
+
+      if (typeof body.farmLng === "number" || body.farmLng === null) {
+        if (
+          typeof body.farmLng === "number" &&
+          (body.farmLng < -180 || body.farmLng > 180)
+        ) {
+          throw new ApiError(400, "Farm longitude is invalid");
+        }
+        if (body.farmLng !== existingUser.farm.lng) {
+          farmData.lng = body.farmLng;
         }
       }
 

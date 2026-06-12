@@ -2,8 +2,8 @@
 
 import { Leaf } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useCallback, useEffect, useState } from "react";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import {
@@ -13,6 +13,8 @@ import {
   Button,
   Alert,
 } from "@mantine/core";
+import FarmLocationPicker from "@/app/components/FarmLocationPicker";
+import type { FieldBoundaryPoint } from "@/app/base/services/farm-client";
 
 const loginSchema = yup.object({
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -25,6 +27,8 @@ const loginSchema = yup.object({
 const setupSchema = yup.object({
   farmName: yup.string().required("Farm name is required"),
   location: yup.string().nullable(),
+  lat: yup.number().nullable().transform((v) => (Number.isNaN(v) ? null : v)),
+  lng: yup.number().nullable().transform((v) => (Number.isNaN(v) ? null : v)),
   acreage: yup.number().nullable().transform((v) => (Number.isNaN(v) ? null : v)),
   name: yup.string().required("Name is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -52,12 +56,44 @@ export default function LoginPage() {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginData | SetupData>({
     resolver: yupResolver(schema),
+    defaultValues: {
+      location: "",
+      lat: null,
+      lng: null,
+    } as Partial<SetupData>,
   });
 
   const e = errors as Record<string, { message?: string } | undefined>;
+  const selectedLat = useWatch({ control, name: "lat" as never }) as
+    | number
+    | null
+    | undefined;
+  const selectedLng = useWatch({ control, name: "lng" as never }) as
+    | number
+    | null
+    | undefined;
+  const selectedLocationLabel =
+    (useWatch({ control, name: "location" as never }) as
+      | string
+      | null
+      | undefined) ?? "";
+  const selectedFarmLocation =
+    typeof selectedLat === "number" && typeof selectedLng === "number"
+      ? { lat: selectedLat, lng: selectedLng }
+      : null;
+
+  const setFarmLocation = useCallback(
+    (point: FieldBoundaryPoint, label: string) => {
+      setValue("location" as never, label as never, { shouldDirty: true });
+      setValue("lat" as never, point.lat as never, { shouldDirty: true });
+      setValue("lng" as never, point.lng as never, { shouldDirty: true });
+    },
+    [setValue],
+  );
 
   useEffect(() => {
     async function checkSetup() {
@@ -130,11 +166,13 @@ export default function LoginPage() {
               error={e.farmName?.message}
               required
             />
-            <TextInput
-              label="Location"
-              placeholder="York, UK"
-              {...register("location")}
-              error={e.location?.message}
+            <input type="hidden" {...register("location")} />
+            <input type="hidden" {...register("lat")} />
+            <input type="hidden" {...register("lng")} />
+            <FarmLocationPicker
+              value={selectedFarmLocation}
+              label={selectedLocationLabel}
+              onChange={setFarmLocation}
             />
             <Controller
               name="acreage"

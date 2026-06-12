@@ -14,6 +14,7 @@ import {
 import { whereForScope } from "@/app/server/farm/scope";
 
 type BoundaryPoint = { lat: number; lng: number };
+const FIELD_STATUSES = new Set(["planted", "growing", "harvested", "fallow"]);
 
 function isBoundaryPoint(value: unknown): value is BoundaryPoint {
   if (!value || typeof value !== "object") return false;
@@ -46,6 +47,49 @@ function parseFieldBoundary<T extends Record<string, unknown>>(field: T) {
   }
 }
 
+function normalizeFieldData(data: Record<string, unknown>) {
+  const name = typeof data.name === "string" ? data.name.trim() : "";
+  const acres = Number(data.acres);
+  const currentCrop =
+    typeof data.currentCrop === "string" ? data.currentCrop.trim() : "";
+  const status = typeof data.status === "string" ? data.status : "planted";
+  const sowDate = typeof data.sowDate === "string" ? data.sowDate : "";
+  const lat = Number(data.lat);
+  const lng = Number(data.lng);
+  const harvestDate =
+    typeof data.harvestDate === "string" && data.harvestDate.trim()
+      ? data.harvestDate
+      : null;
+
+  if (!name) throw new ApiError(400, "Field name is required");
+  if (!Number.isFinite(acres) || acres <= 0) {
+    throw new ApiError(400, "Valid acreage is required");
+  }
+  if (!currentCrop) throw new ApiError(400, "Current crop is required");
+  if (!FIELD_STATUSES.has(status)) {
+    throw new ApiError(400, "Field status is invalid");
+  }
+  if (!sowDate) throw new ApiError(400, "Sow date is required");
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    throw new ApiError(400, "Field boundary is required");
+  }
+  if (
+    !Array.isArray(data.boundary) ||
+    data.boundary.filter(isBoundaryPoint).length < 3
+  ) {
+    throw new ApiError(400, "Mark at least 3 boundary points on the map");
+  }
+
+  data.name = name;
+  data.acres = acres;
+  data.currentCrop = currentCrop;
+  data.status = status;
+  data.sowDate = sowDate;
+  data.harvestDate = harvestDate;
+  data.lat = lat;
+  data.lng = lng;
+}
+
 export async function listFarmEntity(entity: string, user: AuthUser) {
   const config = getEntityConfig(entity);
   const records = await farmDb[config.model].findMany({
@@ -71,6 +115,7 @@ export async function createFarmEntity(
 
   if (entity === "fields") {
     const rotation = Array.isArray(data.rotation) ? data.rotation : [];
+    normalizeFieldData(data);
     data.boundary = serializeBoundary(data.boundary);
     delete data.rotation;
     const field = await prisma.cropField.create({

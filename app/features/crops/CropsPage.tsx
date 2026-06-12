@@ -4,6 +4,7 @@ import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
+import { useCurrentUser } from "@/app/lib/user-context";
 import {
   deleteData,
   generateId,
@@ -14,7 +15,7 @@ import {
   type YieldRecord,
 } from "@/app/base/services/farm-client";
 import { FileText, Map, Plus, Trash2, TrendingUp, Wheat } from "lucide-react";
-import { Button, Group } from "@mantine/core";
+import { Alert, Button, Group } from "@mantine/core";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
@@ -73,8 +74,37 @@ function boundaryCenter(points: FieldBoundaryPoint[]) {
   );
 }
 
+function boundaryAcres(points: FieldBoundaryPoint[]) {
+  if (points.length < 3) return null;
+
+  const centerLat =
+    points.reduce((sum, point) => sum + point.lat, 0) / points.length;
+  const metersPerDegreeLat = 111_320;
+  const metersPerDegreeLng =
+    metersPerDegreeLat * Math.cos((centerLat * Math.PI) / 180);
+  const projected = points.map((point) => ({
+    x: point.lng * metersPerDegreeLng,
+    y: point.lat * metersPerDegreeLat,
+  }));
+
+  let areaSquareMeters = 0;
+  for (let index = 0; index < projected.length; index += 1) {
+    const current = projected[index];
+    const next = projected[(index + 1) % projected.length];
+    areaSquareMeters += current.x * next.y - next.x * current.y;
+  }
+
+  return Math.round((Math.abs(areaSquareMeters) / 2 / 4046.8564224) * 10) / 10;
+}
+
 export default function CropsPage() {
   const [tab, setTab] = useState<Tab>("map");
+  const currentUser = useCurrentUser();
+  const farmCoordinates =
+    typeof currentUser?.farm.lat === "number" &&
+    typeof currentUser?.farm.lng === "number"
+      ? { lat: currentUser.farm.lat, lng: currentUser.farm.lng }
+      : null;
   const { data, reload: load } = useFarmData(CROP_ENTITIES);
   const fields = data.fields as CropField[];
   const inputs = data.inputs as InputLog[];
@@ -88,13 +118,14 @@ export default function CropsPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [inputErrors, setInputErrors] = useState<Record<string, string>>({});
   const [yieldErrors, setYieldErrors] = useState<Record<string, string>>({});
+  const [fieldSaveError, setFieldSaveError] = useState<string | null>(null);
 
   const validateField = () => {
     const errors: Record<string, string> = {};
     if (!fieldForm.name?.trim()) errors.name = "Field name is required";
-    if (!fieldForm.acres || fieldForm.acres <= 0)
-      errors.acres = "Valid acreage is required";
     if (!fieldForm.sowDate) errors.sowDate = "Sow date is required";
+    if (!fieldForm.currentCrop?.trim())
+      errors.currentCrop = "Current crop is required";
     if (!fieldForm.boundary || fieldForm.boundary.length < 3)
       errors.boundary = "Mark at least 3 boundary points on the map";
     setFieldErrors(errors);
@@ -102,21 +133,41 @@ export default function CropsPage() {
   };
 
   const saveField = async () => {
+    setFieldSaveError(null);
     if (!validateField()) return;
     const boundary = fieldForm.boundary ?? [];
+    const acres = boundaryAcres(boundary);
+    if (!acres || acres <= 0) {
+      setFieldErrors((current) => ({
+        ...current,
+        boundary: "Select a larger valid field boundary",
+      }));
+      return;
+    }
     const center = boundaryCenter(boundary);
-    await saveData("fields", {
-      id: fieldForm.id || generateId(),
-      lat: center.lat,
-      lng: center.lng,
-      rotation: [],
-      ...fieldForm,
-      boundary,
-    } as CropField);
-    await load();
-    setShowAddField(false);
-    setFieldForm({});
-    setFieldErrors({});
+    try {
+      await saveData("fields", {
+        id: fieldForm.id || generateId(),
+        name: fieldForm.name?.trim() ?? "",
+        acres,
+        currentCrop: fieldForm.currentCrop?.trim() ?? "",
+        status: fieldForm.status ?? "planted",
+        sowDate: fieldForm.sowDate ?? "",
+        harvestDate: fieldForm.harvestDate,
+        lat: center.lat,
+        lng: center.lng,
+        rotation: fieldForm.rotation ?? [],
+        boundary,
+      } as CropField);
+      await load();
+      setShowAddField(false);
+      setFieldForm({});
+      setFieldErrors({});
+    } catch (error) {
+      setFieldSaveError(
+        error instanceof Error ? error.message : "Unable to create field",
+      );
+    }
   };
 
   const validateInput = () => {
@@ -173,6 +224,7 @@ export default function CropsPage() {
   }));
 
   const totalAcres = fields.reduce((s, f) => s + f.acres, 0);
+  const computedFieldAcres = boundaryAcres(fieldForm.boundary ?? []);
 
   return (
     <div style={{ padding: 24 }}>
@@ -307,7 +359,10 @@ export default function CropsPage() {
               }}
             >
               <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
-                Field Boundaries — Yorkshire, UK
+                Field Boundaries
+                {currentUser?.farm.location
+                  ? ` - ${currentUser.farm.location}`
+                  : ""}
               </span>
               <button
                 className="btn-primary"
@@ -316,7 +371,11 @@ export default function CropsPage() {
                 <Plus size={14} /> Add Field
               </button>
             </div>
-            <FieldMap fields={fields} />
+            <FieldMap
+              fields={fields}
+              farmLocation={currentUser?.farm.location}
+              farmCoordinates={farmCoordinates}
+            />
           </div>
 
           <div
@@ -733,10 +792,16 @@ export default function CropsPage() {
             setShowAddField(false);
             setFieldForm({});
             setFieldErrors({});
+            setFieldSaveError(null);
           }}
           maxWidth={760}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {fieldSaveError && (
+              <Alert color="red" variant="light" p="xs">
+                {fieldSaveError}
+              </Alert>
+            )}
             <FormField
               label="Field Name"
               name="name"
@@ -760,13 +825,10 @@ export default function CropsPage() {
                 label="Acres"
                 name="acres"
                 type="number"
-                placeholder="42"
-                required
-                error={fieldErrors.acres}
-                value={String(fieldForm.acres ?? "")}
-                onChange={(e) =>
-                  setFieldForm((f) => ({ ...f, acres: +e.target.value }))
-                }
+                placeholder="Calculated from boundary"
+                helperText="Calculated automatically from selected map points"
+                value={computedFieldAcres ?? ""}
+                readOnly
               />
               <FormField
                 label="Sow Date"
@@ -785,6 +847,8 @@ export default function CropsPage() {
               name="currentCrop"
               type="text"
               placeholder="Winter Wheat"
+              required
+              error={fieldErrors.currentCrop}
               value={String(fieldForm.currentCrop ?? "")}
               onChange={(e) =>
                 setFieldForm((f) => ({ ...f, currentCrop: e.target.value }))
@@ -824,10 +888,14 @@ export default function CropsPage() {
                     size="xs"
                     variant="default"
                     onClick={() =>
-                      setFieldForm((current) => ({
-                        ...current,
-                        boundary: current.boundary?.slice(0, -1) ?? [],
-                      }))
+                      setFieldForm((current) => {
+                        const boundary = current.boundary?.slice(0, -1) ?? [];
+                        return {
+                          ...current,
+                          acres: boundaryAcres(boundary) ?? undefined,
+                          boundary,
+                        };
+                      })
                     }
                     disabled={!fieldForm.boundary?.length}
                   >
@@ -839,6 +907,7 @@ export default function CropsPage() {
                     onClick={() =>
                       setFieldForm((current) => ({
                         ...current,
+                        acres: undefined,
                         boundary: [],
                       }))
                     }
@@ -855,10 +924,16 @@ export default function CropsPage() {
               >
                 <FieldMap
                   fields={fields}
+                  farmLocation={currentUser?.farm.location}
+                  farmCoordinates={farmCoordinates}
                   drawingBoundary
                   draftBoundary={fieldForm.boundary ?? []}
                   onBoundaryChange={(boundary) => {
-                    setFieldForm((current) => ({ ...current, boundary }));
+                    setFieldForm((current) => ({
+                      ...current,
+                      acres: boundaryAcres(boundary) ?? undefined,
+                      boundary,
+                    }));
                     if (fieldErrors.boundary) {
                       setFieldErrors((current) => {
                         const next = { ...current };
@@ -887,6 +962,7 @@ export default function CropsPage() {
                   setShowAddField(false);
                   setFieldForm({});
                   setFieldErrors({});
+                  setFieldSaveError(null);
                 }}
               >
                 Cancel

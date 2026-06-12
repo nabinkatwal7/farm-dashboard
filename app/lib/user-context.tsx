@@ -14,6 +14,8 @@ export type CurrentUser = {
     id?: string;
     name: string;
     location: string | null;
+    lat: number | null;
+    lng: number | null;
     acreage: number | null;
     createdAt?: string;
     updatedAt?: string;

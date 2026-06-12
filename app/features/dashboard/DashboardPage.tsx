@@ -155,7 +155,7 @@ function EmptyState({
   href: string;
 }) {
   return (
-    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card-hover/40 p-6 text-center">
+    <div className="flex min-h-55 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card-hover/40 p-6 text-center">
       <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl border border-border bg-surface text-green">
         <Leaf size={22} />
       </div>

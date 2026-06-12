@@ -14,6 +14,7 @@ import { useState } from "react";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
+import { useCurrentUser } from "@/app/lib/user-context";
 import {
   deleteData,
   generateId,
@@ -73,6 +74,12 @@ function statusBadgeColor(status: string) {
 
 export default function SeedingPage() {
   const [tab, setTab] = useState<Tab>("maps");
+  const currentUser = useCurrentUser();
+  const farmCoordinates =
+    typeof currentUser?.farm.lat === "number" &&
+    typeof currentUser?.farm.lng === "number"
+      ? { lat: currentUser.farm.lat, lng: currentUser.farm.lng }
+      : null;
   const { data, reload: load } = useFarmData(SEEDING_ENTITIES);
   const fields = data.fields as CropField[];
   const prescriptionMaps = data.prescriptionMaps as PrescriptionMap[];
@@ -285,7 +292,12 @@ export default function SeedingPage() {
                 <Plus size={14} /> New Prescription
               </button>
             </div>
-            <SeedingMap fields={fields} prescriptionMaps={prescriptionMaps} />
+            <SeedingMap
+              fields={fields}
+              prescriptionMaps={prescriptionMaps}
+              farmLocation={currentUser?.farm.location}
+              farmCoordinates={farmCoordinates}
+            />
           </div>
 
           <div

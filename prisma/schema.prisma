@@ -11,6 +11,8 @@ model Farm {
   id               String            @id @default(uuid())
   name             String
   location         String?
+  lat              Float?
+  lng              Float?
   acreage          Float?
   users            User[]
   fields           CropField[]

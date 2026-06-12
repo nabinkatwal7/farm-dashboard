@@ -26,6 +26,8 @@ type ProfileResponse = Required<
 > & {
   farm: Required<Pick<CurrentUser["farm"], "id" | "name" | "createdAt" | "updatedAt">> & {
     location: string | null;
+    lat: number | null;
+    lng: number | null;
     acreage: number | null;
   };
 };
