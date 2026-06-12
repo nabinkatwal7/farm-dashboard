@@ -16,6 +16,7 @@ import {
 } from "@/app/base/services/farm-client";
 import { useCurrentUser } from "@/app/lib/user-context";
 import { Button, Group } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   BarChart3,
   Droplets,
@@ -451,8 +452,13 @@ export default function SoilHydrologyPage() {
                       <td>
                         <button
                           onClick={async () => {
-                            await deleteData("waterTableReadings", r.id);
-                            await reload();
+                            try {
+                              await deleteData("waterTableReadings", r.id);
+                              notifications.show({ title: "Deleted", message: "Water table reading removed", color: "green" });
+                              await reload();
+                            } catch (e) {
+                              notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to delete", color: "red" });
+                            }
                           }}
                           style={{
                             background: "rgba(248,113,113,0.15)",
@@ -665,8 +671,13 @@ export default function SoilHydrologyPage() {
                         <td>
                           <button
                             onClick={async () => {
-                              await deleteData("soilZones", z.id);
-                              await reload();
+                              try {
+                                await deleteData("soilZones", z.id);
+                                notifications.show({ title: "Deleted", message: "Soil zone removed", color: "green" });
+                                await reload();
+                              } catch (e) {
+                                notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to delete", color: "red" });
+                              }
                             }}
                             style={{
                               background: "rgba(248,113,113,0.15)",
@@ -1039,8 +1050,13 @@ export default function SoilHydrologyPage() {
                         <td>
                           <button
                             onClick={async () => {
-                              await deleteData("irrigationEvents", e.id);
-                              await reload();
+                              try {
+                                await deleteData("irrigationEvents", e.id);
+                                notifications.show({ title: "Deleted", message: "Irrigation event removed", color: "green" });
+                                await reload();
+                              } catch (e) {
+                                notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to delete", color: "red" });
+                              }
                             }}
                             style={{
                               background: "rgba(248,113,113,0.15)",
@@ -1157,19 +1173,27 @@ export default function SoilHydrologyPage() {
             <Group grow mt={4}>
               <Button
                 onClick={async () => {
-                  if (!zoneForm.fieldId || !zoneForm.name?.trim()) return;
-                  await saveData("soilZones", {
-                    id: generateId(),
-                    fieldId: zoneForm.fieldId,
-                    name: zoneForm.name.trim(),
-                    depthFrom: zoneForm.depthFrom ?? 0,
-                    depthTo: zoneForm.depthTo ?? 30,
-                    soilType: zoneForm.soilType || undefined,
-                    notes: zoneForm.notes,
-                  } as SoilZone);
-                  await reload();
-                  setShowAddZone(false);
-                  setZoneForm({});
+                  try {
+                    if (!zoneForm.fieldId || !zoneForm.name?.trim()) {
+                      notifications.show({ title: "Validation", message: "Field and name are required", color: "orange" });
+                      return;
+                    }
+                    await saveData("soilZones", {
+                      id: generateId(),
+                      fieldId: zoneForm.fieldId,
+                      name: zoneForm.name.trim(),
+                      depthFrom: zoneForm.depthFrom ?? 0,
+                      depthTo: zoneForm.depthTo ?? 30,
+                      soilType: zoneForm.soilType || undefined,
+                      notes: zoneForm.notes,
+                    } as SoilZone);
+                    notifications.show({ title: "Success", message: "Soil zone created", color: "green" });
+                    await reload();
+                    setShowAddZone(false);
+                    setZoneForm({});
+                  } catch (e) {
+                    notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to save zone", color: "red" });
+                  }
                 }}
               >
                 Save Zone
@@ -1244,17 +1268,25 @@ export default function SoilHydrologyPage() {
             <Group grow mt={4}>
               <Button
                 onClick={async () => {
-                  if (readingForm.depthToWater === undefined) return;
-                  await saveData("waterTableReadings", {
-                    id: generateId(),
-                    fieldId: readingForm.fieldId || undefined,
-                    timestamp: readingForm.timestamp || new Date().toISOString().slice(0, 10),
-                    depthToWater: readingForm.depthToWater,
-                    wellName: readingForm.wellName || undefined,
-                  } as WaterTableReading);
-                  await reload();
-                  setShowAddReading(false);
-                  setReadingForm({});
+                  try {
+                    if (readingForm.depthToWater === undefined) {
+                      notifications.show({ title: "Validation", message: "Depth to water is required", color: "orange" });
+                      return;
+                    }
+                    await saveData("waterTableReadings", {
+                      id: generateId(),
+                      fieldId: readingForm.fieldId || undefined,
+                      timestamp: readingForm.timestamp || new Date().toISOString().slice(0, 10),
+                      depthToWater: readingForm.depthToWater,
+                      wellName: readingForm.wellName || undefined,
+                    } as WaterTableReading);
+                    notifications.show({ title: "Success", message: "Water table reading saved", color: "green" });
+                    await reload();
+                    setShowAddReading(false);
+                    setReadingForm({});
+                  } catch (e) {
+                    notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to save reading", color: "red" });
+                  }
                 }}
               >
                 Save Reading
@@ -1372,20 +1404,28 @@ export default function SoilHydrologyPage() {
             <Group grow mt={4}>
               <Button
                 onClick={async () => {
-                  if (!irrigationForm.fieldId || irrigationForm.amountMm === undefined) return;
-                  await saveData("irrigationEvents", {
-                    id: generateId(),
-                    fieldId: irrigationForm.fieldId,
-                    date: irrigationForm.date || new Date().toISOString().slice(0, 10),
-                    amountMm: irrigationForm.amountMm,
-                    method: irrigationForm.method || "sprinkler",
-                    source: irrigationForm.source || undefined,
-                    durationHours: irrigationForm.durationHours || undefined,
-                    notes: irrigationForm.notes,
-                  } as IrrigationEvent);
-                  await reload();
-                  setShowAddIrrigation(false);
-                  setIrrigationForm({});
+                  try {
+                    if (!irrigationForm.fieldId || irrigationForm.amountMm === undefined) {
+                      notifications.show({ title: "Validation", message: "Field and amount are required", color: "orange" });
+                      return;
+                    }
+                    await saveData("irrigationEvents", {
+                      id: generateId(),
+                      fieldId: irrigationForm.fieldId,
+                      date: irrigationForm.date || new Date().toISOString().slice(0, 10),
+                      amountMm: irrigationForm.amountMm,
+                      method: irrigationForm.method || "sprinkler",
+                      source: irrigationForm.source || undefined,
+                      durationHours: irrigationForm.durationHours || undefined,
+                      notes: irrigationForm.notes,
+                    } as IrrigationEvent);
+                    notifications.show({ title: "Success", message: "Irrigation event saved", color: "green" });
+                    await reload();
+                    setShowAddIrrigation(false);
+                    setIrrigationForm({});
+                  } catch (e) {
+                    notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to save event", color: "red" });
+                  }
                 }}
               >
                 Save Event

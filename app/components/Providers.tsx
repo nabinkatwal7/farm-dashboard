@@ -5,6 +5,7 @@ import {
   createTheme,
   localStorageColorSchemeManager,
 } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
 import { ThemeSync } from "./ThemeProvider";
 
 const colorSchemeManager = localStorageColorSchemeManager({
@@ -64,6 +65,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       defaultColorScheme="auto"
       theme={theme}
     >
+      <Notifications position="top-right" />
       <ThemeSync />
       {children}
     </MantineProvider>
