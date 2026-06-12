@@ -35,6 +35,9 @@ model Farm {
   soilMoistureRecords SoilMoistureRecord[]
   waterTableReadings WaterTableReading[]
   irrigationEvents   IrrigationEvent[]
+  seedLots           SeedLot[]
+  germinationTests   GerminationTest[]
+  consignments       Consignment[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -87,6 +90,7 @@ model CropField {
   soilZones           SoilZone[]
   waterTableReadings  WaterTableReading[]
   irrigationEvents    IrrigationEvent[]
+  consignments        Consignment[]
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
@@ -534,4 +538,64 @@ model IrrigationEvent {
   createdAt      DateTime      @default(now())
 
   @@index([fieldId, date])
+}
+
+model SeedLot {
+  id                  String             @id @default(uuid())
+  farmId              String
+  farm                Farm               @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  crop                String
+  variety             String?
+  lotNumber           String
+  supplier            String?
+  purchaseDate        String?
+  quantity            Float
+  unit                String             @default("kg")
+  treatmentType       String             @default("none")
+  treatmentProduct    String?
+  treatmentDate       String?
+  baselineGermination Float?
+  notes               String?
+  germinationTests    GerminationTest[]
+  consignments        Consignment[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@unique([farmId, lotNumber])
+}
+
+model GerminationTest {
+  id                  String    @id @default(uuid())
+  seedLotId           String
+  seedLot             SeedLot   @relation(fields: [seedLotId], references: [id], onDelete: Cascade)
+  farmId              String
+  farm                Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  testDate            String
+  seedsTested         Int
+  seedsGerminated     Int
+  germinationPercent  Float
+  testMethod          String    @default("paper")
+  notes               String?
+  createdAt           DateTime  @default(now())
+
+  @@index([seedLotId, testDate])
+}
+
+model Consignment {
+  id          String     @id @default(uuid())
+  farmId      String
+  farm        Farm       @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldId     String?
+  field       CropField? @relation(fields: [fieldId], references: [id], onDelete: SetNull)
+  seedLotId   String?
+  seedLot     SeedLot?   @relation(fields: [seedLotId], references: [id], onDelete: SetNull)
+  date        String
+  quantity    Float
+  unit        String     @default("kg")
+  destination String?
+  sowingDate  String?
+  notes       String?
+  createdAt   DateTime   @default(now())
+
+  @@index([farmId, date])
 }

@@ -298,6 +298,45 @@ export type IrrigationEvent = {
   notes?: string;
 };
 
+export type SeedLot = {
+  id: string;
+  crop: string;
+  variety?: string;
+  lotNumber: string;
+  supplier?: string;
+  purchaseDate?: string;
+  quantity: number;
+  unit: string;
+  treatmentType: "none" | "chemical" | "biological";
+  treatmentProduct?: string;
+  treatmentDate?: string;
+  baselineGermination?: number;
+  notes?: string;
+};
+
+export type GerminationTest = {
+  id: string;
+  seedLotId: string;
+  testDate: string;
+  seedsTested: number;
+  seedsGerminated: number;
+  germinationPercent: number;
+  testMethod: "paper" | "damp-towel" | "soil" | "other";
+  notes?: string;
+};
+
+export type Consignment = {
+  id: string;
+  fieldId?: string;
+  seedLotId?: string;
+  date: string;
+  quantity: number;
+  unit: string;
+  destination?: string;
+  sowingDate?: string;
+  notes?: string;
+};
+
 export type ExpenseRecord = {
   id: string;
   date: string;

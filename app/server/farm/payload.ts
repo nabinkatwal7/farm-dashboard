@@ -28,6 +28,7 @@ export function cleanBody(body: Record<string, unknown>) {
     product,
     station,
     zone,
+    seedLot,
     operatorUser,
     assigneeUser,
     ...data
@@ -44,6 +45,7 @@ export function cleanBody(body: Record<string, unknown>) {
   void product;
   void station;
   void zone;
+  void seedLot;
   void operatorUser;
   void assigneeUser;
   return data;
