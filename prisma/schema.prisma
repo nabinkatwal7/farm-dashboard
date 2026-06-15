@@ -38,6 +38,9 @@ model Farm {
   seedLots           SeedLot[]
   germinationTests   GerminationTest[]
   consignments       Consignment[]
+  droneFlights       DroneFlight[]
+  orthomosaicMaps    OrthomosaicMap[]
+  scoutingObservations ScoutingObservation[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -91,6 +94,9 @@ model CropField {
   waterTableReadings  WaterTableReading[]
   irrigationEvents    IrrigationEvent[]
   consignments        Consignment[]
+  droneFlights        DroneFlight[]
+  orthomosaicMaps     OrthomosaicMap[]
+  scoutingObservations ScoutingObservation[]
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
@@ -598,4 +604,66 @@ model Consignment {
   createdAt   DateTime   @default(now())
 
   @@index([farmId, date])
+}
+
+model DroneFlight {
+  id               String       @id @default(uuid())
+  farmId           String
+  farm             Farm         @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldId          String?
+  field            CropField?   @relation(fields: [fieldId], references: [id], onDelete: SetNull)
+  flightDate       String
+  droneType        String?
+  altitude         Float?
+  groundResolution Float?
+  coverageAcres    Float?
+  status           String       @default("completed")
+  notes            String?
+  maps             OrthomosaicMap[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([farmId, flightDate])
+}
+
+model OrthomosaicMap {
+  id            String              @id @default(uuid())
+  farmId        String
+  farm          Farm                @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldId       String?
+  field         CropField?          @relation(fields: [fieldId], references: [id], onDelete: SetNull)
+  flightId      String?
+  flight        DroneFlight?        @relation(fields: [flightId], references: [id], onDelete: SetNull)
+  name          String
+  fileType      String
+  filePath      String?
+  resolution    Float?
+  coverageAcres Float?
+  fileSize      Float?
+  notes         String?
+  observations  ScoutingObservation[]
+  createdAt     DateTime            @default(now())
+
+  @@index([farmId, fileType])
+}
+
+model ScoutingObservation {
+  id              String         @id @default(uuid())
+  farmId          String
+  farm            Farm           @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  fieldId         String?
+  field           CropField?     @relation(fields: [fieldId], references: [id], onDelete: SetNull)
+  mapId           String?
+  map             OrthomosaicMap? @relation(fields: [mapId], references: [id], onDelete: SetNull)
+  observationType String
+  severity        String         @default("medium")
+  lat             Float?
+  lng             Float?
+  areaAcres       Float?
+  notes           String?
+  imageUrl        String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([farmId, observationType])
 }

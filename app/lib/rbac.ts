@@ -208,6 +208,18 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
     write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
   },
+  droneFlights: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
+  },
+  orthomosaicMaps: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
+  },
+  scoutingObservations: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
+  },
 };
 
 export function canAccess(

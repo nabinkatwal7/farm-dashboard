@@ -337,6 +337,46 @@ export type Consignment = {
   notes?: string;
 };
 
+export type DroneFlight = {
+  id: string;
+  fieldId?: string;
+  flightDate: string;
+  droneType?: string;
+  altitude?: number;
+  groundResolution?: number;
+  coverageAcres?: number;
+  status: "planned" | "in-progress" | "completed" | "failed";
+  notes?: string;
+};
+
+export type OrthomosaicMap = {
+  id: string;
+  fieldId?: string;
+  flightId?: string;
+  name: string;
+  fileType: "ndvi" | "truecolor" | "thermal" | "multispectral" | "other";
+  filePath?: string;
+  resolution?: number;
+  coverageAcres?: number;
+  fileSize?: number;
+  notes?: string;
+  createdAt?: string;
+};
+
+export type ScoutingObservation = {
+  id: string;
+  fieldId?: string;
+  mapId?: string;
+  observationType: "weed_pressure" | "nitrogen_deficiency" | "pest" | "disease" | "water_stress" | "other";
+  severity: "low" | "medium" | "high";
+  lat?: number;
+  lng?: number;
+  areaAcres?: number;
+  notes?: string;
+  imageUrl?: string;
+  createdAt?: string;
+};
+
 export type ExpenseRecord = {
   id: string;
   date: string;

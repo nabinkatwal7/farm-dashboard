@@ -1,6 +1,5 @@
 import "server-only";
 
-import { Prisma } from "@prisma/client";
 import { ApiError } from "@/app/lib/api";
 import type { AuthUser } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
@@ -12,6 +11,7 @@ import {
   toSaleItemInput,
 } from "@/app/server/farm/payload";
 import { whereForScope } from "@/app/server/farm/scope";
+import { Prisma } from "@prisma/client";
 
 type BoundaryPoint = { lat: number; lng: number };
 const FIELD_STATUSES = new Set(["planted", "growing", "harvested", "fallow"]);
@@ -99,7 +99,7 @@ export async function listFarmEntity(entity: string, user: AuthUser) {
   });
   if (entity === "fields") {
     return records.map((record) =>
-      parseFieldBoundary(record as Record<string, unknown>),
+      parseFieldBoundary(record as Record<string, unknown>)
     );
   }
   return records;
@@ -108,7 +108,7 @@ export async function listFarmEntity(entity: string, user: AuthUser) {
 export async function createFarmEntity(
   entity: string,
   body: Record<string, unknown>,
-  user: AuthUser,
+  user: AuthUser
 ) {
   const config = getEntityConfig(entity);
   const data = cleanBody(body);
@@ -265,9 +265,7 @@ export async function createFarmEntity(
   const model = farmDb[config.model];
   if (!model) throw new ApiError(500, `Invalid model: ${config.model}`);
   const createData =
-    config.scopedBy === "farmId"
-      ? { ...data, farmId: user.farmId }
-      : data;
+    config.scopedBy === "farmId" ? { ...data, farmId: user.farmId } : data;
   if (config.include) {
     return model.create({ data: createData, include: config.include });
   }
@@ -278,7 +276,7 @@ export async function updateFarmEntity(
   entity: string,
   id: string,
   body: Record<string, unknown>,
-  user: AuthUser,
+  user: AuthUser
 ) {
   const config = getEntityConfig(entity);
   const existing = await farmDb[config.model].findFirst({
@@ -311,7 +309,7 @@ export async function updateFarmEntity(
 export async function deleteFarmEntity(
   entity: string,
   id: string,
-  user: AuthUser,
+  user: AuthUser
 ) {
   const config = getEntityConfig(entity);
   const existing = await farmDb[config.model].findFirst({

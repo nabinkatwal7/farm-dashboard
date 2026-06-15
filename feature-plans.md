@@ -17,8 +17,8 @@ _GIS spatial mapping, soil health trackers, and field asset automation._
 - [x] **05. Automated Yield Analytics & Machine Integration:** Telematics sync module that pulls live grain-flow data directly from combine harvesters during cutting to construct spatial yield-density maps.
 - [x] **06. Hyper-Local Weather & Crop Modeling Service:** Proprietary meteorological engine that ingests on-farm weather station APIs to compute Growing Degree Days (GDD) and forecast exact physiological growth stages.
 - [x] **07. Soil Hydrology & Moisture Mapping Core:** Visualization dashboard tracking water-table trends, moisture retention across varying depths, and localized field irrigation efficiency.
-- [ ] **08. Seed Lot & Consignment Germination Tracker:** Inventory ledger measuring germination rates, seed-treatment lot numbers, and tracking viability curves of seed inventory across multiple seasons.
-- [ ] **09. Drone Scouting & Orthomosaic Map Ingestion Pipeline:** File storage and indexing pipeline that ingests high-resolution multi-spectral drone imagery to tag weed pressure or nitrogen deficiencies.
+- [x] **08. Seed Lot & Consignment Germination Tracker:** Inventory ledger measuring germination rates, seed-treatment lot numbers, and tracking viability curves of seed inventory across multiple seasons.
+- [x] **09. Drone Scouting & Orthomosaic Map Ingestion Pipeline:** File storage and indexing pipeline that ingests high-resolution multi-spectral drone imagery to tag weed pressure or nitrogen deficiencies.
 - [ ] **10. Post-Harvest Crop Drydown Simulator:** Analytical engine tracking grain ambient drying speeds within storage sheds, calculating weight losses due to natural moisture evaporation.
 
 ---
