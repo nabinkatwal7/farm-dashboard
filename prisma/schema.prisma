@@ -44,6 +44,8 @@ model Farm {
   drydownBatches     DrydownBatch[]
   livestockIntegrations LivestockIntegration[]
   livestockSyncRecords  LivestockSyncRecord[]
+  rfidScanSessions      RFIDScanSession[]
+  rfidTagReads          RFIDTagRead[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -727,4 +729,42 @@ model LivestockSyncRecord {
 
   @@index([farmId, eventType])
   @@index([farmId, status])
+}
+
+model RFIDScanSession {
+  id            String   @id @default(uuid())
+  farmId        String
+  farm          Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name          String
+  date          String
+  location      String?
+  status        String   @default("active")
+  totalScans    Int      @default(0)
+  matchedCount  Int      @default(0)
+  unmatchedCount Int     @default(0)
+  notes         String?
+  tagReads      RFIDTagRead[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([farmId, date])
+}
+
+model RFIDTagRead {
+  id            String          @id @default(uuid())
+  sessionId     String
+  session       RFIDScanSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  farmId        String
+  farm          Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  earTag        String
+  timestamp     String
+  status        String          @default("unmatched")
+  animalId      String?
+  animalEarTag  String?
+  deviceId      String?
+  rawData       String?
+  createdAt     DateTime        @default(now())
+
+  @@index([sessionId, earTag])
+  @@index([farmId, timestamp])
 }

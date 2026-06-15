@@ -2,6 +2,7 @@
 
 import {
   Beef,
+  Bluetooth,
   CalendarDays,
   ChevronDown,
   ChevronRight,
@@ -59,6 +60,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
       { href: "/drydown", label: "Crop Drydown", icon: Warehouse },
       { href: "/livestock", label: "Livestock", icon: Beef },
       { href: "/livestock-traceability", label: "Traceability", icon: Fingerprint },
+      { href: "/rfid-scanner", label: "RFID Scanner", icon: Bluetooth },
       { href: "/seeding", label: "Precision Farming", icon: Leaf },
     ],
   },

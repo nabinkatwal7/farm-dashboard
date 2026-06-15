@@ -33,6 +33,7 @@ export function cleanBody(body: Record<string, unknown>) {
     map,
     operatorUser,
     assigneeUser,
+    session,
     ...data
   } = body;
   void id;
@@ -52,6 +53,7 @@ export function cleanBody(body: Record<string, unknown>) {
   void map;
   void operatorUser;
   void assigneeUser;
+  void session;
   return data;
 }
 

@@ -232,6 +232,14 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     read: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY", "VIEWER"],
     write: ["ADMIN", "FARM_MANAGER"],
   },
+  rfidScanSessions: {
+    read: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER"],
+  },
+  rfidTagReads: {
+    read: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER"],
+  },
 };
 
 export function canAccess(

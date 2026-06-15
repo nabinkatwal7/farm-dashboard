@@ -199,6 +199,16 @@ const ENTITIES: Record<string, EntityConfig> = {
     scopedBy: "farmId",
     orderBy: { createdAt: "desc" },
   },
+  rfidScanSessions: {
+    model: "rFIDScanSession",
+    scopedBy: "farmId",
+    orderBy: { date: "desc" },
+  },
+  rfidTagReads: {
+    model: "rFIDTagRead",
+    scopedBy: "farmId",
+    orderBy: { createdAt: "desc" },
+  },
 };
 
 export const farmDb = prisma as unknown as Record<string, DynamicModelDelegate>;

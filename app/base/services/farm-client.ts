@@ -455,6 +455,33 @@ export type LivestockSyncRecord = {
   createdAt?: string;
 };
 
+export type RFIDScanSession = {
+  id: string;
+  name: string;
+  date: string;
+  location?: string;
+  status: "active" | "completed" | "cancelled";
+  totalScans: number;
+  matchedCount: number;
+  unmatchedCount: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type RFIDTagRead = {
+  id: string;
+  sessionId: string;
+  earTag: string;
+  timestamp: string;
+  status: "matched" | "unmatched" | "skipped";
+  animalId?: string;
+  animalEarTag?: string;
+  deviceId?: string;
+  rawData?: string;
+  createdAt?: string;
+};
+
 export type StockAdjustment = {
   id: string;
   stockItemId: string;
