@@ -70,7 +70,7 @@ function boundaryCenter(points: FieldBoundaryPoint[]) {
       lat: center.lat + point.lat / points.length,
       lng: center.lng + point.lng / points.length,
     }),
-    { lat: 0, lng: 0 }
+    { lat: 0, lng: 0 },
   );
 }
 
@@ -165,7 +165,7 @@ export default function CropsPage() {
       setFieldErrors({});
     } catch (error) {
       setFieldSaveError(
-        error instanceof Error ? error.message : "Unable to create field"
+        error instanceof Error ? error.message : "Unable to create field",
       );
     }
   };
@@ -273,7 +273,7 @@ export default function CropsPage() {
           label="Active Crops"
           value={
             fields.filter(
-              (f) => f.status === "growing" || f.status === "planted"
+              (f) => f.status === "growing" || f.status === "planted",
             ).length
           }
           icon={Wheat}
@@ -569,8 +569,8 @@ export default function CropsPage() {
                           log.type === "spray"
                             ? "badge-red"
                             : log.type === "fertiliser"
-                            ? "badge-amber"
-                            : "badge-green"
+                              ? "badge-amber"
+                              : "badge-green"
                         }
                       >
                         {log.type}
