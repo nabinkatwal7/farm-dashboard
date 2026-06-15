@@ -220,6 +220,10 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
     write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
   },
+  drydownBatches: {
+    read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
+  },
 };
 
 export function canAccess(

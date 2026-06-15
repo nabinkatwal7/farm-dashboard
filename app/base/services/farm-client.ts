@@ -412,6 +412,24 @@ export type Task = {
   priority: "low" | "medium" | "high";
 };
 
+export type DrydownBatch = {
+  id: string;
+  storageName: string;
+  grainType: string;
+  cropYear: number;
+  initialMoisture: number;
+  initialWeight: number;
+  initialUnit: string;
+  currentMoisture: number;
+  currentTemperature?: number;
+  currentHumidity?: number;
+  targetMoisture?: number;
+  status: "drying" | "stable" | "ready";
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type StockAdjustment = {
   id: string;
   stockItemId: string;

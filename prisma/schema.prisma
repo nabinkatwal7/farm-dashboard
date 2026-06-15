@@ -41,6 +41,7 @@ model Farm {
   droneFlights       DroneFlight[]
   orthomosaicMaps    OrthomosaicMap[]
   scoutingObservations ScoutingObservation[]
+  drydownBatches     DrydownBatch[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -666,4 +667,26 @@ model ScoutingObservation {
   updatedAt       DateTime       @updatedAt
 
   @@index([farmId, observationType])
+}
+
+model DrydownBatch {
+  id               String   @id @default(uuid())
+  farmId           String
+  farm             Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  storageName      String
+  grainType        String
+  cropYear         Int
+  initialMoisture  Float
+  initialWeight    Float
+  initialUnit      String   @default("lbs")
+  currentMoisture  Float
+  currentTemperature Float?
+  currentHumidity  Float?
+  targetMoisture   Float?
+  status           String   @default("drying")
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([farmId, status])
 }
