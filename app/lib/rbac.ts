@@ -224,6 +224,14 @@ const ACCESS: Record<string, { read: Role[]; write: Role[] }> = {
     read: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER", "VIEWER"],
     write: ["ADMIN", "FARM_MANAGER", "FIELD_WORKER"],
   },
+  livestockIntegrations: {
+    read: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER"],
+  },
+  livestockSyncRecords: {
+    read: ["ADMIN", "FARM_MANAGER", "LIVESTOCK_MANAGER", "VETERINARY", "VIEWER"],
+    write: ["ADMIN", "FARM_MANAGER"],
+  },
 };
 
 export function canAccess(

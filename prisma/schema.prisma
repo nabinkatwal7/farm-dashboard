@@ -42,6 +42,8 @@ model Farm {
   orthomosaicMaps    OrthomosaicMap[]
   scoutingObservations ScoutingObservation[]
   drydownBatches     DrydownBatch[]
+  livestockIntegrations LivestockIntegration[]
+  livestockSyncRecords  LivestockSyncRecord[]
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -688,5 +690,41 @@ model DrydownBatch {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  @@index([farmId, status])
+}
+
+model LivestockIntegration {
+  id             String   @id @default(uuid())
+  farmId         String
+  farm           Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  provider       String
+  label          String
+  apiEndpoint    String?
+  apiKey         String?
+  herdMark       String?
+  isActive       Boolean  @default(false)
+  lastSyncAt     String?
+  lastSyncStatus String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([farmId, provider])
+}
+
+model LivestockSyncRecord {
+  id             String   @id @default(uuid())
+  farmId         String
+  farm           Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  eventType      String
+  animalId       String?
+  animalEarTag   String?
+  status         String   @default("pending")
+  requestPayload String?
+  responseData   String?
+  errorMessage   String?
+  syncedAt       String?
+  createdAt      DateTime @default(now())
+
+  @@index([farmId, eventType])
   @@index([farmId, status])
 }

@@ -430,6 +430,31 @@ export type DrydownBatch = {
   updatedAt?: string;
 };
 
+export type LivestockIntegration = {
+  id: string;
+  provider: string;
+  label: string;
+  apiEndpoint?: string;
+  apiKey?: string;
+  herdMark?: string;
+  isActive: boolean;
+  lastSyncAt?: string;
+  lastSyncStatus?: string;
+};
+
+export type LivestockSyncRecord = {
+  id: string;
+  eventType: "birth" | "death" | "transfer_in" | "transfer_out" | "registration" | "movement";
+  animalId?: string;
+  animalEarTag?: string;
+  status: "pending" | "synced" | "failed";
+  requestPayload?: string;
+  responseData?: string;
+  errorMessage?: string;
+  syncedAt?: string;
+  createdAt?: string;
+};
+
 export type StockAdjustment = {
   id: string;
   stockItemId: string;

@@ -9,6 +9,7 @@ import {
   ClipboardList,
   CloudSun,
   Droplets,
+  Fingerprint,
   LayoutDashboard,
   Leaf,
   Package,
@@ -57,6 +58,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
       { href: "/drone", label: "Drone Scouting", icon: Satellite },
       { href: "/drydown", label: "Crop Drydown", icon: Warehouse },
       { href: "/livestock", label: "Livestock", icon: Beef },
+      { href: "/livestock-traceability", label: "Traceability", icon: Fingerprint },
       { href: "/seeding", label: "Precision Farming", icon: Leaf },
     ],
   },
@@ -208,7 +210,7 @@ export default function Sidebar({
                   const isActive = href
                     ? href === "/"
                       ? pathname === "/"
-                      : pathname.startsWith(href)
+                      : pathname === href || pathname.startsWith(href + "/")
                     : false;
                   const className = `flex shrink-0 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm no-underline transition-all duration-150 lg:shrink ${
                     collapsed ? "lg:justify-center lg:px-2.5" : ""

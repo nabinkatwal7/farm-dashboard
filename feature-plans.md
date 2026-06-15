@@ -19,7 +19,7 @@ _GIS spatial mapping, soil health trackers, and field asset automation._
 - [x] **07. Soil Hydrology & Moisture Mapping Core:** Visualization dashboard tracking water-table trends, moisture retention across varying depths, and localized field irrigation efficiency.
 - [x] **08. Seed Lot & Consignment Germination Tracker:** Inventory ledger measuring germination rates, seed-treatment lot numbers, and tracking viability curves of seed inventory across multiple seasons.
 - [x] **09. Drone Scouting & Orthomosaic Map Ingestion Pipeline:** File storage and indexing pipeline that ingests high-resolution multi-spectral drone imagery to tag weed pressure or nitrogen deficiencies.
-- [ ] **10. Post-Harvest Crop Drydown Simulator:** Analytical engine tracking grain ambient drying speeds within storage sheds, calculating weight losses due to natural moisture evaporation.
+- [x] **10. Post-Harvest Crop Drydown Simulator:** Analytical engine tracking grain ambient drying speeds within storage sheds, calculating weight losses due to natural moisture evaporation.
 
 ---
 
@@ -27,7 +27,7 @@ _GIS spatial mapping, soil health trackers, and field asset automation._
 
 _Herd biological asset management from birth through supply-chain processing._
 
-- [ ] **11. National Livestock Traceability API Engine:** Deep integration service connecting directly to national livestock databases (e.g., BCMS, NLIS) for automated statutory animal registrations, births, deaths, and transfers.
+- [x] **11. National Livestock Traceability API Engine:** Deep integration service connecting directly to national livestock databases (e.g., BCMS, NLIS) for automated statutory animal registrations, births, deaths, and transfers.
 - [ ] **12. EID & RFID Hardware Sync Service:** Real-time data pipeline linking handheld Bluetooth wand scanners directly to mobile devices for automated, instant population logging during physical animal handling.
 - [x] **13. Bio-Economic Breeding & Genetics Analytics Engine:** Matrix system tracking generational lines, calving/lambing outcomes, and sire/dam efficacy to compute hereditary performance metrics.
 - [x] **14. Veterinary Medical Management System:** Automated clinical ledger tracking individual and herd health interventions, veterinary diagnoses, and critical vaccination calendars.

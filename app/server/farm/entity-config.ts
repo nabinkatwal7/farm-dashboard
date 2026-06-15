@@ -189,6 +189,16 @@ const ENTITIES: Record<string, EntityConfig> = {
     scopedBy: "farmId",
     orderBy: { createdAt: "desc" },
   },
+  livestockIntegrations: {
+    model: "livestockIntegration",
+    scopedBy: "farmId",
+    orderBy: { label: "asc" },
+  },
+  livestockSyncRecords: {
+    model: "livestockSyncRecord",
+    scopedBy: "farmId",
+    orderBy: { createdAt: "desc" },
+  },
 };
 
 export const farmDb = prisma as unknown as Record<string, DynamicModelDelegate>;
