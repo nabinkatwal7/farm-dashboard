@@ -5,6 +5,7 @@ import {
   CheckCircle,
   Clock,
   MapPin,
+  Pencil,
   Plus,
   Trash2,
   Wifi,
@@ -20,16 +21,19 @@ import {
   deleteData,
   generateId,
   saveData,
+  type CropField,
   type Machine,
   type Task,
 } from "@/app/base/services/farm-client";
 import { Button, Group } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 
 type Tab = "machinery" | "tasks";
 
 const OPERATIONS_ENTITIES = {
   machines: "machines",
   tasks: "tasks",
+  fields: "fields",
 } as const;
 
 const PRIORITY_COLORS = { high: "#f87171", medium: "#fbbf24", low: "#60a5fa" };
@@ -38,13 +42,33 @@ export default function OperationsPage() {
   const { data, reload: load } = useFarmData(OPERATIONS_ENTITIES);
   const machines = data.machines as Machine[];
   const tasks = data.tasks as Task[];
+  const fields = data.fields as CropField[];
   const [isOnline, setIsOnline] = useState(true);
   const [showAddMachine, setShowAddMachine] = useState(false);
+  const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
   const [showAddTask, setShowAddTask] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [machineForm, setMachineForm] = useState<Partial<Machine>>({});
   const [taskForm, setTaskForm] = useState<Partial<Task>>({});
   const [machineErrors, setMachineErrors] = useState<Record<string, string>>({});
   const [taskErrors, setTaskErrors] = useState<Record<string, string>>({});
+
+  const editTask = (task: Task) => {
+    setEditingTask(task);
+    setTaskForm({
+      title: task.title,
+      description: task.description,
+      fieldName: task.fieldName,
+      lat: task.lat,
+      lng: task.lng,
+      assignee: task.assignee,
+      dueDate: task.dueDate,
+      status: task.status,
+      priority: task.priority,
+    });
+    setTaskErrors({});
+    setShowAddTask(true);
+  };
 
   useEffect(() => {
     const updateOnline = () => setIsOnline(navigator.onLine);
@@ -72,18 +96,27 @@ export default function OperationsPage() {
 
   const saveMachine = async () => {
     if (!validateMachine()) return;
-    await saveData("machines", {
-      id: generateId(),
-      status: machineForm.status || "operational",
-      engineHours: machineForm.engineHours ?? 0,
-      nextService: machineForm.nextService ?? 500,
-      lastService: machineForm.lastService || new Date().toISOString().slice(0, 10),
-      ...machineForm,
-    } as Machine);
-    await load();
-    setShowAddMachine(false);
-    setMachineForm({});
-    setMachineErrors({});
+    try {
+      await saveData("machines", {
+        id: editingMachine?.id || generateId(),
+        status: machineForm.status || "operational",
+        engineHours: machineForm.engineHours ?? 0,
+        nextService: machineForm.nextService ?? 500,
+        lastService: machineForm.lastService || new Date().toISOString().slice(0, 10),
+        ...machineForm,
+      } as Machine);
+      await load();
+      setShowAddMachine(false);
+      setEditingMachine(null);
+      setMachineForm({});
+      setMachineErrors({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save machine",
+        color: "red",
+      });
+    }
   };
 
   const validateTask = () => {
@@ -96,24 +129,41 @@ export default function OperationsPage() {
 
   const saveTask = async () => {
     if (!validateTask()) return;
-    await saveData("tasks", {
-      id: generateId(),
-      status: taskForm.status || "pending",
-      priority: taskForm.priority || "medium",
-      dueDate: taskForm.dueDate || new Date().toISOString().slice(0, 10),
-      assignee: taskForm.assignee || "Unassigned",
-      description: taskForm.description || "",
-      ...taskForm,
-    } as Task);
-    await load();
-    setShowAddTask(false);
-    setTaskForm({});
-    setTaskErrors({});
+    try {
+      await saveData("tasks", {
+        id: editingTask?.id || generateId(),
+        status: taskForm.status || "pending",
+        priority: taskForm.priority || "medium",
+        dueDate: taskForm.dueDate || new Date().toISOString().slice(0, 10),
+        assignee: taskForm.assignee || "Unassigned",
+        description: taskForm.description || "",
+        ...taskForm,
+      } as Task);
+      await load();
+      setShowAddTask(false);
+      setEditingTask(null);
+      setTaskForm({});
+      setTaskErrors({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save task",
+        color: "red",
+      });
+    }
   };
 
   const updateTaskStatus = async (task: Task, status: Task["status"]) => {
-    await saveData("tasks", { ...task, status });
-    await load();
+    try {
+      await saveData("tasks", { ...task, status });
+      await load();
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to update task status",
+        color: "red",
+      });
+    }
   };
 
   const pendingTasks = tasks.filter((t) => t.status === "pending");
@@ -462,17 +512,50 @@ export default function OperationsPage() {
                           </span>
                         </td>
                         <td>
+                          <div style={{ display: "flex", gap: 4 }}>
+                          <button
+                            className="btn-ghost"
+                            title="Edit machine"
+                            style={{ padding: "4px 8px" }}
+                            onClick={() => {
+                              setEditingMachine(m);
+                              setMachineForm({
+                                name: m.name,
+                                type: m.type,
+                                make: m.make,
+                                model: m.model,
+                                year: m.year,
+                                engineHours: m.engineHours,
+                                lastService: m.lastService,
+                                nextService: m.nextService,
+                                status: m.status,
+                              });
+                              setMachineErrors({});
+                              setShowAddMachine(true);
+                            }}
+                          >
+                            <Pencil size={14} />
+                          </button>
                           <button
                             className="btn-danger"
                             title="Delete machine"
                             style={{ padding: "4px 8px" }}
                             onClick={async () => {
-                              await deleteData("machines", m.id);
-                              await load();
+                              try {
+                                await deleteData("machines", m.id);
+                                await load();
+                              } catch (error) {
+                                notifications.show({
+                                  title: "Error",
+                                  message: error instanceof Error ? error.message : "Failed to delete machine",
+                                  color: "red",
+                                });
+                              }
                             }}
                           >
                             <Trash2 size={14} />
                           </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -541,9 +624,18 @@ export default function OperationsPage() {
                     key={task.id}
                     task={task}
                     onUpdateStatus={updateTaskStatus}
+                    onEdit={() => editTask(task)}
                     onDelete={async () => {
-                      await deleteData("tasks", task.id);
-                      await load();
+                      try {
+                        await deleteData("tasks", task.id);
+                        await load();
+                      } catch (error) {
+                        notifications.show({
+                          title: "Error",
+                          message: error instanceof Error ? error.message : "Failed to delete task",
+                          color: "red",
+                        });
+                      }
                     }}
                   />
                 ))}
@@ -589,9 +681,18 @@ export default function OperationsPage() {
                     key={task.id}
                     task={task}
                     onUpdateStatus={updateTaskStatus}
+                    onEdit={() => editTask(task)}
                     onDelete={async () => {
-                      await deleteData("tasks", task.id);
-                      await load();
+                      try {
+                        await deleteData("tasks", task.id);
+                        await load();
+                      } catch (error) {
+                        notifications.show({
+                          title: "Error",
+                          message: error instanceof Error ? error.message : "Failed to delete task",
+                          color: "red",
+                        });
+                      }
                     }}
                   />
                 ))}
@@ -632,14 +733,23 @@ export default function OperationsPage() {
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 10 }}
               >
-                {doneTasks.map((task) => (
+                  {doneTasks.map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
                     onUpdateStatus={updateTaskStatus}
+                    onEdit={() => editTask(task)}
                     onDelete={async () => {
-                      await deleteData("tasks", task.id);
-                      await load();
+                      try {
+                        await deleteData("tasks", task.id);
+                        await load();
+                      } catch (error) {
+                        notifications.show({
+                          title: "Error",
+                          message: error instanceof Error ? error.message : "Failed to delete task",
+                          color: "red",
+                        });
+                      }
                     }}
                   />
                 ))}
@@ -651,7 +761,7 @@ export default function OperationsPage() {
 
       {/* Add Machine Modal */}
       {showAddMachine && (
-        <Modal title="Add Machine" onClose={() => { setShowAddMachine(false); setMachineErrors({}); }}>
+        <Modal title={editingMachine ? `Edit Machine — ${editingMachine.name}` : "Add Machine"} onClose={() => { setShowAddMachine(false); setEditingMachine(null); setMachineErrors({}); setMachineForm({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               label="Machine Name"
@@ -744,8 +854,8 @@ export default function OperationsPage() {
               ))}
             </FormField>
             <Group grow mt={4}>
-              <Button onClick={saveMachine}>Add Machine</Button>
-              <Button variant="default" onClick={() => { setShowAddMachine(false); setMachineErrors({}); }}>
+              <Button onClick={saveMachine}>{editingMachine ? "Update Machine" : "Add Machine"}</Button>
+              <Button variant="default" onClick={() => { setShowAddMachine(false); setEditingMachine(null); setMachineErrors({}); setMachineForm({}); }}>
                 Cancel
               </Button>
             </Group>
@@ -755,7 +865,7 @@ export default function OperationsPage() {
 
       {/* Add Task Modal */}
       {showAddTask && (
-        <Modal title="Create Task" onClose={() => { setShowAddTask(false); setTaskErrors({}); }}>
+        <Modal title={editingTask ? `Edit Task — ${editingTask.title}` : "Create Task"} onClose={() => { setShowAddTask(false); setEditingTask(null); setTaskErrors({}); setTaskForm({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               label="Task Title"
@@ -778,21 +888,35 @@ export default function OperationsPage() {
             />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
+                as="select"
                 label="Field / Location"
                 name="fieldName"
-                type="text"
-                placeholder="North Meadow"
-                value={String(taskForm.fieldName ?? "")}
+                value={taskForm.fieldName ?? ""}
                 onChange={(e) => setTaskForm((f) => ({ ...f, fieldName: e.target.value }))}
-              />
+              >
+                <option value="">Select field...</option>
+                {fields.map((f) => (
+                  <option key={f.id} value={f.name}>
+                    {f.name}
+                  </option>
+                ))}
+              </FormField>
               <FormField
+                as="select"
                 label="Assignee"
                 name="assignee"
-                type="text"
-                placeholder="Tom Greene"
-                value={String(taskForm.assignee ?? "")}
+                value={taskForm.assignee ?? ""}
                 onChange={(e) => setTaskForm((f) => ({ ...f, assignee: e.target.value }))}
-              />
+              >
+                <option value="">Select assignee...</option>
+                {[...new Set(tasks.map((t) => t.assignee).filter(Boolean))].map(
+                  (a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ),
+                )}
+              </FormField>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
@@ -846,8 +970,8 @@ export default function OperationsPage() {
               </FormField>
             </div>
             <Group grow mt={4}>
-              <Button onClick={saveTask}>Create Task</Button>
-              <Button variant="default" onClick={() => { setShowAddTask(false); setTaskErrors({}); }}>
+              <Button onClick={saveTask}>{editingTask ? "Update Task" : "Create Task"}</Button>
+              <Button variant="default" onClick={() => { setShowAddTask(false); setEditingTask(null); setTaskErrors({}); setTaskForm({}); }}>
                 Cancel
               </Button>
             </Group>
@@ -862,10 +986,12 @@ function TaskCard({
   task,
   onUpdateStatus,
   onDelete,
+  onEdit,
 }: {
   task: Task;
   onUpdateStatus: (task: Task, status: Task["status"]) => void;
   onDelete: () => void;
+  onEdit?: () => void;
 }) {
   return (
     <div
@@ -1017,6 +1143,25 @@ function TaskCard({
             }}
           >
             Done ✓
+          </button>
+        )}
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            title="Edit task"
+            style={{
+              padding: "5px 7px",
+              borderRadius: 5,
+              border: "1px solid rgba(96,165,250,0.3)",
+              background: "rgba(96,165,250,0.08)",
+              cursor: "pointer",
+              color: "#60a5fa",
+              display: "flex",
+              alignItems: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Pencil size={12} />
           </button>
         )}
         <button

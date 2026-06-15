@@ -7,10 +7,12 @@ import {
   Pencil,
   Plus,
   Search,
+  Settings,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { Button, Group } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
@@ -19,7 +21,9 @@ import {
   deleteData,
   generateId,
   saveData,
+  type Animal,
   type BatchRecord,
+  type CropField,
   type StockAdjustment,
   type StockItem,
 } from "@/app/base/services/farm-client";
@@ -27,6 +31,8 @@ import {
 const INVENTORY_ENTITIES = {
   stock: "stockItems",
   batches: "batches",
+  fields: "fields",
+  animals: "animals",
 } as const;
 
 type Tab = "stock" | "batches";
@@ -43,10 +49,14 @@ export default function InventoryPage() {
   const { data, reload: load } = useFarmData(INVENTORY_ENTITIES);
   const stock = data.stock as StockItem[];
   const batches = data.batches as BatchRecord[];
+  const fields = data.fields as CropField[];
+  const animals = data.animals as Animal[];
   const [search, setSearch] = useState("");
   const [traceSearch, setTraceSearch] = useState("");
   const [showAddStock, setShowAddStock] = useState(false);
+  const [editingStock, setEditingStock] = useState<StockItem | null>(null);
   const [showAddBatch, setShowAddBatch] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<BatchRecord | null>(null);
   const [stockForm, setStockForm] = useState<Partial<StockItem>>({});
   const [batchForm, setBatchForm] = useState<Partial<BatchRecord>>({});
   const [showAdjust, setShowAdjust] = useState(false);
@@ -59,49 +69,74 @@ export default function InventoryPage() {
 
   const saveStock = async () => {
     if (!stockForm.name) return;
-    await saveData("stockItems", {
-      id: generateId(),
-      category: "raw",
-      subCategory: "",
-      minStock: 10,
-      unit: "units",
-      location: "Main Store",
-      updatedAt: new Date().toISOString().slice(0, 10),
-      ...stockForm,
-    } as StockItem);
-    await load();
-    setShowAddStock(false);
-    setStockForm({});
+    try {
+      await saveData("stockItems", {
+        id: editingStock?.id || generateId(),
+        category: "raw",
+        subCategory: "",
+        minStock: 10,
+        unit: "units",
+        location: "Main Store",
+        ...stockForm,
+      } as StockItem);
+      await load();
+      setShowAddStock(false);
+      setEditingStock(null);
+      setStockForm({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save stock item",
+        color: "red",
+      });
+    }
   };
 
   const saveAdjustment = async () => {
     if (!adjustItem) return;
-    await saveData<StockAdjustment>("stockAdjustments", {
-      id: generateId(),
-      stockItemId: adjustItem.id,
-      stockItemName: adjustItem.name,
-      date: new Date().toISOString().slice(0, 10),
-      delta: adjustForm.delta,
-      reason: adjustForm.reason,
-      operator: adjustForm.operator,
-    });
-    await load();
-    setShowAdjust(false);
-    setAdjustItem(null);
-    setAdjustForm({ delta: 0, reason: "", operator: "" });
+    try {
+      await saveData<StockAdjustment>("stockAdjustments", {
+        id: generateId(),
+        stockItemId: adjustItem.id,
+        stockItemName: adjustItem.name,
+        date: new Date().toISOString().slice(0, 10),
+        delta: adjustForm.delta,
+        reason: adjustForm.reason,
+        operator: adjustForm.operator,
+      });
+      await load();
+      setShowAdjust(false);
+      setAdjustItem(null);
+      setAdjustForm({ delta: 0, reason: "", operator: "" });
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save adjustment",
+        color: "red",
+      });
+    }
   };
 
   const saveBatch = async () => {
     if (!batchForm.batchCode) return;
-    await saveData("batches", {
-      id: generateId(),
-      status: "active",
-      processedDate: new Date().toISOString().slice(0, 10),
-      ...batchForm,
-    } as BatchRecord);
-    await load();
-    setShowAddBatch(false);
-    setBatchForm({});
+    try {
+      await saveData("batches", {
+        id: editingBatch?.id || generateId(),
+        status: "active",
+        processedDate: new Date().toISOString().slice(0, 10),
+        ...batchForm,
+      } as BatchRecord);
+      await load();
+      setShowAddBatch(false);
+      setEditingBatch(null);
+      setBatchForm({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save batch",
+        color: "red",
+      });
+    }
   };
 
   const filteredStock = stock.filter(
@@ -368,6 +403,28 @@ export default function InventoryPage() {
                         <div style={{ display: "flex", gap: 6 }}>
                           <button
                             className="btn-ghost"
+                            title="Edit stock item"
+                            style={{ padding: "4px 8px" }}
+                            onClick={() => {
+                              setEditingStock(item);
+                              setStockForm({
+                                name: item.name,
+                                category: item.category,
+                                subCategory: item.subCategory,
+                                quantity: item.quantity,
+                                unit: item.unit,
+                                minStock: item.minStock,
+                                location: item.location,
+                                fieldOrigin: item.fieldOrigin,
+                                animalOrigin: item.animalOrigin,
+                              });
+                              setShowAddStock(true);
+                            }}
+                          >
+                            <Settings size={14} />
+                          </button>
+                          <button
+                            className="btn-ghost"
                             title="Adjust quantity"
                             style={{ padding: "4px 8px" }}
                             onClick={() => {
@@ -387,8 +444,16 @@ export default function InventoryPage() {
                             title="Delete item"
                             style={{ padding: "4px 8px" }}
                             onClick={async () => {
-                              await deleteData("stockItems", item.id);
-                              await load();
+                              try {
+                                await deleteData("stockItems", item.id);
+                                await load();
+                              } catch (error) {
+                                notifications.show({
+                                  title: "Error",
+                                  message: error instanceof Error ? error.message : "Failed to delete stock item",
+                                  color: "red",
+                                });
+                              }
                             }}
                           >
                             <Trash2 size={14} />
@@ -631,17 +696,48 @@ export default function InventoryPage() {
                       </span>
                     </td>
                     <td>
+                      <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        className="btn-ghost"
+                        title="Edit batch"
+                        style={{ padding: "4px 8px" }}
+                        onClick={() => {
+                          setEditingBatch(b);
+                          setBatchForm({
+                            batchCode: b.batchCode,
+                            product: b.product,
+                            origin: b.origin,
+                            originType: b.originType,
+                            processedDate: b.processedDate,
+                            quantity: b.quantity,
+                            unit: b.unit,
+                            status: b.status,
+                          });
+                          setShowAddBatch(true);
+                        }}
+                      >
+                        <Settings size={14} />
+                      </button>
                       <button
                         className="btn-danger"
                         title="Delete batch"
                         style={{ padding: "4px 8px" }}
                         onClick={async () => {
-                          await deleteData("batches", b.id);
-                          await load();
+                          try {
+                            await deleteData("batches", b.id);
+                            await load();
+                          } catch (error) {
+                            notifications.show({
+                              title: "Error",
+                              message: error instanceof Error ? error.message : "Failed to delete batch",
+                              color: "red",
+                            });
+                          }
                         }}
                       >
                         <Trash2 size={14} />
                       </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -653,16 +749,13 @@ export default function InventoryPage() {
 
       {/* Add Stock Modal */}
       {showAddStock && (
-        <Modal title="Add Stock Item" onClose={() => setShowAddStock(false)}>
+        <Modal title={editingStock ? `Edit Stock — ${editingStock.name}` : "Add Stock Item"} onClose={() => { setShowAddStock(false); setEditingStock(null); setStockForm({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
               ["Item Name", "name", "text", "Winter Wheat Grain"],
               ["Quantity", "quantity", "number", "100"],
-              ["Unit", "unit", "text", "tonnes"],
               ["Min Stock Level", "minStock", "number", "20"],
               ["Location", "location", "text", "Grain Store A"],
-              ["Field Origin", "fieldOrigin", "text", "e.g. North Meadow"],
-              ["Animal Origin", "animalOrigin", "text", "e.g. UK123456"],
             ].map(([label, key, type, placeholder]) => (
               <FormField
                 key={key}
@@ -682,6 +775,54 @@ export default function InventoryPage() {
             ))}
             <FormField
               as="select"
+              label="Unit"
+              name="unit"
+              value={stockForm.unit ?? ""}
+              onChange={(e) =>
+                setStockForm((f) => ({ ...f, unit: e.target.value }))
+              }
+            >
+              <option value="">Select unit...</option>
+              {["tonnes", "kg", "bags", "litres", "units"].map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              as="select"
+              label="Field Origin"
+              name="fieldOrigin"
+              value={stockForm.fieldOrigin ?? ""}
+              onChange={(e) =>
+                setStockForm((f) => ({ ...f, fieldOrigin: e.target.value }))
+              }
+            >
+              <option value="">Select field...</option>
+              {fields.map((f) => (
+                <option key={f.id} value={f.name}>
+                  {f.name}
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              as="select"
+              label="Animal Origin"
+              name="animalOrigin"
+              value={stockForm.animalOrigin ?? ""}
+              onChange={(e) =>
+                setStockForm((f) => ({ ...f, animalOrigin: e.target.value }))
+              }
+            >
+              <option value="">Select animal...</option>
+              {animals.map((a) => (
+                <option key={a.id} value={a.earTag}>
+                  {a.earTag} - {a.breed}
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              as="select"
               label="Stock category"
               name="category"
               value={stockForm.category ?? "raw"}
@@ -699,8 +840,8 @@ export default function InventoryPage() {
               ))}
             </FormField>
             <Group grow mt={4}>
-              <Button onClick={saveStock}>Save Item</Button>
-              <Button variant="default" onClick={() => setShowAddStock(false)}>
+              <Button onClick={saveStock}>{editingStock ? "Update Item" : "Save Item"}</Button>
+              <Button variant="default" onClick={() => { setShowAddStock(false); setEditingStock(null); setStockForm({}); }}>
                 Cancel
               </Button>
             </Group>
@@ -744,14 +885,23 @@ export default function InventoryPage() {
               }
             />
             <FormField
+              as="select"
               label="Operator name"
               name="operator"
-              placeholder="Tom Greene"
-              value={adjustForm.operator}
+              value={adjustForm.operator ?? ""}
               onChange={(e) =>
                 setAdjustForm((f) => ({ ...f, operator: e.target.value }))
               }
-            />
+            >
+              <option value="">Select operator...</option>
+              {["Tom Greene", "John Smith", "Sarah Jones", "Mike Wilson", "Emma Davis"].map(
+                (o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ),
+              )}
+            </FormField>
             <Group grow mt={4}>
               <Button onClick={saveAdjustment}>Save Adjustment</Button>
               <Button
@@ -770,16 +920,13 @@ export default function InventoryPage() {
 
       {showAddBatch && (
         <Modal
-          title="Create Batch Record"
-          onClose={() => setShowAddBatch(false)}
+          title={editingBatch ? `Edit Batch — ${editingBatch.batchCode}` : "Create Batch Record"}
+          onClose={() => { setShowAddBatch(false); setEditingBatch(null); setBatchForm({}); }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
               ["Batch Code", "batchCode", "text", "BATCH-2026-WW-01"],
-              ["Product", "product", "text", "Winter Wheat / Flour"],
-              ["Origin", "origin", "text", "North Meadow or UK123456"],
               ["Quantity", "quantity", "number", "50"],
-              ["Unit", "unit", "text", "tonnes"],
             ].map(([label, key, type, placeholder]) => (
               <FormField
                 key={key}
@@ -797,6 +944,62 @@ export default function InventoryPage() {
                 }
               />
             ))}
+            <FormField
+              as="select"
+              label="Product"
+              name="product"
+              value={batchForm.product ?? ""}
+              onChange={(e) =>
+                setBatchForm((f) => ({ ...f, product: e.target.value }))
+              }
+            >
+              <option value="">Select product...</option>
+              {[...new Set(stock.map((s) => s.name).filter(Boolean))].map(
+                (p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ),
+              )}
+            </FormField>
+            <FormField
+              as="select"
+              label="Origin"
+              name="origin"
+              value={batchForm.origin ?? ""}
+              onChange={(e) =>
+                setBatchForm((f) => ({ ...f, origin: e.target.value }))
+              }
+            >
+              <option value="">Select origin...</option>
+              {batchForm.originType === "field"
+                ? fields.map((f) => (
+                    <option key={f.id} value={f.name}>
+                      {f.name}
+                    </option>
+                  ))
+                : animals.map((a) => (
+                    <option key={a.id} value={a.earTag}>
+                      {a.earTag} - {a.breed}
+                    </option>
+                  ))}
+            </FormField>
+            <FormField
+              as="select"
+              label="Unit"
+              name="unit"
+              value={batchForm.unit ?? ""}
+              onChange={(e) =>
+                setBatchForm((f) => ({ ...f, unit: e.target.value }))
+              }
+            >
+              <option value="">Select unit...</option>
+              {["tonnes", "kg", "bags", "litres", "units"].map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </FormField>
             <FormField
               as="select"
               label="Origin type"
@@ -825,8 +1028,8 @@ export default function InventoryPage() {
               }
             />
             <Group grow mt={4}>
-              <Button onClick={saveBatch}>Save Batch</Button>
-              <Button variant="default" onClick={() => setShowAddBatch(false)}>
+              <Button onClick={saveBatch}>{editingBatch ? "Update Batch" : "Save Batch"}</Button>
+              <Button variant="default" onClick={() => { setShowAddBatch(false); setEditingBatch(null); setBatchForm({}); }}>
                 Cancel
               </Button>
             </Group>

@@ -13,8 +13,9 @@ import {
   type MedicalRecord,
   type WeightRecord,
 } from "@/app/base/services/farm-client";
-import { AlertTriangle, Beef, Clock, Heart, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Beef, Clock, Heart, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button, Group } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useState } from "react";
 
 const LIVESTOCK_ENTITIES = {
@@ -55,77 +56,118 @@ export default function LivestockPage() {
   const weights = data.weights as WeightRecord[];
   const [searchAnimal, setSearchAnimal] = useState("");
   const [showAddAnimal, setShowAddAnimal] = useState(false);
+  const [editingAnimal, setEditingAnimal] = useState<Animal | null>(null);
   const [showAddMed, setShowAddMed] = useState(false);
+  const [editingMed, setEditingMed] = useState<MedicalRecord | null>(null);
   const [showAddBreed, setShowAddBreed] = useState(false);
+  const [editingBreed, setEditingBreed] = useState<BreedingRecord | null>(null);
+  const [showAddWeight, setShowAddWeight] = useState(false);
+  const [editingWeight, setEditingWeight] = useState<WeightRecord | null>(null);
   const [animalForm, setAnimalForm] = useState<Partial<Animal>>({});
   const [medForm, setMedForm] = useState<Partial<MedicalRecord>>({});
   const [breedForm, setBreedForm] = useState<Partial<BreedingRecord>>({});
-  const [showAddWeight, setShowAddWeight] = useState(false);
   const [weightForm, setWeightForm] = useState<Partial<WeightRecord>>({});
 
   const saveAnimal = async () => {
     if (!animalForm.earTag) return;
-    await saveData("animals", {
-      id: generateId(),
-      status: "healthy",
-      species: "cattle",
-      sex: "F",
-      ...animalForm,
-    } as Animal);
-    await load();
-    setShowAddAnimal(false);
-    setAnimalForm({});
+    try {
+      await saveData("animals", {
+        id: editingAnimal?.id || generateId(),
+        status: "healthy",
+        species: "cattle",
+        sex: "F",
+        ...animalForm,
+      } as Animal);
+      await load();
+      setShowAddAnimal(false);
+      setEditingAnimal(null);
+      setAnimalForm({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to register animal",
+        color: "red",
+      });
+    }
   };
 
   const saveMed = async () => {
     if (!medForm.earTag) return;
-    const animal = animals.find((a) => a.earTag === medForm.earTag);
+    const animal = editingMed
+      ? animals.find((a) => a.id === editingMed.animalId)
+      : animals.find((a) => a.earTag === medForm.earTag);
     let withdrawalEnd: string | undefined;
     if (medForm.withdrawalDays && medForm.date) {
       const d = new Date(medForm.date);
       d.setDate(d.getDate() + (medForm.withdrawalDays as number));
       withdrawalEnd = d.toISOString().slice(0, 10);
     }
-    await saveData("medicalRecords", {
-      id: generateId(),
-      date: new Date().toISOString().slice(0, 10),
-      animalId: animal?.id ?? "",
-      type: "vaccination",
-      ...medForm,
-      withdrawalEnd,
-    } as MedicalRecord);
-    await load();
-    setShowAddMed(false);
-    setMedForm({});
+    try {
+      await saveData("medicalRecords", {
+        id: editingMed?.id || generateId(),
+        date: new Date().toISOString().slice(0, 10),
+        animalId: animal?.id ?? (editingMed?.animalId ?? ""),
+        type: "vaccination",
+        ...medForm,
+        withdrawalEnd,
+      } as MedicalRecord);
+      await load();
+      setShowAddMed(false);
+      setEditingMed(null);
+      setMedForm({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save medical record",
+        color: "red",
+      });
+    }
   };
 
   const saveWeight = async () => {
     if (!weightForm.earTag || !weightForm.weightKg) return;
-    await saveData("weightRecords", {
-      id: generateId(),
-      animalId: animals.find((a) => a.earTag === weightForm.earTag)?.id ?? "",
-      date: new Date().toISOString().slice(0, 10),
-      ...weightForm,
-    } as WeightRecord);
-    await load();
-    setShowAddWeight(false);
-    setWeightForm({});
+    try {
+      await saveData("weightRecords", {
+        id: editingWeight?.id || generateId(),
+        animalId: editingWeight?.animalId || (animals.find((a) => a.earTag === weightForm.earTag)?.id ?? ""),
+        date: new Date().toISOString().slice(0, 10),
+        ...weightForm,
+      } as WeightRecord);
+      await load();
+      setShowAddWeight(false);
+      setEditingWeight(null);
+      setWeightForm({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save weight record",
+        color: "red",
+      });
+    }
   };
 
   const saveBreed = async () => {
     if (!breedForm.damEarTag || !breedForm.breedingDate) return;
-    // Calculate expected birth based on species
     const breedDate = new Date(breedForm.breedingDate);
-    breedDate.setDate(breedDate.getDate() + 283); // Default cattle gestation
-    await saveData("breedingRecords", {
-      id: generateId(),
-      status: "pregnant",
-      expectedBirth: breedDate.toISOString().slice(0, 10),
-      ...breedForm,
-    } as BreedingRecord);
-    await load();
-    setShowAddBreed(false);
-    setBreedForm({});
+    breedDate.setDate(breedDate.getDate() + 283);
+    try {
+      await saveData("breedingRecords", {
+        id: editingBreed?.id || generateId(),
+        status: "pregnant",
+        expectedBirth: editingBreed?.expectedBirth || breedDate.toISOString().slice(0, 10),
+        ...breedForm,
+      } as BreedingRecord);
+      await load();
+      setShowAddBreed(false);
+      setEditingBreed(null);
+      setBreedForm({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save breeding record",
+        color: "red",
+      });
+    }
   };
 
   const filteredAnimals = animals.filter(
@@ -344,10 +386,50 @@ export default function LivestockPage() {
                     </span>
                   </td>
                   <td>
+                    <div style={{ display: "flex", gap: 4 }}>
+                    <button
+                      onClick={() => {
+                        setEditingAnimal(a);
+                        setAnimalForm({
+                          earTag: a.earTag,
+                          species: a.species,
+                          breed: a.breed,
+                          sex: a.sex,
+                          dob: a.dob,
+                          group: a.group,
+                          status: a.status,
+                          notes: a.notes,
+                        });
+                        setShowAddAnimal(true);
+                      }}
+                      style={{
+                        background: "rgba(96,165,250,0.15)",
+                        border: "1px solid rgba(96,165,250,0.3)",
+                        color: "#60a5fa",
+                        borderRadius: 6,
+                        padding: "4px 8px",
+                        fontSize: "0.72rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 3,
+                      }}
+                      title="Edit animal"
+                    >
+                      <Pencil size={12} />
+                    </button>
                     <button
                       onClick={async () => {
-                        await deleteData("animals", a.id);
-                        await load();
+                        try {
+                          await deleteData("animals", a.id);
+                          await load();
+                        } catch (error) {
+                          notifications.show({
+                            title: "Error",
+                            message: error instanceof Error ? error.message : "Failed to delete animal",
+                            color: "red",
+                          });
+                        }
                       }}
                       style={{
                         background: "rgba(248,113,113,0.15)",
@@ -365,6 +447,7 @@ export default function LivestockPage() {
                     >
                       <Trash2 size={14} />
                     </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -566,27 +649,68 @@ export default function LivestockPage() {
                       )}
                     </td>
                     <td>
-                      <button
-                        onClick={async () => {
+                    <div style={{ display: "flex", gap: 4 }}>
+                    <button
+                      onClick={() => {
+                        setEditingMed(m);
+                        setMedForm({
+                          earTag: m.earTag,
+                          date: m.date,
+                          type: m.type,
+                          product: m.product,
+                          condition: m.condition,
+                          vetName: m.vetName,
+                          withdrawalDays: m.withdrawalDays,
+                          notes: m.notes,
+                        });
+                        setShowAddMed(true);
+                      }}
+                      style={{
+                        background: "rgba(96,165,250,0.15)",
+                        border: "1px solid rgba(96,165,250,0.3)",
+                        color: "#60a5fa",
+                        borderRadius: 6,
+                        padding: "4px 8px",
+                        fontSize: "0.72rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 3,
+                      }}
+                      title="Edit record"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
                           await deleteData("medicalRecords", m.id);
                           await load();
-                        }}
-                        style={{
-                          background: "rgba(248,113,113,0.15)",
-                          border: "1px solid rgba(248,113,113,0.3)",
-                          color: "#f87171",
-                          borderRadius: 6,
-                          padding: "4px 10px",
-                          fontSize: "0.8rem",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                        title="Delete record"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                        } catch (error) {
+                          notifications.show({
+                            title: "Error",
+                            message: error instanceof Error ? error.message : "Failed to delete medical record",
+                            color: "red",
+                          });
+                        }
+                      }}
+                      style={{
+                        background: "rgba(248,113,113,0.15)",
+                        border: "1px solid rgba(248,113,113,0.3)",
+                        color: "#f87171",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: "0.8rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                      title="Delete record"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                    </div>
                     </td>
                   </tr>
                 ))}
@@ -755,10 +879,50 @@ export default function LivestockPage() {
                       marginTop: 10,
                     }}
                   >
+                    <div style={{ display: "flex", gap: 4 }}>
+                    <button
+                      onClick={() => {
+                        setEditingBreed(b);
+                        setBreedForm({
+                          damEarTag: b.damEarTag,
+                          sireEarTag: b.sireEarTag,
+                          breedingDate: b.breedingDate,
+                          expectedBirth: b.expectedBirth,
+                          actualBirth: b.actualBirth,
+                          offspring: b.offspring,
+                          status: b.status,
+                          notes: b.notes,
+                        });
+                        setShowAddBreed(true);
+                      }}
+                      style={{
+                        background: "rgba(96,165,250,0.15)",
+                        border: "1px solid rgba(96,165,250,0.3)",
+                        color: "#60a5fa",
+                        borderRadius: 6,
+                        padding: "4px 8px",
+                        fontSize: "0.72rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 3,
+                      }}
+                      title="Edit record"
+                    >
+                      <Pencil size={12} />
+                    </button>
                     <button
                       onClick={async () => {
-                        await deleteData("breedingRecords", b.id);
-                        await load();
+                        try {
+                          await deleteData("breedingRecords", b.id);
+                          await load();
+                        } catch (error) {
+                          notifications.show({
+                            title: "Error",
+                            message: error instanceof Error ? error.message : "Failed to delete breeding record",
+                            color: "red",
+                          });
+                        }
                       }}
                       style={{
                         background: "rgba(248,113,113,0.15)",
@@ -776,6 +940,7 @@ export default function LivestockPage() {
                     >
                       <Trash2 size={14} />
                     </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -846,10 +1011,46 @@ export default function LivestockPage() {
                     {w.notes || "—"}
                   </td>
                   <td>
+                    <div style={{ display: "flex", gap: 4 }}>
+                    <button
+                      onClick={() => {
+                        setEditingWeight(w);
+                        setWeightForm({
+                          earTag: w.earTag,
+                          date: w.date,
+                          weightKg: w.weightKg,
+                          notes: w.notes,
+                        });
+                        setShowAddWeight(true);
+                      }}
+                      style={{
+                        background: "rgba(96,165,250,0.15)",
+                        border: "1px solid rgba(96,165,250,0.3)",
+                        color: "#60a5fa",
+                        borderRadius: 6,
+                        padding: "4px 8px",
+                        fontSize: "0.72rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 3,
+                      }}
+                      title="Edit record"
+                    >
+                      <Pencil size={12} />
+                    </button>
                     <button
                       onClick={async () => {
-                        await deleteData("weightRecords", w.id);
-                        await load();
+                        try {
+                          await deleteData("weightRecords", w.id);
+                          await load();
+                        } catch (error) {
+                          notifications.show({
+                            title: "Error",
+                            message: error instanceof Error ? error.message : "Failed to delete weight record",
+                            color: "red",
+                          });
+                        }
                       }}
                       style={{
                         background: "rgba(248,113,113,0.15)",
@@ -867,6 +1068,7 @@ export default function LivestockPage() {
                     >
                       <Trash2 size={14} />
                     </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -877,11 +1079,10 @@ export default function LivestockPage() {
 
       {/* Add Animal Modal */}
       {showAddAnimal && (
-        <Modal title="Register animal" onClose={() => setShowAddAnimal(false)}>
+        <Modal title={editingAnimal ? `Edit Animal — ${editingAnimal.earTag}` : "Register animal"} onClose={() => { setShowAddAnimal(false); setEditingAnimal(null); setAnimalForm({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
               ["Ear tag", "earTag", "text", "UK123999"],
-              ["Breed", "breed", "text", "Hereford"],
               ["Date of birth", "dob", "date", ""],
               ["Management group", "group", "text", "Breeding herd"],
             ].map(([label, key, type, placeholder]) => (
@@ -897,6 +1098,24 @@ export default function LivestockPage() {
                 }
               />
             ))}
+            <FormField
+              as="select"
+              label="Breed"
+              name="breed"
+              value={animalForm.breed ?? ""}
+              onChange={(e) =>
+                setAnimalForm((f) => ({ ...f, breed: e.target.value }))
+              }
+            >
+              <option value="">Select breed...</option>
+              {[...new Set(animals.map((a) => a.breed).filter(Boolean))].map(
+                (b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ),
+              )}
+            </FormField>
             <FormField
               as="select"
               label="Species"
@@ -942,7 +1161,7 @@ export default function LivestockPage() {
 
       {/* Add Medical Modal */}
       {showAddMed && (
-        <Modal title="Add medical record" onClose={() => setShowAddMed(false)}>
+        <Modal title={editingMed ? `Edit Medical Record — ${editingMed.earTag}` : "Add medical record"} onClose={() => { setShowAddMed(false); setEditingMed(null); setMedForm({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               as="select"
@@ -1023,8 +1242,8 @@ export default function LivestockPage() {
       {/* Add Weight Modal */}
       {showAddWeight && (
         <Modal
-          title="Log weight record"
-          onClose={() => setShowAddWeight(false)}
+          title={editingWeight ? `Edit Weight Record — ${editingWeight.earTag}` : "Log weight record"}
+          onClose={() => { setShowAddWeight(false); setEditingWeight(null); setWeightForm({}); }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
@@ -1087,8 +1306,8 @@ export default function LivestockPage() {
       {/* Add Breeding Modal */}
       {showAddBreed && (
         <Modal
-          title="Add breeding record"
-          onClose={() => setShowAddBreed(false)}
+          title={editingBreed ? `Edit Breeding Record — ${editingBreed.damEarTag}` : "Add breeding record"}
+          onClose={() => { setShowAddBreed(false); setEditingBreed(null); setBreedForm({}); }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
@@ -1110,14 +1329,23 @@ export default function LivestockPage() {
                 ))}
             </FormField>
             <FormField
+              as="select"
               label="Sire ear tag"
               name="sireEarTag"
-              placeholder="UK789050"
               value={breedForm.sireEarTag ?? ""}
               onChange={(e) =>
                 setBreedForm((f) => ({ ...f, sireEarTag: e.target.value }))
               }
-            />
+            >
+              <option value="">Select sire...</option>
+              {animals
+                .filter((a) => a.sex === "M")
+                .map((a) => (
+                  <option key={a.id} value={a.earTag}>
+                    {a.earTag} - {a.breed}
+                  </option>
+                ))}
+            </FormField>
             <FormField
               label="Breeding date"
               name="breedingDate"

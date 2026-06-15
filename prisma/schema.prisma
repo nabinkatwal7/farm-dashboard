@@ -217,7 +217,7 @@ model StockItem {
   batchId        String?
   fieldOrigin    String?
   animalOrigin   String?
-  updatedAt      String
+  updatedAt      DateTime @updatedAt
   adjustments    StockAdjustment[]
 }
 

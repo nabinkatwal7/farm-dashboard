@@ -10,6 +10,7 @@ import {
   ClipboardList,
   CloudSun,
   Droplets,
+  Eye,
   Fingerprint,
   LayoutDashboard,
   Leaf,
@@ -78,6 +79,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: "/finance", label: "Finance", icon: CircleDollarSign },
       { href: "/users", label: "Users", icon: ShieldCheck, adminOnly: true },
+      { href: "/traceability", label: "Public Portal", icon: Eye },
       { label: "Settings", icon: Settings },
     ],
   },

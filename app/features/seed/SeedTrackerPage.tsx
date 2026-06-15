@@ -10,6 +10,7 @@ import {
   saveData,
   type Consignment,
   type CropField,
+  type CropModel,
   type GerminationTest,
   type SeedLot,
 } from "@/app/base/services/farm-client";
@@ -42,6 +43,7 @@ const SEED_ENTITIES = {
   seedLots: "seedLots",
   germinationTests: "germinationTests",
   consignments: "consignments",
+  cropModels: "cropModels",
 } as const;
 
 type Tab = "inventory" | "germination" | "consignments";
@@ -60,6 +62,7 @@ export default function SeedTrackerPage() {
   const seedLots = data.seedLots as SeedLot[];
   const germinationTests = data.germinationTests as GerminationTest[];
   const consignments = data.consignments as Consignment[];
+  const cropModels = data.cropModels as CropModel[];
 
   const [showAddLot, setShowAddLot] = useState(false);
   const [showAddTest, setShowAddTest] = useState(false);
@@ -826,13 +829,19 @@ export default function SeedTrackerPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
+                as="select"
                 label="Crop"
                 name="crop"
-                type="text"
-                placeholder="e.g. Winter Wheat"
-                value={String(lotForm.crop ?? "")}
+                value={lotForm.crop ?? ""}
                 onChange={(e) => setLotForm((f) => ({ ...f, crop: e.target.value }))}
-              />
+              >
+                <option value="">Select crop...</option>
+                {cropModels.map((cm) => (
+                  <option key={cm.id} value={cm.crop}>
+                    {cm.crop}
+                  </option>
+                ))}
+              </FormField>
               <FormField
                 label="Variety"
                 name="variety"
@@ -884,13 +893,21 @@ export default function SeedTrackerPage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
+                as="select"
                 label="Supplier"
                 name="supplier"
-                type="text"
-                placeholder="e.g. Agrii"
-                value={String(lotForm.supplier ?? "")}
+                value={lotForm.supplier ?? ""}
                 onChange={(e) => setLotForm((f) => ({ ...f, supplier: e.target.value }))}
-              />
+              >
+                <option value="">Select supplier...</option>
+                {[...new Set(seedLots.map((l) => l.supplier).filter(Boolean))].map(
+                  (s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ),
+                )}
+              </FormField>
               <FormField
                 label="Baseline Germination (%)"
                 name="baselineGermination"

@@ -20,15 +20,18 @@ import {
   generateId,
   saveData,
   type CropField,
+  type CropModel,
   type PrescriptionMap,
   type SeedIntegration,
   type SeedingZone,
 } from "@/app/base/services/farm-client";
+import { notifications } from "@mantine/notifications";
 
 const SEEDING_ENTITIES = {
   fields: "fields",
   prescriptionMaps: "prescriptionMaps",
   seedIntegrations: "seedIntegrations",
+  cropModels: "cropModels",
 } as const;
 
 const SeedingMap = dynamic(() => import("@/app/components/SeedingMap"), {
@@ -84,6 +87,7 @@ export default function SeedingPage() {
   const fields = data.fields as CropField[];
   const prescriptionMaps = data.prescriptionMaps as PrescriptionMap[];
   const integrations = data.seedIntegrations as SeedIntegration[];
+  const cropModels = data.cropModels as CropModel[];
 
   const [showAddPrescription, setShowAddPrescription] = useState(false);
   const [showEditMap, setShowEditMap] = useState<PrescriptionMap | null>(null);
@@ -118,20 +122,28 @@ export default function SeedingPage() {
       color: nextColor(i),
     }));
 
-    await saveData("prescriptionMaps", {
-      id: prescriptionForm.id || generateId(),
-      fieldId: prescriptionForm.fieldId,
-      fieldName: field?.name ?? "",
-      crop: prescriptionForm.crop ?? field?.currentCrop ?? "",
-      season: prescriptionForm.season ?? new Date().getFullYear().toString(),
-      status: (prescriptionForm.status as PrescriptionMap["status"]) ?? "draft",
-      notes: prescriptionForm.notes ?? "",
-      zones: generatedZones,
-      ...prescriptionForm,
-    } as PrescriptionMap);
-    await load();
-    setShowAddPrescription(false);
-    setPrescriptionForm({});
+    try {
+      await saveData("prescriptionMaps", {
+        id: prescriptionForm.id || generateId(),
+        fieldId: prescriptionForm.fieldId,
+        fieldName: field?.name ?? "",
+        crop: prescriptionForm.crop ?? field?.currentCrop ?? "",
+        season: prescriptionForm.season ?? new Date().getFullYear().toString(),
+        status: (prescriptionForm.status as PrescriptionMap["status"]) ?? "draft",
+        notes: prescriptionForm.notes ?? "",
+        zones: generatedZones,
+        ...prescriptionForm,
+      } as PrescriptionMap);
+      await load();
+      setShowAddPrescription(false);
+      setPrescriptionForm({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save prescription",
+        color: "red",
+      });
+    }
   };
 
   const saveIntegration = async () => {
@@ -139,24 +151,40 @@ export default function SeedingPage() {
     const existing = integrations.find(
       (i) => i.provider === integrationForm.provider,
     );
-    await saveData("seedIntegrations", {
-      id: existing?.id || generateId(),
-      isActive: true,
-      ...integrationForm,
-    } as SeedIntegration);
-    await load();
-    setShowIntegration(false);
-    setIntegrationForm({});
+    try {
+      await saveData("seedIntegrations", {
+        id: existing?.id || generateId(),
+        isActive: true,
+        ...integrationForm,
+      } as SeedIntegration);
+      await load();
+      setShowIntegration(false);
+      setIntegrationForm({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save integration",
+        color: "red",
+      });
+    }
   };
 
   const exportPrescription = async (pm: PrescriptionMap) => {
-    await saveData("prescriptionMaps", {
-      ...pm,
-      status: "active",
-      exportedAt: new Date().toISOString(),
-      exportFormat: "shapefile",
-    } as PrescriptionMap);
-    await load();
+    try {
+      await saveData("prescriptionMaps", {
+        ...pm,
+        status: "active",
+        exportedAt: new Date().toISOString(),
+        exportFormat: "shapefile",
+      } as PrescriptionMap);
+      await load();
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to export prescription",
+        color: "red",
+      });
+    }
   };
 
   return (
@@ -458,8 +486,16 @@ export default function SeedingPage() {
                         </button>
                         <button
                           onClick={async () => {
-                            await deleteData("prescriptionMaps", pm.id);
-                            await load();
+                            try {
+                              await deleteData("prescriptionMaps", pm.id);
+                              await load();
+                            } catch (error) {
+                              notifications.show({
+                                title: "Error",
+                                message: error instanceof Error ? error.message : "Failed to delete prescription map",
+                                color: "red",
+                              });
+                            }
                           }}
                           style={{
                             background: "rgba(248,113,113,0.15)",
@@ -596,8 +632,16 @@ export default function SeedingPage() {
                           )}
                           <button
                             onClick={async () => {
-                              await deleteData("prescriptionMaps", pm.id);
-                              await load();
+                              try {
+                                await deleteData("prescriptionMaps", pm.id);
+                                await load();
+                              } catch (error) {
+                                notifications.show({
+                                  title: "Error",
+                                  message: error instanceof Error ? error.message : "Failed to delete prescription map",
+                                  color: "red",
+                                });
+                              }
                             }}
                             style={{
                               background: "rgba(248,113,113,0.15)",
@@ -758,9 +802,17 @@ export default function SeedingPage() {
                     )}
                     <button
                       onClick={async () => {
-                        const updated = { ...int, isActive: !int.isActive };
-                        await saveData("seedIntegrations", updated as SeedIntegration);
-                        await load();
+                        try {
+                          const updated = { ...int, isActive: !int.isActive };
+                          await saveData("seedIntegrations", updated as SeedIntegration);
+                          await load();
+                        } catch (error) {
+                          notifications.show({
+                            title: "Error",
+                            message: error instanceof Error ? error.message : "Failed to toggle integration",
+                            color: "red",
+                          });
+                        }
                       }}
                       style={{
                         background: "rgba(96,165,250,0.15)",
@@ -776,8 +828,16 @@ export default function SeedingPage() {
                     </button>
                     <button
                       onClick={async () => {
-                        await deleteData("seedIntegrations", int.id);
-                        await load();
+                        try {
+                          await deleteData("seedIntegrations", int.id);
+                          await load();
+                        } catch (error) {
+                          notifications.show({
+                            title: "Error",
+                            message: error instanceof Error ? error.message : "Failed to delete integration",
+                            color: "red",
+                          });
+                        }
                       }}
                       style={{
                         background: "rgba(248,113,113,0.15)",
@@ -933,15 +993,21 @@ export default function SeedingPage() {
               >
                 Crop
               </label>
-              <input
+              <select
                 className="farm-input"
-                type="text"
-                placeholder="Winter Wheat"
-                value={String(prescriptionForm.crop ?? "")}
+                value={prescriptionForm.crop ?? ""}
                 onChange={(e) =>
                   setPrescriptionForm((f) => ({ ...f, crop: e.target.value }))
                 }
-              />
+                style={{ width: "100%" }}
+              >
+                <option value="">Select crop...</option>
+                {cropModels.map((cm) => (
+                  <option key={cm.id} value={cm.crop}>
+                    {cm.crop}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label
@@ -1178,9 +1244,17 @@ export default function SeedingPage() {
                 className="btn-primary"
                 style={{ flex: 1 }}
                 onClick={async () => {
-                  await saveData("prescriptionMaps", showEditMap as PrescriptionMap);
-                  setShowEditMap(null);
-                  await load();
+                  try {
+                    await saveData("prescriptionMaps", showEditMap as PrescriptionMap);
+                    setShowEditMap(null);
+                    await load();
+                  } catch (error) {
+                    notifications.show({
+                      title: "Error",
+                      message: error instanceof Error ? error.message : "Failed to save zone edits",
+                      color: "red",
+                    });
+                  }
                 }}
               >
                 Save Zones

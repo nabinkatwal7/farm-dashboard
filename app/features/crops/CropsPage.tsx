@@ -9,13 +9,15 @@ import {
   generateId,
   saveData,
   type CropField,
+  type CropModel,
   type FieldBoundaryPoint,
   type InputLog,
   type YieldRecord,
 } from "@/app/base/services/farm-client";
 import { useCurrentUser } from "@/app/lib/user-context";
 import { Alert, Button, Group } from "@mantine/core";
-import { FileText, Map, Plus, Trash2, TrendingUp, Wheat } from "lucide-react";
+import { notifications } from "@mantine/notifications";
+import { FileText, Map, Pencil, Plus, Trash2, TrendingUp, Wheat } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
@@ -33,6 +35,7 @@ const CROP_ENTITIES = {
   fields: "fields",
   inputs: "inputLogs",
   yields: "yieldRecords",
+  cropModels: "cropModels",
 } as const;
 
 // Leaflet must be loaded client-side only
@@ -109,9 +112,13 @@ export default function CropsPage() {
   const fields = data.fields as CropField[];
   const inputs = data.inputs as InputLog[];
   const yields = data.yields as YieldRecord[];
+  const cropModels = data.cropModels as CropModel[];
   const [showAddField, setShowAddField] = useState(false);
+  const [editingField, setEditingField] = useState<CropField | null>(null);
   const [showAddInput, setShowAddInput] = useState(false);
+  const [editingInput, setEditingInput] = useState<InputLog | null>(null);
   const [showAddYield, setShowAddYield] = useState(false);
+  const [editingYield, setEditingYield] = useState<YieldRecord | null>(null);
   const [fieldForm, setFieldForm] = useState<Partial<CropField>>({});
   const [inputForm, setInputForm] = useState<Partial<InputLog>>({});
   const [yieldForm, setYieldForm] = useState<Partial<YieldRecord>>({});
@@ -147,7 +154,7 @@ export default function CropsPage() {
     const center = boundaryCenter(boundary);
     try {
       await saveData("fields", {
-        id: fieldForm.id || generateId(),
+        id: editingField?.id || fieldForm.id || generateId(),
         name: fieldForm.name?.trim() ?? "",
         acres,
         currentCrop: fieldForm.currentCrop?.trim() ?? "",
@@ -161,11 +168,12 @@ export default function CropsPage() {
       } as CropField);
       await load();
       setShowAddField(false);
+      setEditingField(null);
       setFieldForm({});
       setFieldErrors({});
     } catch (error) {
       setFieldSaveError(
-        error instanceof Error ? error.message : "Unable to create field",
+        error instanceof Error ? error.message : "Unable to save field",
       );
     }
   };
@@ -181,15 +189,24 @@ export default function CropsPage() {
 
   const saveInput = async () => {
     if (!validateInput()) return;
-    await saveData("inputLogs", {
-      id: generateId(),
-      date: new Date().toISOString().slice(0, 10),
-      ...inputForm,
-    } as InputLog);
-    await load();
-    setShowAddInput(false);
-    setInputForm({});
-    setInputErrors({});
+    try {
+      await saveData("inputLogs", {
+        id: editingInput?.id || generateId(),
+        date: new Date().toISOString().slice(0, 10),
+        ...inputForm,
+      } as InputLog);
+      await load();
+      setShowAddInput(false);
+      setEditingInput(null);
+      setInputForm({});
+      setInputErrors({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save input log",
+        color: "red",
+      });
+    }
   };
 
   const validateYield = () => {
@@ -205,15 +222,24 @@ export default function CropsPage() {
 
   const saveYield = async () => {
     if (!validateYield()) return;
-    await saveData("yieldRecords", {
-      id: generateId(),
-      year: new Date().getFullYear(),
-      ...yieldForm,
-    } as YieldRecord);
-    await load();
-    setShowAddYield(false);
-    setYieldForm({});
-    setYieldErrors({});
+    try {
+      await saveData("yieldRecords", {
+        id: editingYield?.id || generateId(),
+        year: new Date().getFullYear(),
+        ...yieldForm,
+      } as YieldRecord);
+      await load();
+      setShowAddYield(false);
+      setEditingYield(null);
+      setYieldForm({});
+      setYieldErrors({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save yield record",
+        color: "red",
+      });
+    }
   };
 
   const yieldChartData = yields.map((y) => ({
@@ -478,17 +504,51 @@ export default function CropsPage() {
                       ))}
                     </div>
                   </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      marginTop: 8,
-                    }}
-                  >
+                  <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", marginTop: 8 }}>
+                    <button
+                      onClick={() => {
+                        setEditingField(field);
+                        setFieldForm({
+                          name: field.name,
+                          currentCrop: field.currentCrop,
+                          status: field.status,
+                          sowDate: field.sowDate,
+                          harvestDate: field.harvestDate,
+                          rotation: field.rotation,
+                          boundary: field.boundary,
+                        });
+                        setFieldErrors({});
+                        setFieldSaveError(null);
+                        setShowAddField(true);
+                      }}
+                      style={{
+                        background: "rgba(96,165,250,0.15)",
+                        border: "1px solid rgba(96,165,250,0.3)",
+                        color: "#60a5fa",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: "0.8rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                      title="Edit field"
+                    >
+                      <Pencil size={14} />
+                    </button>
                     <button
                       onClick={async () => {
-                        await deleteData("fields", field.id);
-                        await load();
+                        try {
+                          await deleteData("fields", field.id);
+                          await load();
+                        } catch (error) {
+                          notifications.show({
+                            title: "Error",
+                            message: error instanceof Error ? error.message : "Failed to delete field",
+                            color: "red",
+                          });
+                        }
                       }}
                       style={{
                         background: "rgba(248,113,113,0.15)",
@@ -585,10 +645,52 @@ export default function CropsPage() {
                       {log.notes || "—"}
                     </td>
                     <td>
+                      <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        onClick={() => {
+                          setEditingInput(log);
+                          setInputForm({
+                            date: log.date,
+                            fieldId: log.fieldId,
+                            fieldName: log.fieldName,
+                            type: log.type,
+                            product: log.product,
+                            quantity: log.quantity,
+                            unit: log.unit,
+                            operator: log.operator,
+                            notes: log.notes,
+                          });
+                          setInputErrors({});
+                          setShowAddInput(true);
+                        }}
+                        style={{
+                          background: "rgba(96,165,250,0.15)",
+                          border: "1px solid rgba(96,165,250,0.3)",
+                          color: "#60a5fa",
+                          borderRadius: 6,
+                          padding: "4px 8px",
+                          fontSize: "0.72rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 3,
+                        }}
+                        title="Edit log"
+                      >
+                        <Pencil size={12} />
+                      </button>
                       <button
                         onClick={async () => {
-                          await deleteData("inputLogs", log.id);
-                          await load();
+                          try {
+                            await deleteData("inputLogs", log.id);
+                            await load();
+                          } catch (error) {
+                            notifications.show({
+                              title: "Error",
+                              message: error instanceof Error ? error.message : "Failed to delete input log",
+                              color: "red",
+                            });
+                          }
                         }}
                         style={{
                           background: "rgba(248,113,113,0.15)",
@@ -606,6 +708,7 @@ export default function CropsPage() {
                       >
                         <Trash2 size={14} />
                       </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -742,27 +845,68 @@ export default function CropsPage() {
                         </span>
                       </td>
                       <td>
-                        <button
-                          onClick={async () => {
+                      <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        onClick={() => {
+                          setEditingYield(y);
+                          setYieldForm({
+                            fieldId: y.fieldId,
+                            fieldName: y.fieldName,
+                            crop: y.crop,
+                            year: y.year,
+                            projected: y.projected,
+                            actual: y.actual,
+                            unit: y.unit,
+                          });
+                          setYieldErrors({});
+                          setShowAddYield(true);
+                        }}
+                        style={{
+                          background: "rgba(96,165,250,0.15)",
+                          border: "1px solid rgba(96,165,250,0.3)",
+                          color: "#60a5fa",
+                          borderRadius: 6,
+                          padding: "4px 8px",
+                          fontSize: "0.72rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 3,
+                        }}
+                        title="Edit record"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          try {
                             await deleteData("yieldRecords", y.id);
                             await load();
-                          }}
-                          style={{
-                            background: "rgba(248,113,113,0.15)",
-                            border: "1px solid rgba(248,113,113,0.3)",
-                            color: "#f87171",
-                            borderRadius: 6,
-                            padding: "4px 10px",
-                            fontSize: "0.8rem",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 4,
-                          }}
-                          title="Delete record"
-                        >
-                          <Trash2 size={14} />
+                          } catch (error) {
+                            notifications.show({
+                              title: "Error",
+                              message: error instanceof Error ? error.message : "Failed to delete yield record",
+                              color: "red",
+                            });
+                          }
+                        }}
+                        style={{
+                          background: "rgba(248,113,113,0.15)",
+                          border: "1px solid rgba(248,113,113,0.3)",
+                          color: "#f87171",
+                          borderRadius: 6,
+                          padding: "4px 10px",
+                          fontSize: "0.8rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                        title="Delete record"
+                      >
+                        <Trash2 size={14} />
                         </button>
+                      </div>
                       </td>
                     </tr>
                   );
@@ -776,9 +920,10 @@ export default function CropsPage() {
       {/* Add Field Modal */}
       {showAddField && (
         <Modal
-          title="Add New Field"
+          title={editingField ? `Edit Field — ${editingField.name}` : "Add New Field"}
           onClose={() => {
             setShowAddField(false);
+            setEditingField(null);
             setFieldForm({});
             setFieldErrors({});
             setFieldSaveError(null);
@@ -832,17 +977,23 @@ export default function CropsPage() {
               />
             </div>
             <FormField
+              as="select"
               label="Current Crop"
               name="currentCrop"
-              type="text"
-              placeholder="Winter Wheat"
               required
               error={fieldErrors.currentCrop}
-              value={String(fieldForm.currentCrop ?? "")}
+              value={fieldForm.currentCrop ?? ""}
               onChange={(e) =>
                 setFieldForm((f) => ({ ...f, currentCrop: e.target.value }))
               }
-            />
+            >
+              <option value="">Select crop...</option>
+              {cropModels.map((cm) => (
+                <option key={cm.id} value={cm.crop}>
+                  {cm.crop}
+                </option>
+              ))}
+            </FormField>
             <FormField
               as="select"
               label="Field status"
@@ -944,11 +1095,12 @@ export default function CropsPage() {
               </div>
             </div>
             <Group grow mt={4}>
-              <Button onClick={saveField}>Save Field</Button>
+              <Button onClick={saveField}>{editingField ? "Update Field" : "Save Field"}</Button>
               <Button
                 variant="default"
                 onClick={() => {
                   setShowAddField(false);
+                  setEditingField(null);
                   setFieldForm({});
                   setFieldErrors({});
                   setFieldSaveError(null);
@@ -964,9 +1116,10 @@ export default function CropsPage() {
       {/* Add Input Modal */}
       {showAddInput && (
         <Modal
-          title="Log Input Application"
+          title={editingInput ? `Edit Input Log — ${editingInput.product}` : "Log Input Application"}
           onClose={() => {
             setShowAddInput(false);
+            setEditingInput(null);
             setInputErrors({});
           }}
         >
@@ -1035,17 +1188,25 @@ export default function CropsPage() {
                 ))}
               </FormField>
               <FormField
+                as="select"
                 label="Product"
                 name="product"
-                type="text"
-                placeholder="e.g. KWS Zyatt Winter Wheat"
                 required
                 error={inputErrors.product}
-                value={String(inputForm.product ?? "")}
+                value={inputForm.product ?? ""}
                 onChange={(e) =>
                   setInputForm((f) => ({ ...f, product: e.target.value }))
                 }
-              />
+              >
+                <option value="">Select product...</option>
+                {[...new Set(inputs.map((i) => i.product).filter(Boolean))].map(
+                  (p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ),
+                )}
+              </FormField>
             </div>
             <div
               style={{
@@ -1067,26 +1228,42 @@ export default function CropsPage() {
                 }
               />
               <FormField
+                as="select"
                 label="Unit"
                 name="unit"
-                type="text"
-                placeholder="kg/ha"
-                value={String(inputForm.unit ?? "")}
+                value={inputForm.unit ?? ""}
                 onChange={(e) =>
                   setInputForm((f) => ({ ...f, unit: e.target.value }))
                 }
-              />
+              >
+                <option value="">Select unit...</option>
+                {["kg/ha", "l/ha", "kg", "litres", "tonnes", "bags", "g", "ml"].map(
+                  (u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ),
+                )}
+              </FormField>
             </div>
             <FormField
+              as="select"
               label="Operator"
               name="operator"
-              type="text"
-              placeholder="Tom Greene"
-              value={String(inputForm.operator ?? "")}
+              value={inputForm.operator ?? ""}
               onChange={(e) =>
                 setInputForm((f) => ({ ...f, operator: e.target.value }))
               }
-            />
+            >
+              <option value="">Select operator...</option>
+              {[...new Set(inputs.map((i) => i.operator).filter(Boolean))].map(
+                (o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ),
+              )}
+            </FormField>
             <FormField
               label="Notes"
               name="notes"
@@ -1110,9 +1287,10 @@ export default function CropsPage() {
       {/* Add Yield Modal */}
       {showAddYield && (
         <Modal
-          title="Add Yield Record"
+          title={editingYield ? `Edit Yield Record — ${editingYield.fieldName}` : "Add Yield Record"}
           onClose={() => {
             setShowAddYield(false);
+            setEditingYield(null);
             setYieldErrors({});
           }}
         >
@@ -1154,15 +1332,21 @@ export default function CropsPage() {
               }}
             >
               <FormField
+                as="select"
                 label="Crop"
                 name="crop"
-                type="text"
-                placeholder="Winter Wheat"
-                value={String(yieldForm.crop ?? "")}
+                value={yieldForm.crop ?? ""}
                 onChange={(e) =>
                   setYieldForm((f) => ({ ...f, crop: e.target.value }))
                 }
-              />
+              >
+                <option value="">Select crop...</option>
+                {cropModels.map((cm) => (
+                  <option key={cm.id} value={cm.crop}>
+                    {cm.crop}
+                  </option>
+                ))}
+              </FormField>
               <FormField
                 label="Year"
                 name="year"
@@ -1207,15 +1391,21 @@ export default function CropsPage() {
               />
             </div>
             <FormField
+              as="select"
               label="Unit"
               name="unit"
-              type="text"
-              placeholder="t/ha"
-              value={String(yieldForm.unit ?? "")}
+              value={yieldForm.unit ?? ""}
               onChange={(e) =>
                 setYieldForm((f) => ({ ...f, unit: e.target.value }))
               }
-            />
+            >
+              <option value="">Select unit...</option>
+              {["t/ha", "kg/ha", "tonnes", "kg", "bags"].map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </FormField>
             <Group grow mt={4}>
               <Button onClick={saveYield}>Save Record</Button>
               <Button

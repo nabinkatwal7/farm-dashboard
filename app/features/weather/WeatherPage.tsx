@@ -16,12 +16,14 @@ import {
 } from "@/app/base/services/farm-client";
 import { useCurrentUser } from "@/app/lib/user-context";
 import { Button, Group } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   Cloud,
   CloudRain,
   CloudSun,
   FlaskConical,
   Gauge,
+  Pencil,
   Plus,
   Sprout,
   ThermometerSun,
@@ -92,7 +94,9 @@ export default function WeatherPage() {
   const forecasts = data.growthStageForecasts as GrowthStageForecast[];
 
   const [showAddStation, setShowAddStation] = useState(false);
+  const [editingStation, setEditingStation] = useState<WeatherStation | null>(null);
   const [showAddCropModel, setShowAddCropModel] = useState(false);
+  const [editingModel, setEditingModel] = useState<CropModel | null>(null);
   const [stationForm, setStationForm] = useState<Partial<WeatherStation>>({});
   const [modelForm, setModelForm] = useState<Partial<CropModel>>({});
   const [computing, setComputing] = useState<string | null>(null);
@@ -331,10 +335,47 @@ export default function WeatherPage() {
                           : "—"}
                       </td>
                       <td>
+                        <div style={{ display: "flex", gap: 4 }}>
+                        <button
+                          onClick={() => {
+                            setEditingStation(station);
+                            setStationForm({
+                              name: station.name,
+                              provider: station.provider,
+                              apiEndpoint: station.apiEndpoint,
+                              lat: station.lat,
+                              lng: station.lng,
+                            });
+                            setShowAddStation(true);
+                          }}
+                          style={{
+                            background: "rgba(96,165,250,0.15)",
+                            border: "1px solid rgba(96,165,250,0.3)",
+                            color: "#60a5fa",
+                            borderRadius: 6,
+                            padding: "4px 8px",
+                            fontSize: "0.72rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 3,
+                          }}
+                          title="Edit station"
+                        >
+                          <Pencil size={12} />
+                        </button>
                         <button
                           onClick={async () => {
-                            await deleteData("weatherStations", station.id);
-                            await reload();
+                            try {
+                              await deleteData("weatherStations", station.id);
+                              await reload();
+                            } catch (error) {
+                              notifications.show({
+                                title: "Error",
+                                message: error instanceof Error ? error.message : "Failed to delete station",
+                                color: "red",
+                              });
+                            }
                           }}
                           style={{
                             background: "rgba(248,113,113,0.15)",
@@ -352,6 +393,7 @@ export default function WeatherPage() {
                         >
                           <Trash2 size={14} />
                         </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -427,10 +469,52 @@ export default function WeatherPage() {
                       <td>{model.gddToFlowering ?? "—"}</td>
                       <td>{model.gddToMaturity ?? "—"}</td>
                       <td>
+                        <div style={{ display: "flex", gap: 4 }}>
+                        <button
+                          onClick={() => {
+                            setEditingModel(model);
+                            setModelForm({
+                              crop: model.crop,
+                              baseTemp: model.baseTemp,
+                              optimalTemp: model.optimalTemp,
+                              maxTemp: model.maxTemp,
+                              gddToGermination: model.gddToGermination,
+                              gddToEmergence: model.gddToEmergence,
+                              gddToVegetative: model.gddToVegetative,
+                              gddToFlowering: model.gddToFlowering,
+                              gddToFruiting: model.gddToFruiting,
+                              gddToMaturity: model.gddToMaturity,
+                            });
+                            setShowAddCropModel(true);
+                          }}
+                          style={{
+                            background: "rgba(96,165,250,0.15)",
+                            border: "1px solid rgba(96,165,250,0.3)",
+                            color: "#60a5fa",
+                            borderRadius: 6,
+                            padding: "4px 8px",
+                            fontSize: "0.72rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 3,
+                          }}
+                          title="Edit model"
+                        >
+                          <Pencil size={12} />
+                        </button>
                         <button
                           onClick={async () => {
-                            await deleteData("cropModels", model.id);
-                            await reload();
+                            try {
+                              await deleteData("cropModels", model.id);
+                              await reload();
+                            } catch (error) {
+                              notifications.show({
+                                title: "Error",
+                                message: error instanceof Error ? error.message : "Failed to delete model",
+                                color: "red",
+                              });
+                            }
                           }}
                           style={{
                             background: "rgba(248,113,113,0.15)",
@@ -448,6 +532,7 @@ export default function WeatherPage() {
                         >
                           <Trash2 size={14} />
                         </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -780,9 +865,10 @@ export default function WeatherPage() {
 
       {showAddStation && (
         <Modal
-          title="Add Weather Station"
+          title={editingStation ? `Edit Station — ${editingStation.name}` : "Add Weather Station"}
           onClose={() => {
             setShowAddStation(false);
+            setEditingStation(null);
             setStationForm({});
           }}
         >
@@ -861,18 +947,27 @@ export default function WeatherPage() {
             <Group grow mt={4}>
               <Button
                 onClick={async () => {
-                  await saveData("weatherStations", {
-                    id: generateId(),
-                    name: stationForm.name?.trim() || "Unnamed Station",
-                    provider: stationForm.provider || "open-meteo",
-                    apiEndpoint: stationForm.apiEndpoint || undefined,
-                    lat: stationForm.lat || undefined,
-                    lng: stationForm.lng || undefined,
-                    isActive: true,
-                  } as WeatherStation);
-                  await reload();
-                  setShowAddStation(false);
-                  setStationForm({});
+                  try {
+                    await saveData("weatherStations", {
+                      id: editingStation?.id || generateId(),
+                      name: stationForm.name?.trim() || "Unnamed Station",
+                      provider: stationForm.provider || "open-meteo",
+                      apiEndpoint: stationForm.apiEndpoint || undefined,
+                      lat: stationForm.lat || undefined,
+                      lng: stationForm.lng || undefined,
+                      isActive: true,
+                    } as WeatherStation);
+                    await reload();
+                    setShowAddStation(false);
+                    setEditingStation(null);
+                    setStationForm({});
+                  } catch (error) {
+                    notifications.show({
+                      title: "Error",
+                      message: error instanceof Error ? error.message : "Failed to save station",
+                      color: "red",
+                    });
+                  }
                 }}
               >
                 Save Station
@@ -881,6 +976,7 @@ export default function WeatherPage() {
                 variant="default"
                 onClick={() => {
                   setShowAddStation(false);
+                  setEditingStation(null);
                   setStationForm({});
                 }}
               >
@@ -893,9 +989,10 @@ export default function WeatherPage() {
 
       {showAddCropModel && (
         <Modal
-          title="Add Crop Model"
+          title={editingModel ? `Edit Model — ${editingModel.crop}` : "Add Crop Model"}
           onClose={() => {
             setShowAddCropModel(false);
+            setEditingModel(null);
             setModelForm({});
           }}
         >
@@ -1053,13 +1150,22 @@ export default function WeatherPage() {
               <Button
                 onClick={async () => {
                   if (!modelForm.crop) return;
-                  await saveData("cropModels", {
-                    id: generateId(),
-                    ...modelForm,
-                  } as CropModel);
-                  await reload();
-                  setShowAddCropModel(false);
-                  setModelForm({});
+                  try {
+                    await saveData("cropModels", {
+                      id: editingModel?.id || generateId(),
+                      ...modelForm,
+                    } as CropModel);
+                    await reload();
+                    setShowAddCropModel(false);
+                    setEditingModel(null);
+                    setModelForm({});
+                  } catch (error) {
+                    notifications.show({
+                      title: "Error",
+                      message: error instanceof Error ? error.message : "Failed to save model",
+                      color: "red",
+                    });
+                  }
                 }}
               >
                 Save Model
@@ -1068,6 +1174,7 @@ export default function WeatherPage() {
                 variant="default"
                 onClick={() => {
                   setShowAddCropModel(false);
+                  setEditingModel(null);
                   setModelForm({});
                 }}
               >

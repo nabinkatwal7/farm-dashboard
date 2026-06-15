@@ -34,6 +34,7 @@ import {
 } from "@/app/base/services/farm-client";
 import FormField from "@/app/abstract/ui/FormField";
 import { Button, Group } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 
 const SHOP_ENTITIES = {
   products: "products",
@@ -84,10 +85,18 @@ export default function ShopPage() {
 
   const saveEditProduct = async () => {
     if (!editProduct) return;
-    await saveData("products", editProduct);
-    await load();
-    setShowEditProduct(false);
-    setEditProduct(null);
+    try {
+      await saveData("products", editProduct);
+      await load();
+      setShowEditProduct(false);
+      setEditProduct(null);
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save product",
+        color: "red",
+      });
+    }
   };
 
   const checkout = async () => {
@@ -105,11 +114,19 @@ export default function ShopPage() {
       total: cartTotal,
       paymentMethod,
     };
-    await saveData("sales", sale);
-    setCart([]);
-    setCheckoutDone(true);
-    setTimeout(() => setCheckoutDone(false), 3000);
-    await load();
+    try {
+      await saveData("sales", sale);
+      setCart([]);
+      setCheckoutDone(true);
+      setTimeout(() => setCheckoutDone(false), 3000);
+      await load();
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to complete sale",
+        color: "red",
+      });
+    }
   };
 
   // Analytics data
@@ -415,8 +432,16 @@ export default function ShopPage() {
                         gap: 4,
                       }}
                       onClick={async () => {
-                        await deleteData("products", product.id);
-                        await load();
+                        try {
+                          await deleteData("products", product.id);
+                          await load();
+                        } catch (error) {
+                          notifications.show({
+                            title: "Error",
+                            message: error instanceof Error ? error.message : "Failed to delete product",
+                            color: "red",
+                          });
+                        }
                       }}
                     >
                       <Trash2 size={12} /> Delete
@@ -878,7 +903,6 @@ export default function ShopPage() {
             {(
               [
                 ["Product name", "name", "text"],
-                ["Product category", "category", "text"],
                 ["Sale price", "price", "number"],
                 ["Unit cost", "cost", "number"],
                 ["Stock on hand", "stock", "number"],
@@ -906,6 +930,26 @@ export default function ShopPage() {
                 }
               />
             ))}
+            <FormField
+              as="select"
+              label="Product category"
+              name="category"
+              value={editProduct?.category ?? ""}
+              onChange={(e) =>
+                setEditProduct((p) =>
+                  p ? { ...p, category: e.target.value } : p
+                )
+              }
+            >
+              <option value="">Select category...</option>
+              {[...new Set(products.map((p) => p.category).filter(Boolean))].map(
+                (c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ),
+              )}
+            </FormField>
             <Group grow mt={4}>
               <Button onClick={saveEditProduct}>Save Product</Button>
               <Button

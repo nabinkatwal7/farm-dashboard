@@ -3,6 +3,7 @@
 import {
   Banknote,
   BarChart2,
+  Pencil,
   Plus,
   Receipt,
   Trash2,
@@ -33,14 +34,17 @@ import {
   deleteData,
   generateId,
   saveData,
+  type CropField,
   type ExpenseRecord,
   type SaleRecord,
 } from "@/app/base/services/farm-client";
 import { Button, Group } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 
 const FINANCE_ENTITIES = {
   expenses: "expenses",
   sales: "sales",
+  fields: "fields",
 } as const;
 
 type Tab = "overview" | "expenses" | "pl-report";
@@ -144,7 +148,9 @@ export default function FinancePage() {
   const { data, reload: load } = useFarmData(FINANCE_ENTITIES);
   const expenses = data.expenses as ExpenseRecord[];
   const sales = data.sales as SaleRecord[];
+  const fields = data.fields as CropField[];
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<ExpenseRecord | null>(null);
   const [expenseForm, setExpenseForm] = useState<Partial<ExpenseRecord>>({
     date: new Date().toISOString().slice(0, 10),
     category: "other",
@@ -163,26 +169,43 @@ export default function FinancePage() {
 
   const saveExpense = async () => {
     if (!validateExpense()) return;
-    await saveData("expenses", {
-      id: generateId(),
-      date: new Date().toISOString().slice(0, 10),
-      category: "other" as const,
-      description: "",
-      amount: 0,
-      ...expenseForm,
-    } as ExpenseRecord);
-    await load();
-    setShowAddExpense(false);
-    setExpenseForm({
-      date: new Date().toISOString().slice(0, 10),
-      category: "other",
-    });
-    setExpenseErrors({});
+    try {
+      await saveData("expenses", {
+        id: editingExpense?.id || generateId(),
+        date: new Date().toISOString().slice(0, 10),
+        category: "other" as const,
+        description: "",
+        amount: 0,
+        ...expenseForm,
+      } as ExpenseRecord);
+      await load();
+      setShowAddExpense(false);
+      setEditingExpense(null);
+      setExpenseForm({
+        date: new Date().toISOString().slice(0, 10),
+        category: "other",
+      });
+      setExpenseErrors({});
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to save expense",
+        color: "red",
+      });
+    }
   };
 
   const handleDeleteExpense = async (id: string) => {
-    await deleteData("expenses", id);
-    await load();
+    try {
+      await deleteData("expenses", id);
+      await load();
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: error instanceof Error ? error.message : "Failed to delete expense",
+        color: "red",
+      });
+    }
   };
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
@@ -768,6 +791,28 @@ export default function FinancePage() {
                           £{e.amount.toFixed(2)}
                         </td>
                         <td>
+                          <div style={{ display: "flex", gap: 4 }}>
+                          <button
+                            className="btn-ghost"
+                            onClick={() => {
+                              setEditingExpense(e);
+                              setExpenseForm({
+                                date: e.date,
+                                category: e.category,
+                                description: e.description,
+                                amount: e.amount,
+                                supplier: e.supplier,
+                                invoiceRef: e.invoiceRef,
+                                fieldName: e.fieldName,
+                                notes: e.notes,
+                              });
+                              setExpenseErrors({});
+                              setShowAddExpense(true);
+                            }}
+                            title="Edit expense"
+                          >
+                            <Pencil size={13} />
+                          </button>
                           <button
                             className="btn-danger"
                             onClick={() => handleDeleteExpense(e.id)}
@@ -775,6 +820,7 @@ export default function FinancePage() {
                           >
                             <Trash2 size={13} />
                           </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -990,9 +1036,10 @@ export default function FinancePage() {
       ════════════════════════════════════════════════════════════════════ */}
       {showAddExpense && (
         <Modal
-          title="Add Expense"
+          title={editingExpense ? `Edit Expense — ${editingExpense.description}` : "Add Expense"}
           onClose={() => {
             setShowAddExpense(false);
+            setEditingExpense(null);
             setExpenseForm({
               date: new Date().toISOString().slice(0, 10),
               category: "other",
@@ -1054,12 +1101,21 @@ export default function FinancePage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
+                as="select"
                 label="Supplier"
                 name="supplier"
-                placeholder="AgriSupplies Ltd"
                 value={expenseForm.supplier ?? ""}
                 onChange={(e) => setExpenseForm((f) => ({ ...f, supplier: e.target.value }))}
-              />
+              >
+                <option value="">Select supplier...</option>
+                {[...new Set(expenses.map((e) => e.supplier).filter(Boolean))].map(
+                  (s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ),
+                )}
+              </FormField>
               <FormField
                 label="Invoice reference"
                 name="invoiceRef"
@@ -1070,12 +1126,19 @@ export default function FinancePage() {
             </div>
 
             <FormField
+              as="select"
               label="Field or area"
               name="fieldName"
-              placeholder="North Meadow"
               value={expenseForm.fieldName ?? ""}
               onChange={(e) => setExpenseForm((f) => ({ ...f, fieldName: e.target.value }))}
-            />
+            >
+              <option value="">Select field...</option>
+              {fields.map((f) => (
+                <option key={f.id} value={f.name}>
+                  {f.name}
+                </option>
+              ))}
+            </FormField>
 
             <FormField
               as="textarea"
@@ -1093,6 +1156,7 @@ export default function FinancePage() {
                 variant="default"
                 onClick={() => {
                   setShowAddExpense(false);
+                  setEditingExpense(null);
                   setExpenseForm({
                     date: new Date().toISOString().slice(0, 10),
                     category: "other",
