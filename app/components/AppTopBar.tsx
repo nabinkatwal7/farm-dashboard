@@ -8,7 +8,7 @@ import {
   UnstyledButton,
   useMantineColorScheme,
 } from "@mantine/core";
-import { authMeQueryKey } from "@/app/lib/query-client";
+import { authMeQueryKey, clearFarmQueries } from "@/app/lib/query-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, Menu as MenuIcon, Moon, Sun, UserRound } from "lucide-react";
 import Link from "next/link";
@@ -83,6 +83,7 @@ export default function AppTopBar({
       setupRequired: false,
       user: null,
     });
+    clearFarmQueries(queryClient);
     router.replace("/login");
   }
 

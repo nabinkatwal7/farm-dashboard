@@ -541,5 +541,8 @@ export async function deleteData(entity: string, id: string): Promise<void> {
 }
 
 export function generateId(): string {
-  return "";
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }

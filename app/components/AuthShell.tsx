@@ -18,6 +18,8 @@ function isPublicPath(pathname: string) {
     pathname === "/products" ||
     pathname === "/login" ||
     pathname === "/onboard" ||
+    pathname === "/roles" ||
+    pathname === "/pricing" ||
     pathname === "/traceability" ||
     pathname.startsWith("/traceability/")
   );
@@ -38,7 +40,14 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
   const me = sessionQuery.data ?? null;
 
   useEffect(() => {
-    if (!shouldCheckSession || !sessionQuery.data) return;
+    if (!shouldCheckSession) return;
+
+    if (sessionQuery.isError) {
+      router.replace("/login");
+      return;
+    }
+
+    if (!sessionQuery.data) return;
 
     if (!sessionQuery.data.authenticated && !publicPath) {
       router.replace(sessionQuery.data.setupRequired ? "/onboard" : "/login");
@@ -47,17 +56,21 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
     if (sessionQuery.data.authenticated && (isLogin || isOnboard)) {
       router.replace("/dashboard");
     }
-  }, [isLogin, isOnboard, publicPath, router, sessionQuery.data, shouldCheckSession]);
+  }, [isLogin, isOnboard, publicPath, router, sessionQuery.data, sessionQuery.isError, shouldCheckSession]);
 
   useEffect(() => {
     setMobileNavOpen(false);
   }, [pathname]);
 
+  if (sessionQuery.isError && !publicPath) {
+    return null;
+  }
+
   if (publicPath) {
     return <>{children}</>;
   }
 
-  const sessionResolved = !shouldCheckSession || sessionQuery.isSuccess || sessionQuery.isError;
+  const sessionResolved = !shouldCheckSession || sessionQuery.isSuccess;
   const currentUser = me?.user ?? null;
 
   return (

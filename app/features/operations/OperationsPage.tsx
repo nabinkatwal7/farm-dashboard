@@ -718,7 +718,7 @@ export default function OperationsPage() {
             <div className="surface-inset" style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
               <GripVertical size={14} className="text-muted" />
               <span className="text-secondary" style={{ fontSize: "0.82rem" }}>
-                Drag cards between columns to update status. Changes save immediately.
+                Drag or touch cards between columns to update status. Changes save immediately.
               </span>
             </div>
           </div>
@@ -1035,6 +1035,7 @@ function TaskColumn({
   return (
     <section
       className="surface-panel"
+      data-column-status={column.status}
       style={{
         minWidth: 260,
         padding: 14,
@@ -1049,6 +1050,20 @@ function TaskColumn({
       onDrop={(event) => {
         event.preventDefault();
         onDrop();
+      }}
+      onTouchMove={(e) => {
+        const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        const col = el?.closest("[data-column-status]");
+        if (col && col.getAttribute("data-column-status") === column.status) {
+          onDragOver();
+        }
+      }}
+      onTouchEnd={(e) => {
+        const el = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        const col = el?.closest("[data-column-status]");
+        if (col && col.getAttribute("data-column-status") === column.status) {
+          onDrop();
+        }
       }}
     >
       <div
@@ -1115,6 +1130,7 @@ function TaskCard({
       draggable={!isUpdating}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onTouchStart={(e) => { if (!isUpdating) { onDragStart(); } }}
       style={{
         border: `1px solid ${task.priority === "high" ? "rgba(248,113,113,0.2)" : task.priority === "medium" ? "rgba(251,191,36,0.15)" : "var(--border)"}`,
         borderRadius: 10,

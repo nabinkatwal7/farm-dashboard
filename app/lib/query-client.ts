@@ -29,8 +29,16 @@ export function getQueryClient() {
   return browserQueryClient;
 }
 
-export function farmEntityQueryKey(entity: string) {
-  return ["farm-entity", entity] as const;
+export function farmEntityQueryKey(entity: string, farmId?: string) {
+  return farmId ? (["farm-entity", farmId, entity] as const) : (["farm-entity", entity] as const);
+}
+
+export function clearFarmQueries(queryClient: QueryClient, farmId?: string) {
+  if (farmId) {
+    queryClient.removeQueries({ queryKey: ["farm-entity", farmId] });
+  } else {
+    queryClient.removeQueries({ queryKey: ["farm-entity"] });
+  }
 }
 
 export const authMeQueryKey = ["auth-me"] as const;
