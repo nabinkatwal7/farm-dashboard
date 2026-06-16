@@ -51,6 +51,7 @@ export type Animal = {
   group?: string;
   status: "healthy" | "sick" | "quarantine" | "deceased" | "sold";
   notes?: string;
+  photoUrl?: string;
 };
 
 export type MedicalRecord = {
@@ -115,6 +116,7 @@ export type Product = {
   stock: number;
   unit: string;
   batchId?: string;
+  imageUrl?: string;
 };
 
 export type SaleRecord = {

@@ -3,6 +3,8 @@
 import Modal from "@/app/abstract/ui/Modal";
 import FormField from "@/app/abstract/ui/FormField";
 import StatCard from "@/app/abstract/ui/StatCard";
+import ImageUpload from "@/app/components/ImageUpload";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -16,6 +18,7 @@ import {
 import { AlertTriangle, Beef, Clock, Heart, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { validate, hasErrors, type Errors, type Rule } from "@/app/lib/validate";
 import { useState } from "react";
 
 const LIVESTOCK_ENTITIES = {
@@ -49,7 +52,7 @@ function gestationProgress(breedDate: string, expectedBirth: string) {
 
 export default function LivestockPage() {
   const [tab, setTab] = useState<Tab>("animals");
-  const { data, reload: load } = useFarmData(LIVESTOCK_ENTITIES);
+  const { data, reload: load, loading } = useFarmData(LIVESTOCK_ENTITIES);
   const animals = data.animals as Animal[];
   const medical = data.medical as MedicalRecord[];
   const breeding = data.breeding as BreedingRecord[];
@@ -67,9 +70,39 @@ export default function LivestockPage() {
   const [medForm, setMedForm] = useState<Partial<MedicalRecord>>({});
   const [breedForm, setBreedForm] = useState<Partial<BreedingRecord>>({});
   const [weightForm, setWeightForm] = useState<Partial<WeightRecord>>({});
+  const [animalErrors, setAnimalErrors] = useState<Errors>({});
+  const [medErrors, setMedErrors] = useState<Errors>({});
+  const [breedErrors, setBreedErrors] = useState<Errors>({});
+  const [weightErrors, setWeightErrors] = useState<Errors>({});
+
+  const ANIMAL_RULES: Rule[] = [
+    { key: "earTag", label: "Ear tag", required: true },
+    { key: "species", label: "Species", required: true },
+    { key: "breed", label: "Breed", required: true },
+    { key: "sex", label: "Sex", required: true },
+    { key: "dob", label: "Date of birth", required: true },
+  ];
+  const MED_RULES: Rule[] = [
+    { key: "earTag", label: "Animal", required: true },
+    { key: "date", label: "Date", required: true },
+    { key: "type", label: "Record type", required: true },
+  ];
+  const BREED_RULES: Rule[] = [
+    { key: "damEarTag", label: "Dam ear tag", required: true },
+    { key: "sireEarTag", label: "Sire ear tag", required: true },
+    { key: "matingDate", label: "Mating date", required: true },
+    { key: "expectedBirth", label: "Expected birth", required: true },
+  ];
+  const WEIGHT_RULES: Rule[] = [
+    { key: "earTag", label: "Animal", required: true },
+    { key: "date", label: "Date", required: true },
+    { key: "weightKg", label: "Weight", required: true },
+  ];
 
   const saveAnimal = async () => {
-    if (!animalForm.earTag) return;
+    const errors = validate(animalForm as Record<string, unknown>, ANIMAL_RULES);
+    setAnimalErrors(errors);
+    if (hasErrors(errors)) return;
     try {
       await saveData("animals", {
         id: editingAnimal?.id || generateId(),
@@ -79,20 +112,26 @@ export default function LivestockPage() {
         ...animalForm,
       } as Animal);
       await load();
+      notifications.show({ title: "Success", message: editingAnimal ? "Animal updated" : "Animal registered", color: "green" });
       setShowAddAnimal(false);
       setEditingAnimal(null);
       setAnimalForm({});
     } catch (error) {
+      setAnimalErrors({});
       notifications.show({
         title: "Error",
         message: error instanceof Error ? error.message : "Failed to register animal",
         color: "red",
       });
+    } finally {
+      setAnimalErrors({});
     }
   };
 
   const saveMed = async () => {
-    if (!medForm.earTag) return;
+    const errors = validate(medForm as Record<string, unknown>, MED_RULES);
+    setMedErrors(errors);
+    if (hasErrors(errors)) return;
     const animal = editingMed
       ? animals.find((a) => a.id === editingMed.animalId)
       : animals.find((a) => a.earTag === medForm.earTag);
@@ -112,20 +151,26 @@ export default function LivestockPage() {
         withdrawalEnd,
       } as MedicalRecord);
       await load();
+      notifications.show({ title: "Success", message: "Medical record saved", color: "green" });
       setShowAddMed(false);
       setEditingMed(null);
       setMedForm({});
     } catch (error) {
+      setMedErrors({});
       notifications.show({
         title: "Error",
         message: error instanceof Error ? error.message : "Failed to save medical record",
         color: "red",
       });
+    } finally {
+      setMedErrors({});
     }
   };
 
   const saveWeight = async () => {
-    if (!weightForm.earTag || !weightForm.weightKg) return;
+    const errors = validate(weightForm as Record<string, unknown>, WEIGHT_RULES);
+    setWeightErrors(errors);
+    if (hasErrors(errors)) return;
     try {
       await saveData("weightRecords", {
         id: editingWeight?.id || generateId(),
@@ -134,20 +179,27 @@ export default function LivestockPage() {
         ...weightForm,
       } as WeightRecord);
       await load();
+      notifications.show({ title: "Success", message: "Weight record saved", color: "green" });
       setShowAddWeight(false);
       setEditingWeight(null);
       setWeightForm({});
     } catch (error) {
+      setWeightErrors({});
       notifications.show({
         title: "Error",
         message: error instanceof Error ? error.message : "Failed to save weight record",
         color: "red",
       });
+    } finally {
+      setWeightErrors({});
     }
   };
 
   const saveBreed = async () => {
-    if (!breedForm.damEarTag || !breedForm.breedingDate) return;
+    const errors = validate(breedForm as Record<string, unknown>, BREED_RULES);
+    setBreedErrors(errors);
+    if (hasErrors(errors)) return;
+    if (!breedForm.breedingDate) return;
     const breedDate = new Date(breedForm.breedingDate);
     breedDate.setDate(breedDate.getDate() + 283);
     try {
@@ -158,15 +210,19 @@ export default function LivestockPage() {
         ...breedForm,
       } as BreedingRecord);
       await load();
+      notifications.show({ title: "Success", message: "Breeding record saved", color: "green" });
       setShowAddBreed(false);
       setEditingBreed(null);
       setBreedForm({});
     } catch (error) {
+      setBreedErrors({});
       notifications.show({
         title: "Error",
         message: error instanceof Error ? error.message : "Failed to save breeding record",
         color: "red",
       });
+    } finally {
+      setBreedErrors({});
     }
   };
 
@@ -181,6 +237,8 @@ export default function LivestockPage() {
   const activeWithdrawals = medical.filter(
     (m) => m.withdrawalEnd && new Date(m.withdrawalEnd) > new Date()
   );
+
+  if (loading) return <TableSkeleton rows={5} cols={7} />;
 
   return (
     <div style={{ padding: 24 }}>
@@ -337,13 +395,16 @@ export default function LivestockPage() {
                 <th>Breed</th>
                 <th>Sex</th>
                 <th>DOB</th>
+                <th></th>
                 <th>Group</th>
                 <th>Status</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {filteredAnimals.map((a) => (
+              {filteredAnimals.length === 0 ? (
+                <tr><td colSpan={99}><div style={{textAlign:"center",padding:"32px 16px",fontSize:"0.875rem",color:"var(--text-muted)"}}>No animals registered yet. Add your first animal to get started.</div></td></tr>
+              ) : filteredAnimals.map((a) => (
                 <tr key={a.id}>
                   <td style={{ fontSize: "1.1rem" }}>
                     {SPECIES_EMOJI[a.species]}{" "}
@@ -353,6 +414,17 @@ export default function LivestockPage() {
                     >
                       {a.species}
                     </span>
+                  </td>
+                  <td>
+                    {a.photoUrl ? (
+                      <img
+                        src={a.photoUrl}
+                        alt={a.earTag}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-muted" style={{ fontSize: "0.72rem" }}>—</span>
+                    )}
                   </td>
                   <td
                     className="text-primary"
@@ -399,6 +471,7 @@ export default function LivestockPage() {
                           group: a.group,
                           status: a.status,
                           notes: a.notes,
+                          photoUrl: a.photoUrl,
                         });
                         setShowAddAnimal(true);
                       }}
@@ -423,6 +496,7 @@ export default function LivestockPage() {
                         try {
                           await deleteData("animals", a.id);
                           await load();
+                          notifications.show({ title: "Success", message: "Animal deleted", color: "green" });
                         } catch (error) {
                           notifications.show({
                             title: "Error",
@@ -597,8 +671,10 @@ export default function LivestockPage() {
                 </tr>
               </thead>
               <tbody>
-                {medical.map((m) => (
-                  <tr key={m.id}>
+              {medical.length === 0 ? (
+                <tr><td colSpan={99}><div style={{textAlign:"center",padding:"32px 16px",fontSize:"0.875rem",color:"var(--text-muted)"}}>No medical records yet.</div></td></tr>
+              ) : medical.map((m) => (
+                <tr key={m.id}>
                     <td>{new Date(m.date).toLocaleDateString("en-GB")}</td>
                     <td
                       className="text-primary"
@@ -686,6 +762,7 @@ export default function LivestockPage() {
                         try {
                           await deleteData("medicalRecords", m.id);
                           await load();
+                          notifications.show({ title: "Success", message: "Medical record deleted", color: "green" });
                         } catch (error) {
                           notifications.show({
                             title: "Error",
@@ -738,7 +815,11 @@ export default function LivestockPage() {
               gap: 14,
             }}
           >
-            {breeding.map((b) => {
+            {breeding.length === 0 ? (
+              <div style={{ textAlign:"center", padding:"32px 16px", fontSize:"0.875rem", color:"var(--text-muted)" }}>
+                No breeding records yet.
+              </div>
+            ) : breeding.map((b) => {
               const progress =
                 b.status === "pregnant"
                   ? gestationProgress(b.breedingDate, b.expectedBirth)
@@ -916,6 +997,7 @@ export default function LivestockPage() {
                         try {
                           await deleteData("breedingRecords", b.id);
                           await load();
+                          notifications.show({ title: "Success", message: "Breeding record deleted", color: "green" });
                         } catch (error) {
                           notifications.show({
                             title: "Error",
@@ -988,7 +1070,9 @@ export default function LivestockPage() {
               </tr>
             </thead>
             <tbody>
-              {weights.map((w) => (
+              {weights.length === 0 ? (
+                <tr><td colSpan={99}><div style={{textAlign:"center",padding:"32px 16px",fontSize:"0.875rem",color:"var(--text-muted)"}}>No weight records yet.</div></td></tr>
+              ) : weights.map((w) => (
                 <tr key={w.id}>
                   <td>{new Date(w.date).toLocaleDateString("en-GB")}</td>
                   <td
@@ -1044,6 +1128,7 @@ export default function LivestockPage() {
                         try {
                           await deleteData("weightRecords", w.id);
                           await load();
+                          notifications.show({ title: "Success", message: "Weight record deleted", color: "green" });
                         } catch (error) {
                           notifications.show({
                             title: "Error",
@@ -1081,6 +1166,17 @@ export default function LivestockPage() {
       {showAddAnimal && (
         <Modal title={editingAnimal ? `Edit Animal — ${editingAnimal.earTag}` : "Register animal"} onClose={() => { setShowAddAnimal(false); setEditingAnimal(null); setAnimalForm({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <ImageUpload
+              currentUrl={animalForm.photoUrl}
+              folder="animals"
+              onUpload={(url) =>
+                setAnimalForm((f) => ({ ...f, photoUrl: url }))
+              }
+              onRemove={() =>
+                setAnimalForm((f) => ({ ...f, photoUrl: "" }))
+              }
+              label="Animal photo"
+            />
             {[
               ["Ear tag", "earTag", "text", "UK123999"],
               ["Date of birth", "dob", "date", ""],
@@ -1096,6 +1192,8 @@ export default function LivestockPage() {
                 onChange={(e) =>
                   setAnimalForm((f) => ({ ...f, [key]: e.target.value }))
                 }
+                error={(animalErrors as Record<string, string | null>)[key]}
+                required={ANIMAL_RULES.some((r) => r.key === key)}
               />
             ))}
             <FormField
@@ -1106,6 +1204,8 @@ export default function LivestockPage() {
               onChange={(e) =>
                 setAnimalForm((f) => ({ ...f, breed: e.target.value }))
               }
+              error={animalErrors.breed}
+              required
             >
               <option value="">Select breed...</option>
               {[...new Set(animals.map((a) => a.breed).filter(Boolean))].map(
@@ -1127,6 +1227,8 @@ export default function LivestockPage() {
                   species: e.target.value as Animal["species"],
                 }))
               }
+              error={animalErrors.species}
+              required
             >
               {["cattle", "sheep", "pig", "poultry", "other"].map((s) => (
                 <option key={s} value={s}>
@@ -1145,6 +1247,8 @@ export default function LivestockPage() {
                   sex: e.target.value as "M" | "F",
                 }))
               }
+              error={animalErrors.sex}
+              required
             >
               <option value="F">Female</option>
               <option value="M">Male</option>
@@ -1171,6 +1275,8 @@ export default function LivestockPage() {
               onChange={(e) =>
                 setMedForm((f) => ({ ...f, earTag: e.target.value }))
               }
+              error={medErrors.earTag}
+              required
             >
               <option value="">Select animal...</option>
               {animals.map((a) => (
@@ -1187,6 +1293,8 @@ export default function LivestockPage() {
               onChange={(e) =>
                 setMedForm((f) => ({ ...f, date: e.target.value }))
               }
+              error={medErrors.date}
+              required
             />
             <FormField
               as="select"
@@ -1199,6 +1307,8 @@ export default function LivestockPage() {
                   type: e.target.value as MedicalRecord["type"],
                 }))
               }
+              error={medErrors.type}
+              required
             >
               {["vaccination", "treatment", "illness", "checkup"].map((t) => (
                 <option key={t} value={t}>
@@ -1227,6 +1337,8 @@ export default function LivestockPage() {
                       type === "number" ? +e.target.value : e.target.value,
                   }))
                 }
+                error={(medErrors as Record<string, string | null>)[key]}
+                required={MED_RULES.some((r) => r.key === key)}
               />
             ))}
             <Group grow mt={4}>
@@ -1254,6 +1366,8 @@ export default function LivestockPage() {
               onChange={(e) =>
                 setWeightForm((f) => ({ ...f, earTag: e.target.value }))
               }
+              error={weightErrors.earTag}
+              required
             >
               <option value="">Select animal...</option>
               {animals.map((a) => (
@@ -1270,6 +1384,8 @@ export default function LivestockPage() {
               onChange={(e) =>
                 setWeightForm((f) => ({ ...f, date: e.target.value }))
               }
+              error={weightErrors.date}
+              required
             />
             <FormField
               label="Weight"
@@ -1281,6 +1397,8 @@ export default function LivestockPage() {
               onChange={(e) =>
                 setWeightForm((f) => ({ ...f, weightKg: +e.target.value }))
               }
+              error={weightErrors.weightKg}
+              required
             />
             <FormField
               as="textarea"
@@ -1318,6 +1436,8 @@ export default function LivestockPage() {
               onChange={(e) =>
                 setBreedForm((f) => ({ ...f, damEarTag: e.target.value }))
               }
+              error={breedErrors.damEarTag}
+              required
             >
               <option value="">Select female...</option>
               {animals
@@ -1336,6 +1456,8 @@ export default function LivestockPage() {
               onChange={(e) =>
                 setBreedForm((f) => ({ ...f, sireEarTag: e.target.value }))
               }
+              error={breedErrors.sireEarTag}
+              required
             >
               <option value="">Select sire...</option>
               {animals
@@ -1354,6 +1476,8 @@ export default function LivestockPage() {
               onChange={(e) =>
                 setBreedForm((f) => ({ ...f, breedingDate: e.target.value }))
               }
+              error={breedErrors.matingDate}
+              required
             />
             <FormField
               label="Notes"

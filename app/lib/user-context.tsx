@@ -8,6 +8,7 @@ export type CurrentUser = {
   name: string;
   role: string;
   isActive?: boolean;
+  avatarUrl?: string;
   createdAt?: string;
   updatedAt?: string;
   farm: {

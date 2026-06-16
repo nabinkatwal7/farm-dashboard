@@ -25,7 +25,6 @@ export function cleanBody(body: Record<string, unknown>) {
     animal,
     stockItem,
     sale,
-    product,
     station,
     zone,
     seedLot,
@@ -45,7 +44,6 @@ export function cleanBody(body: Record<string, unknown>) {
   void animal;
   void stockItem;
   void sale;
-  void product;
   void station;
   void zone;
   void seedLot;

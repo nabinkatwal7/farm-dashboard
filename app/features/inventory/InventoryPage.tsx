@@ -11,6 +11,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
+import EmptyState from "@/app/abstract/ui/EmptyState";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import FormField from "@/app/abstract/ui/FormField";
@@ -27,6 +29,7 @@ import {
   type StockAdjustment,
   type StockItem,
 } from "@/app/base/services/farm-client";
+import { validate, hasErrors, type Errors, type Rule } from "@/app/lib/validate";
 
 const INVENTORY_ENTITIES = {
   stock: "stockItems",
@@ -46,7 +49,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function InventoryPage() {
   const [tab, setTab] = useState<Tab>("stock");
-  const { data, reload: load } = useFarmData(INVENTORY_ENTITIES);
+  const { data, reload: load, loading } = useFarmData(INVENTORY_ENTITIES);
   const stock = data.stock as StockItem[];
   const batches = data.batches as BatchRecord[];
   const fields = data.fields as CropField[];
@@ -66,9 +69,31 @@ export default function InventoryPage() {
     reason: "",
     operator: "",
   });
+  const [stockErrors, setStockErrors] = useState<Errors>({});
+  const [batchErrors, setBatchErrors] = useState<Errors>({});
+  const [adjustErrors, setAdjustErrors] = useState<Errors>({});
+
+const STOCK_RULES: Rule[] = [
+  { key: "name", label: "Item name", required: true },
+  { key: "category", label: "Category", required: true },
+];
+const BATCH_RULES: Rule[] = [
+  { key: "batchCode", label: "Batch code", required: true },
+  { key: "product", label: "Product", required: true },
+  { key: "origin", label: "Origin", required: true },
+  { key: "originType", label: "Origin type", required: true },
+  { key: "unit", label: "Unit", required: true },
+  { key: "quantity", label: "Quantity", required: true },
+];
+const ADJUST_RULES: Rule[] = [
+  { key: "delta", label: "Quantity change", required: true },
+  { key: "reason", label: "Reason", required: true },
+];
 
   const saveStock = async () => {
-    if (!stockForm.name) return;
+    const errs = validate(stockForm as Record<string, unknown>, STOCK_RULES);
+    setStockErrors(errs);
+    if (hasErrors(errs)) return;
     try {
       await saveData("stockItems", {
         id: editingStock?.id || generateId(),
@@ -80,9 +105,15 @@ export default function InventoryPage() {
         ...stockForm,
       } as StockItem);
       await load();
+      notifications.show({
+        title: "Success",
+        message: editingStock ? "Stock item updated" : "Stock item created",
+        color: "green",
+      });
       setShowAddStock(false);
       setEditingStock(null);
       setStockForm({});
+      setStockErrors({});
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -94,6 +125,9 @@ export default function InventoryPage() {
 
   const saveAdjustment = async () => {
     if (!adjustItem) return;
+    const errs = validate(adjustForm as Record<string, unknown>, ADJUST_RULES);
+    setAdjustErrors(errs);
+    if (hasErrors(errs)) return;
     try {
       await saveData<StockAdjustment>("stockAdjustments", {
         id: generateId(),
@@ -105,9 +139,15 @@ export default function InventoryPage() {
         operator: adjustForm.operator,
       });
       await load();
+      notifications.show({
+        title: "Success",
+        message: "Stock adjustment saved",
+        color: "green",
+      });
       setShowAdjust(false);
       setAdjustItem(null);
       setAdjustForm({ delta: 0, reason: "", operator: "" });
+      setAdjustErrors({});
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -118,18 +158,27 @@ export default function InventoryPage() {
   };
 
   const saveBatch = async () => {
-    if (!batchForm.batchCode) return;
+    const data = { originType: "field", ...batchForm };
+    const errs = validate(data, BATCH_RULES);
+    setBatchErrors(errs);
+    if (hasErrors(errs)) return;
     try {
       await saveData("batches", {
         id: editingBatch?.id || generateId(),
         status: "active",
         processedDate: new Date().toISOString().slice(0, 10),
-        ...batchForm,
+        ...data,
       } as BatchRecord);
       await load();
+      notifications.show({
+        title: "Success",
+        message: editingBatch ? "Batch updated" : "Batch created",
+        color: "green",
+      });
       setShowAddBatch(false);
       setEditingBatch(null);
       setBatchForm({});
+      setBatchErrors({});
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -156,6 +205,8 @@ export default function InventoryPage() {
 
   const lowStock = stock.filter((s) => s.quantity <= s.minStock);
   const totalValue = stock.reduce((s, item) => s + item.quantity, 0);
+
+  if (loading) return <TableSkeleton rows={5} cols={6} />;
 
   return (
     <div style={{ padding: 24 }}>
@@ -447,6 +498,11 @@ export default function InventoryPage() {
                               try {
                                 await deleteData("stockItems", item.id);
                                 await load();
+                                notifications.show({
+                                  title: "Success",
+                                  message: "Stock item deleted",
+                                  color: "green",
+                                });
                               } catch (error) {
                                 notifications.show({
                                   title: "Error",
@@ -463,6 +519,13 @@ export default function InventoryPage() {
                     </tr>
                   );
                 })}
+                {filteredStock.length === 0 && (
+                  <tr>
+                    <td colSpan={99}>
+                      <EmptyState icon={Package} title="No stock items" description="Add your first stock item to start tracking inventory." />
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -726,6 +789,11 @@ export default function InventoryPage() {
                           try {
                             await deleteData("batches", b.id);
                             await load();
+                            notifications.show({
+                              title: "Success",
+                              message: "Batch deleted",
+                              color: "green",
+                            });
                           } catch (error) {
                             notifications.show({
                               title: "Error",
@@ -741,6 +809,13 @@ export default function InventoryPage() {
                     </td>
                   </tr>
                 ))}
+                {batches.length === 0 && (
+                  <tr>
+                    <td colSpan={99}>
+                      <EmptyState icon={Package} title="No batches" description="Create a batch to enable traceability and QR code generation." />
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -751,8 +826,22 @@ export default function InventoryPage() {
       {showAddStock && (
         <Modal title={editingStock ? `Edit Stock — ${editingStock.name}` : "Add Stock Item"} onClose={() => { setShowAddStock(false); setEditingStock(null); setStockForm({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <FormField
+              label="Item Name"
+              name="name"
+              type="text"
+              placeholder="Winter Wheat Grain"
+              value={String((stockForm as Record<string, unknown>)["name"] ?? "")}
+              onChange={(e) =>
+                setStockForm((f) => ({
+                  ...f,
+                  name: e.target.value,
+                }))
+              }
+              error={stockErrors.name}
+              required
+            />
             {[
-              ["Item Name", "name", "text", "Winter Wheat Grain"],
               ["Quantity", "quantity", "number", "100"],
               ["Min Stock Level", "minStock", "number", "20"],
               ["Location", "location", "text", "Grain Store A"],
@@ -832,6 +921,8 @@ export default function InventoryPage() {
                   category: e.target.value as StockItem["category"],
                 }))
               }
+              error={stockErrors.category}
+              required
             >
               {["raw", "processed", "packaging", "supplies"].map((c) => (
                 <option key={c} value={c}>
@@ -871,6 +962,8 @@ export default function InventoryPage() {
               name="delta"
               type="number"
               value={adjustForm.delta}
+              error={adjustErrors.delta}
+              required
               onChange={(e) =>
                 setAdjustForm((f) => ({ ...f, delta: +e.target.value }))
               }
@@ -883,6 +976,8 @@ export default function InventoryPage() {
               onChange={(e) =>
                 setAdjustForm((f) => ({ ...f, reason: e.target.value }))
               }
+              error={adjustErrors.reason}
+              required
             />
             <FormField
               as="select"
@@ -924,26 +1019,36 @@ export default function InventoryPage() {
           onClose={() => { setShowAddBatch(false); setEditingBatch(null); setBatchForm({}); }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {[
-              ["Batch Code", "batchCode", "text", "BATCH-2026-WW-01"],
-              ["Quantity", "quantity", "number", "50"],
-            ].map(([label, key, type, placeholder]) => (
-              <FormField
-                key={key}
-                label={label}
-                name={key}
-                type={type}
-                placeholder={placeholder}
-                value={String((batchForm as Record<string, unknown>)[key] ?? "")}
-                onChange={(e) =>
-                  setBatchForm((f) => ({
-                    ...f,
-                    [key]:
-                      type === "number" ? +e.target.value : e.target.value,
-                  }))
-                }
-              />
-            ))}
+            <FormField
+              label="Batch Code"
+              name="batchCode"
+              type="text"
+              placeholder="BATCH-2026-WW-01"
+              value={String((batchForm as Record<string, unknown>)["batchCode"] ?? "")}
+              onChange={(e) =>
+                setBatchForm((f) => ({
+                  ...f,
+                  batchCode: e.target.value,
+                }))
+              }
+              error={batchErrors.batchCode}
+              required
+            />
+            <FormField
+              label="Quantity"
+              name="quantity"
+              type="number"
+              placeholder="50"
+              value={String((batchForm as Record<string, unknown>)["quantity"] ?? "")}
+              onChange={(e) =>
+                setBatchForm((f) => ({
+                  ...f,
+                  quantity: +e.target.value,
+                }))
+              }
+              error={batchErrors.quantity}
+              required
+            />
             <FormField
               as="select"
               label="Product"
@@ -952,6 +1057,8 @@ export default function InventoryPage() {
               onChange={(e) =>
                 setBatchForm((f) => ({ ...f, product: e.target.value }))
               }
+              error={batchErrors.product}
+              required
             >
               <option value="">Select product...</option>
               {[...new Set(stock.map((s) => s.name).filter(Boolean))].map(
@@ -970,6 +1077,8 @@ export default function InventoryPage() {
               onChange={(e) =>
                 setBatchForm((f) => ({ ...f, origin: e.target.value }))
               }
+              error={batchErrors.origin}
+              required
             >
               <option value="">Select origin...</option>
               {batchForm.originType === "field"
@@ -992,6 +1101,8 @@ export default function InventoryPage() {
               onChange={(e) =>
                 setBatchForm((f) => ({ ...f, unit: e.target.value }))
               }
+              error={batchErrors.unit}
+              required
             >
               <option value="">Select unit...</option>
               {["tonnes", "kg", "bags", "litres", "units"].map((u) => (
@@ -1011,6 +1122,8 @@ export default function InventoryPage() {
                   originType: e.target.value as "field" | "animal",
                 }))
               }
+              error={batchErrors.originType}
+              required
             >
               <option value="field">Field</option>
               <option value="animal">Animal</option>
@@ -1026,6 +1139,7 @@ export default function InventoryPage() {
               onChange={(e) =>
                 setBatchForm((f) => ({ ...f, processedDate: e.target.value }))
               }
+              error={batchErrors.processedDate}
             />
             <Group grow mt={4}>
               <Button onClick={saveBatch}>{editingBatch ? "Update Batch" : "Save Batch"}</Button>

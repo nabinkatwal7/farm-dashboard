@@ -29,6 +29,7 @@ import {
 import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -38,6 +39,7 @@ import {
   type ExpenseRecord,
   type SaleRecord,
 } from "@/app/base/services/farm-client";
+import { validate, hasErrors, type Errors, type Rule } from "@/app/lib/validate";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 
@@ -145,7 +147,7 @@ const fmtGbp = (v: unknown) =>
 
 export default function FinancePage() {
   const [tab, setTab] = useState<Tab>("overview");
-  const { data, reload: load } = useFarmData(FINANCE_ENTITIES);
+  const { data, reload: load, loading } = useFarmData(FINANCE_ENTITIES);
   const expenses = data.expenses as ExpenseRecord[];
   const sales = data.sales as SaleRecord[];
   const fields = data.fields as CropField[];
@@ -155,16 +157,20 @@ export default function FinancePage() {
     date: new Date().toISOString().slice(0, 10),
     category: "other",
   });
-  const [expenseErrors, setExpenseErrors] = useState<Record<string, string>>({});
+  const [expenseErrors, setExpenseErrors] = useState<Errors>({});
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ExpenseRecord["category"] | "">("");
 
   const validateExpense = () => {
-    const errors: Record<string, string> = {};
-    if (!expenseForm.description?.trim()) errors.description = "Description is required";
-    if (!expenseForm.amount || expenseForm.amount <= 0) errors.amount = "Valid amount is required";
+    const rules: Rule[] = [
+      { key: "date", label: "Date", required: true },
+      { key: "category", label: "Category", required: true },
+      { key: "description", label: "Description", required: true },
+      { key: "amount", label: "Amount", required: true },
+    ];
+    const errors = validate(expenseForm as Record<string, unknown>, rules);
     setExpenseErrors(errors);
-    return Object.keys(errors).length === 0;
+    return !hasErrors(errors);
   };
 
   const saveExpense = async () => {
@@ -179,6 +185,7 @@ export default function FinancePage() {
         ...expenseForm,
       } as ExpenseRecord);
       await load();
+      notifications.show({ title: "Success", message: "Expense saved", color: "green" });
       setShowAddExpense(false);
       setEditingExpense(null);
       setExpenseForm({
@@ -199,6 +206,7 @@ export default function FinancePage() {
     try {
       await deleteData("expenses", id);
       await load();
+      notifications.show({ title: "Success", message: "Expense deleted", color: "green" });
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -563,7 +571,9 @@ export default function FinancePage() {
                         CATEGORY_COLORS[
                           cat.name as ExpenseRecord["category"]
                         ];
-                      return (
+  if (loading) return <TableSkeleton rows={5} cols={5} />;
+
+  return (
                         <div key={cat.name}>
                           <div
                             style={{
@@ -1053,6 +1063,8 @@ export default function FinancePage() {
                 label="Expense date"
                 name="expense-date"
                 type="date"
+                required
+                error={expenseErrors.date}
                 value={expenseForm.date ?? new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setExpenseForm((f) => ({ ...f, date: e.target.value }))}
               />
@@ -1060,6 +1072,8 @@ export default function FinancePage() {
                 as="select"
                 label="Expense category"
                 name="expense-category"
+                required
+                error={expenseErrors.category}
                 value={expenseForm.category ?? "other"}
                 onChange={(e) =>
                   setExpenseForm((f) => ({

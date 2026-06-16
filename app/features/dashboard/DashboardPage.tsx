@@ -1,6 +1,7 @@
 "use client";
 
 import { useFarmData } from "@/app/base/hooks/useFarmData";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import {
   type Animal,
   type CropField,
@@ -277,7 +278,7 @@ function KpiCard({
 
 export default function DashboardPage() {
   const currentUser = useCurrentUser();
-  const { data } = useFarmData(DASHBOARD_ENTITIES);
+  const { data, loading } = useFarmData(DASHBOARD_ENTITIES);
   const fields = data.fields as CropField[];
   const animals = data.animals as Animal[];
   const stock = data.stock as StockItem[];
@@ -634,6 +635,8 @@ export default function DashboardPage() {
   const WeatherIcon = weather
     ? weatherInfo(weather.current.weather_code).Icon
     : CloudRain;
+
+  if (loading) return <TableSkeleton />;
 
   return (
     <div className="min-h-screen bg-background px-3 py-4 text-primary sm:px-4 lg:px-4 lg:py-4">

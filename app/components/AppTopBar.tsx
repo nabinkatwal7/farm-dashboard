@@ -21,11 +21,13 @@ const routeMeta = [
   { href: "/livestock", title: "Livestock", section: "Production" },
   { href: "/seeding", title: "Precision Farming", section: "Production" },
   { href: "/inventory", title: "Inventory", section: "Commerce" },
+  { href: "/qrcodes", title: "QR Codes", section: "Commerce" },
   { href: "/orders", title: "Orders", section: "Commerce" },
   { href: "/shop", title: "Shop & POS", section: "Commerce" },
   { href: "/customers", title: "Customers", section: "Commerce" },
   { href: "/finance", title: "Finance", section: "Administration" },
   { href: "/users", title: "Users", section: "Administration" },
+  { href: "/settings", title: "Settings", section: "Administration" },
   { href: "/profile", title: "Profile", section: "Account" },
 ] as const;
 

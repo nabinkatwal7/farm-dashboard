@@ -14,6 +14,7 @@ export type AuthUser = {
   name: string;
   role: string;
   farmId: string;
+  avatarUrl?: string;
   farm: {
     id: string;
     name: string;
@@ -96,6 +97,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     name: session.user.name,
     role: session.user.role,
     farmId: session.user.farmId,
+    avatarUrl: session.user.avatarUrl ?? undefined,
     farm: session.user.farm,
   };
 }

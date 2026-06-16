@@ -7,6 +7,7 @@ import { notifications } from "@mantine/notifications";
 import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -53,7 +54,7 @@ function statusBadge(status: string) {
 }
 
 export default function LivestockTraceabilityPage() {
-  const { data, reload } = useFarmData(ENTITIES);
+  const { data, reload, loading } = useFarmData(ENTITIES);
   const integrations = data.integrations as LivestockIntegration[];
   const syncRecords = data.syncRecords as LivestockSyncRecord[];
   const animals = data.animals as Animal[];
@@ -132,6 +133,8 @@ export default function LivestockTraceabilityPage() {
       setSyncing(false);
     }
   }
+
+  if (loading) return <TableSkeleton />;
 
   return (
     <div style={{ padding: 24 }}>

@@ -1,8 +1,10 @@
 "use client";
 
 import FormField from "@/app/abstract/ui/FormField";
+import ImageUpload from "@/app/components/ImageUpload";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -16,6 +18,7 @@ import {
 import { useCurrentUser } from "@/app/lib/user-context";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { validate, hasErrors, type Errors, type Rule } from "@/app/lib/validate";
 import {
   BarChart3,
   Eye,
@@ -84,7 +87,7 @@ const MAP_TYPE_COLORS: Record<string, string> = {
 export default function DroneScoutingPage() {
   const [tab, setTab] = useState<Tab>("flights");
   const currentUser = useCurrentUser();
-  const { data, reload } = useFarmData(DRONE_ENTITIES);
+  const { data, reload, loading } = useFarmData(DRONE_ENTITIES);
   const fields = data.fields as CropField[];
   const flights = data.droneFlights as DroneFlight[];
   const maps = data.orthomosaicMaps as OrthomosaicMap[];
@@ -96,6 +99,11 @@ export default function DroneScoutingPage() {
   const [flightForm, setFlightForm] = useState<Partial<DroneFlight>>({});
   const [mapForm, setMapForm] = useState<Partial<OrthomosaicMap>>({ fileType: "ndvi" });
   const [observationForm, setObservationForm] = useState<Partial<ScoutingObservation>>({});
+  const [observationErrors, setObservationErrors] = useState<Errors>({});
+
+  const OBSERVATION_RULES: Rule[] = [
+    { key: "observationType", label: "Observation type", required: true },
+  ];
 
   const activeFields = fields.filter((f) => f.status !== "fallow");
 
@@ -137,6 +145,8 @@ export default function DroneScoutingPage() {
 
   const totalAcresFlown = flights.reduce((s, f) => s + (f.coverageAcres ?? 0), 0);
   const highSeverityObs = observations.filter((o) => o.severity === "high").length;
+
+  if (loading) return <TableSkeleton />;
 
   return (
     <div style={{ padding: 24 }}>
@@ -993,11 +1003,13 @@ export default function DroneScoutingPage() {
       )}
 
       {showAddObservation && (
-        <Modal title="Add Scouting Observation" onClose={() => { setShowAddObservation(false); setObservationForm({}); }}>
+        <Modal title="Add Scouting Observation" onClose={() => { setShowAddObservation(false); setObservationForm({}); setObservationErrors({}); }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
                 as="select" label="Type" name="observationType"
+                required
+                error={observationErrors.observationType}
                 value={observationForm.observationType ?? "weed_pressure"}
                 onChange={(e) => setObservationForm((f) => ({ ...f, observationType: e.target.value as ScoutingObservation["observationType"] }))}
               >
@@ -1063,18 +1075,21 @@ export default function DroneScoutingPage() {
               onChange={(e) => setObservationForm((f) => ({ ...f, notes: e.target.value }))}
               rows={2}
             />
-            <FormField
-              label="Image URL (optional)" name="imageUrl" type="url" placeholder="https://..."
-              value={String(observationForm.imageUrl ?? "")}
-              onChange={(e) => setObservationForm((f) => ({ ...f, imageUrl: e.target.value }))}
+            <ImageUpload
+              currentUrl={observationForm.imageUrl}
+              folder="observations"
+              onUpload={(url) => setObservationForm((f) => ({ ...f, imageUrl: url }))}
+              onRemove={() => setObservationForm((f) => ({ ...f, imageUrl: "" }))}
+              label="Observation image"
             />
             <Group grow mt={4}>
               <Button onClick={async () => {
+                const errors = validate(observationForm, OBSERVATION_RULES);
+                if (hasErrors(errors)) {
+                  setObservationErrors(errors);
+                  return;
+                }
                 try {
-                  if (!observationForm.observationType) {
-                    notifications.show({ title: "Validation", message: "Observation type is required", color: "orange" });
-                    return;
-                  }
                   await saveData("scoutingObservations", {
                     id: generateId(),
                     observationType: observationForm.observationType,
@@ -1088,12 +1103,12 @@ export default function DroneScoutingPage() {
                     imageUrl: observationForm.imageUrl || undefined,
                   } as ScoutingObservation);
                   notifications.show({ title: "Success", message: "Observation recorded", color: "green" });
-                  await reload(); setShowAddObservation(false); setObservationForm({});
+                  await reload(); setShowAddObservation(false); setObservationForm({}); setObservationErrors({});
                 } catch (e) {
                   notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to save", color: "red" });
                 }
               }}>Save Observation</Button>
-              <Button variant="default" onClick={() => { setShowAddObservation(false); setObservationForm({}); }}>Cancel</Button>
+              <Button variant="default" onClick={() => { setShowAddObservation(false); setObservationForm({}); setObservationErrors({}); }}>Cancel</Button>
             </Group>
           </div>
         </Modal>

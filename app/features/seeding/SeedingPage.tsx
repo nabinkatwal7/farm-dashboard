@@ -13,6 +13,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import { useCurrentUser } from "@/app/lib/user-context";
 import {
@@ -26,6 +27,9 @@ import {
   type SeedingZone,
 } from "@/app/base/services/farm-client";
 import { notifications } from "@mantine/notifications";
+import { validate, hasErrors, type Errors, type Rule } from "@/app/lib/validate";
+import { cropOptions } from "@/app/lib/crops";
+import FormField from "@/app/abstract/ui/FormField";
 
 const SEEDING_ENTITIES = {
   fields: "fields",
@@ -83,7 +87,7 @@ export default function SeedingPage() {
     typeof currentUser?.farm.lng === "number"
       ? { lat: currentUser.farm.lat, lng: currentUser.farm.lng }
       : null;
-  const { data, reload: load } = useFarmData(SEEDING_ENTITIES);
+  const { data, loading, reload: load } = useFarmData(SEEDING_ENTITIES);
   const fields = data.fields as CropField[];
   const prescriptionMaps = data.prescriptionMaps as PrescriptionMap[];
   const integrations = data.seedIntegrations as SeedIntegration[];
@@ -95,6 +99,14 @@ export default function SeedingPage() {
 
   const [prescriptionForm, setPrescriptionForm] = useState<Partial<PrescriptionMap>>({});
   const [integrationForm, setIntegrationForm] = useState<Partial<SeedIntegration>>({});
+  const [prescriptionErrors, setPrescriptionErrors] = useState<Errors>({});
+
+  const PRESCRIPTION_RULES: Rule[] = [
+    { key: "name", label: "Prescription name", required: true },
+    { key: "fieldId", label: "Field", required: true },
+    { key: "crop", label: "Crop", required: true },
+    { key: "targetRate", label: "Target rate", required: true },
+  ];
 
   const activeMaps = prescriptionMaps.filter((m) => m.status === "active");
   const activeIntegrations = integrations.filter((i) => i.isActive);
@@ -107,7 +119,11 @@ export default function SeedingPage() {
     }, 0);
 
   const savePrescription = async () => {
-    if (!prescriptionForm.name || !prescriptionForm.fieldId) return;
+    const errors = validate(prescriptionForm, PRESCRIPTION_RULES);
+    if (hasErrors(errors)) {
+      setPrescriptionErrors(errors);
+      return;
+    }
     const field = fields.find((f) => f.id === prescriptionForm.fieldId);
     const targetRate = prescriptionForm.targetRate ?? 0;
     const zoneCount = Math.min(3, Math.max(2, Math.floor((field?.acres ?? 50) / 15)));
@@ -137,6 +153,8 @@ export default function SeedingPage() {
       await load();
       setShowAddPrescription(false);
       setPrescriptionForm({});
+      setPrescriptionErrors({});
+      notifications.show({ title: "Success", message: "Prescription saved", color: "green" });
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -160,6 +178,7 @@ export default function SeedingPage() {
       await load();
       setShowIntegration(false);
       setIntegrationForm({});
+      notifications.show({ title: "Success", message: "Integration saved", color: "green" });
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -178,14 +197,16 @@ export default function SeedingPage() {
         exportFormat: "shapefile",
       } as PrescriptionMap);
       await load();
+      notifications.show({ title: "Success", message: "Export complete", color: "green" });
     } catch (error) {
       notifications.show({
         title: "Error",
         message: error instanceof Error ? error.message : "Failed to export prescription",
-        color: "red",
       });
     }
   };
+
+  if (loading) return <TableSkeleton rows={5} cols={5} />;
 
   return (
     <div style={{ padding: 24 }}>
@@ -489,6 +510,7 @@ export default function SeedingPage() {
                             try {
                               await deleteData("prescriptionMaps", pm.id);
                               await load();
+                              notifications.show({ title: "Success", message: "Prescription deleted", color: "green" });
                             } catch (error) {
                               notifications.show({
                                 title: "Error",
@@ -635,6 +657,7 @@ export default function SeedingPage() {
                               try {
                                 await deleteData("prescriptionMaps", pm.id);
                                 await load();
+                                notifications.show({ title: "Success", message: "Prescription deleted", color: "green" });
                               } catch (error) {
                                 notifications.show({
                                   title: "Error",
@@ -831,6 +854,7 @@ export default function SeedingPage() {
                         try {
                           await deleteData("seedIntegrations", int.id);
                           await load();
+                          notifications.show({ title: "Success", message: "Integration deleted", color: "green" });
                         } catch (error) {
                           notifications.show({
                             title: "Error",
@@ -929,86 +953,56 @@ export default function SeedingPage() {
           onClose={() => setShowAddPrescription(false)}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Prescription Name
-              </label>
-              <input
-                className="farm-input"
-                type="text"
-                placeholder="e.g. North Field Spring Wheat Rx"
-                value={String(prescriptionForm.name ?? "")}
-                onChange={(e) =>
-                  setPrescriptionForm((f) => ({ ...f, name: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Field
-              </label>
-              <select
-                className="farm-input"
-                value={prescriptionForm.fieldId ?? ""}
-                onChange={(e) => {
-                  const f = fields.find((f) => f.id === e.target.value);
-                  setPrescriptionForm((prev) => ({
-                    ...prev,
-                    fieldId: e.target.value,
-                    fieldName: f?.name ?? "",
-                    crop: prev.crop || f?.currentCrop || "",
-                  }));
-                }}
-              >
-                <option value="">Select field...</option>
-                {fields.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name} ({f.acres} ac — {f.currentCrop})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Crop
-              </label>
-              <select
-                className="farm-input"
-                value={prescriptionForm.crop ?? ""}
-                onChange={(e) =>
-                  setPrescriptionForm((f) => ({ ...f, crop: e.target.value }))
-                }
-                style={{ width: "100%" }}
-              >
-                <option value="">Select crop...</option>
-                {cropModels.map((cm) => (
-                  <option key={cm.id} value={cm.crop}>
-                    {cm.crop}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <FormField
+              label="Prescription Name"
+              name="name"
+              type="text"
+              placeholder="e.g. North Field Spring Wheat Rx"
+              required
+              error={prescriptionErrors.name}
+              value={String(prescriptionForm.name ?? "")}
+              onChange={(e) => setPrescriptionForm((f) => ({ ...f, name: e.target.value }))}
+            />
+            <FormField
+              as="select"
+              label="Field"
+              name="fieldId"
+              required
+              error={prescriptionErrors.fieldId}
+              value={prescriptionForm.fieldId ?? ""}
+              onChange={(e) => {
+                const f = fields.find((f) => f.id === e.target.value);
+                setPrescriptionForm((prev) => ({
+                  ...prev,
+                  fieldId: e.target.value,
+                  fieldName: f?.name ?? "",
+                  crop: prev.crop || f?.currentCrop || "",
+                }));
+              }}
+            >
+              <option value="">Select field...</option>
+              {fields.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name} ({f.acres} ac — {f.currentCrop})
+                </option>
+              ))}
+            </FormField>
+            <FormField
+              as="select"
+              label="Crop"
+              name="crop"
+              required
+              error={prescriptionErrors.crop}
+              value={prescriptionForm.crop ?? ""}
+              onChange={(e) => setPrescriptionForm((f) => ({ ...f, crop: e.target.value }))}
+            >
+              <option value="">Select crop...</option>
+              {cropOptions(cropModels).map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </FormField>
             <div>
               <label
                 className="text-muted"
@@ -1030,30 +1024,16 @@ export default function SeedingPage() {
                 }
               />
             </div>
-            <div>
-              <label
-                className="text-muted"
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 6,
-                }}
-              >
-                Base Target Rate (seeds/ac)
-              </label>
-              <input
-                className="farm-input"
-                type="number"
-                placeholder="35000"
-                value={String(prescriptionForm.targetRate ?? "")}
-                onChange={(e) =>
-                  setPrescriptionForm((f) => ({
-                    ...f,
-                    targetRate: +e.target.value,
-                  }))
-                }
-              />
-            </div>
+            <FormField
+              label="Base Target Rate (seeds/ac)"
+              name="targetRate"
+              type="number"
+              placeholder="35000"
+              required
+              error={prescriptionErrors.targetRate}
+              value={String(prescriptionForm.targetRate ?? "")}
+              onChange={(e) => setPrescriptionForm((f) => ({ ...f, targetRate: +e.target.value }))}
+            />
             <div>
               <label
                 className="text-muted"
@@ -1248,6 +1228,7 @@ export default function SeedingPage() {
                     await saveData("prescriptionMaps", showEditMap as PrescriptionMap);
                     setShowEditMap(null);
                     await load();
+                    notifications.show({ title: "Success", message: "Zones saved", color: "green" });
                   } catch (error) {
                     notifications.show({
                       title: "Error",

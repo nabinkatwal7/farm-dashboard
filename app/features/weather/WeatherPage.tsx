@@ -3,6 +3,7 @@
 import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -14,6 +15,7 @@ import {
   type GrowthStageForecast,
   type WeatherStation,
 } from "@/app/base/services/farm-client";
+import { COMMON_CROPS } from "@/app/lib/crops";
 import { useCurrentUser } from "@/app/lib/user-context";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -86,7 +88,7 @@ function getDefaultProviders() {
 export default function WeatherPage() {
   const [tab, setTab] = useState<Tab>("stations");
   const currentUser = useCurrentUser();
-  const { data, reload } = useFarmData(WEATHER_ENTITIES);
+  const { data, loading, reload } = useFarmData(WEATHER_ENTITIES);
   const fields = data.fields as CropField[];
   const stations = data.weatherStations as WeatherStation[];
   const cropModels = data.cropModels as CropModel[];
@@ -172,6 +174,8 @@ export default function WeatherPage() {
       return unreached.length > 0;
     })
     .slice(0, 5);
+
+  if (loading) return <TableSkeleton rows={6} cols={5} />;
 
   return (
     <div style={{ padding: 24 }}>
@@ -369,6 +373,7 @@ export default function WeatherPage() {
                             try {
                               await deleteData("weatherStations", station.id);
                               await reload();
+                              notifications.show({ title: "Success", message: "Station deleted", color: "green" });
                             } catch (error) {
                               notifications.show({
                                 title: "Error",
@@ -508,6 +513,7 @@ export default function WeatherPage() {
                             try {
                               await deleteData("cropModels", model.id);
                               await reload();
+                              notifications.show({ title: "Success", message: "Crop model deleted", color: "green" });
                             } catch (error) {
                               notifications.show({
                                 title: "Error",
@@ -961,6 +967,7 @@ export default function WeatherPage() {
                     setShowAddStation(false);
                     setEditingStation(null);
                     setStationForm({});
+                    notifications.show({ title: "Success", message: "Station saved", color: "green" });
                   } catch (error) {
                     notifications.show({
                       title: "Error",
@@ -1007,17 +1014,7 @@ export default function WeatherPage() {
               }
             >
               <option value="">Select crop...</option>
-              {[
-                "Winter Wheat",
-                "Spring Wheat",
-                "Winter Barley",
-                "Spring Barley",
-                "Maize",
-                "Oilseed Rape",
-                "Potatoes",
-                "Soybeans",
-                "Oats",
-              ].map((c) => (
+              {COMMON_CROPS.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -1159,6 +1156,7 @@ export default function WeatherPage() {
                     setShowAddCropModel(false);
                     setEditingModel(null);
                     setModelForm({});
+                    notifications.show({ title: "Success", message: "Crop model saved", color: "green" });
                   } catch (error) {
                     notifications.show({
                       title: "Error",

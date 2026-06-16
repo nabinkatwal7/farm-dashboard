@@ -10,7 +10,9 @@ import {
   Group,
   Modal,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import {
   ROLES,
   createUser as createFarmUser,
@@ -31,9 +33,15 @@ export default function UsersPage() {
   const [users, setUsers] = useState<FarmUser[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function load() {
-    setUsers(await listUsers());
+    setLoading(true);
+    try {
+      setUsers(await listUsers());
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -53,6 +61,7 @@ export default function UsersPage() {
         role: String(form.get("role") ?? "FIELD_WORKER"),
       });
       await load();
+      notifications.show({ title: "Success", message: "User created", color: "green" });
       setShowCreate(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to create user");
@@ -62,7 +71,10 @@ export default function UsersPage() {
   async function toggleUser(user: FarmUser) {
     await updateUser(user.id, { isActive: !user.isActive });
     await load();
+    notifications.show({ title: "Success", message: `User ${user.isActive ? "disabled" : "enabled"}`, color: "green" });
   }
+
+  if (loading) return <TableSkeleton rows={5} cols={5} />;
 
   return (
     <div className="p-6">
@@ -114,7 +126,16 @@ export default function UsersPage() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {users.length === 0 ? (
+              <tr>
+                <td colSpan={99}>
+                  <div style={{textAlign:"center",padding:"48px 16px",fontSize:"0.875rem",color:"var(--text-muted)"}}>
+                    No users yet. Invite team members to collaborate.
+                  </div>
+                </td>
+              </tr>
+            ) : (
+            users.map((user) => (
               <tr key={user.id}>
                 <td className="text-primary font-semibold">{user.name}</td>
                 <td>{user.email}</td>
@@ -133,7 +154,8 @@ export default function UsersPage() {
                   </button>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>

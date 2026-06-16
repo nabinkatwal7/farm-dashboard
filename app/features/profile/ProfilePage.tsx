@@ -20,9 +20,10 @@ import {
 import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
 import { useUserContext, type CurrentUser } from "@/app/lib/user-context";
+import ImageUpload from "@/app/components/ImageUpload";
 
 type ProfileResponse = Required<
-  Pick<CurrentUser, "id" | "email" | "name" | "role" | "isActive" | "createdAt" | "updatedAt">
+  Pick<CurrentUser, "id" | "email" | "name" | "role" | "isActive" | "createdAt" | "updatedAt" | "avatarUrl">
 > & {
   farm: Required<Pick<CurrentUser["farm"], "id" | "name" | "createdAt" | "updatedAt">> & {
     location: string | null;
@@ -85,6 +86,7 @@ export default function ProfilePage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    avatarUrl: "",
     currentPassword: "",
     newPassword: "",
     farmName: "",
@@ -114,6 +116,7 @@ export default function ProfilePage() {
       setForm({
         name: loaded.name,
         email: loaded.email,
+        avatarUrl: loaded.avatarUrl ?? "",
         currentPassword: "",
         newPassword: "",
         farmName: loaded.farm.name,
@@ -138,6 +141,7 @@ export default function ProfilePage() {
     const payload: Record<string, unknown> = {
       name: form.name,
       email: form.email,
+      avatarUrl: form.avatarUrl,
     };
 
     if (form.newPassword) {
@@ -172,6 +176,7 @@ export default function ProfilePage() {
       ...current,
       name: updated.name,
       email: updated.email,
+      avatarUrl: updated.avatarUrl ?? "",
       currentPassword: "",
       newPassword: "",
       farmName: updated.farm.name,
@@ -232,6 +237,18 @@ export default function ProfilePage() {
           <section className="space-y-5">
             <div className="rounded-2xl border border-border bg-card p-5">
               <h2 className="mb-4 text-sm font-semibold text-primary">User information</h2>
+              <div className="mb-4 flex items-center gap-4">
+                <ImageUpload
+                  currentUrl={form.avatarUrl}
+                  folder="avatars"
+                  onUpload={(url) => setForm((f) => ({ ...f, avatarUrl: url }))}
+                  onRemove={() => setForm((f) => ({ ...f, avatarUrl: "" }))}
+                  label="Avatar"
+                />
+                <div className="text-xs text-muted">
+                  Click to upload a profile photo
+                </div>
+              </div>
               <div className="grid gap-3">
                 <DetailItem icon={Mail} label="Email" value={effectiveProfile?.email ?? "Not set"} />
                 <DetailItem icon={ShieldCheck} label="Role" value={roleLabel(effectiveProfile?.role ?? "VIEWER")} />

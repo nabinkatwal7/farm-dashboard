@@ -8,6 +8,7 @@ type EntityMap = Record<string, string>;
 type FarmDataResult<T extends EntityMap> = {
   data: { [K in keyof T]: unknown[] };
   reload: () => Promise<void>;
+  loading: boolean;
 };
 
 export function useFarmData<T extends EntityMap>(
@@ -20,8 +21,10 @@ export function useFarmData<T extends EntityMap>(
     }
     return initial;
   });
+  const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
+    setLoading(true);
     const entries = await Promise.all(
       (Object.entries(entities) as Array<[keyof T, string]>).map(
         async ([key, entity]) => [key, await getData(entity)] as const,
@@ -29,12 +32,12 @@ export function useFarmData<T extends EntityMap>(
     );
 
     setData(Object.fromEntries(entries) as { [K in keyof T]: unknown[] });
+    setLoading(false);
   }, [entities]);
 
   useEffect(() => {
     void Promise.resolve().then(reload);
   }, [reload]);
 
-  return { data, reload };
+  return { data, reload, loading };
 }
-

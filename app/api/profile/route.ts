@@ -9,6 +9,7 @@ function serializeProfile(user: {
   name: string;
   role: string;
   isActive: boolean;
+  avatarUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
     farm: {
@@ -28,6 +29,7 @@ function serializeProfile(user: {
     name: user.name,
     role: user.role,
     isActive: user.isActive,
+    avatarUrl: user.avatarUrl,
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
     farm: {
@@ -81,6 +83,7 @@ export async function PATCH(request: Request) {
       name?: string;
       email?: string;
       passwordHash?: string;
+      avatarUrl?: string | null;
     } = {};
     const farmData: {
       name?: string;
@@ -109,6 +112,12 @@ export async function PATCH(request: Request) {
           throw new ApiError(409, "Email is already in use");
         }
       }
+    }
+
+    if (typeof body.avatarUrl === "string") {
+      userData.avatarUrl = body.avatarUrl.trim() || null;
+    } else if (body.avatarUrl === null) {
+      userData.avatarUrl = null;
     }
 
     if (typeof body.newPassword === "string" && body.newPassword.length > 0) {

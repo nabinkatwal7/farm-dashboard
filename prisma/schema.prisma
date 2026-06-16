@@ -60,6 +60,7 @@ model User {
   isActive       Boolean            @default(true)
   farmId         String
   farm           Farm               @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  avatarUrl      String?
   sessions       Session[]
   assignedTasks  Task[]             @relation("TaskAssignee")
   inputLogs      InputLog[]         @relation("InputOperator")
@@ -157,6 +158,7 @@ model Animal {
   group          String?
   status         String
   notes          String?
+  photoUrl       String?
   medicalRecords MedicalRecord[]
   weights        WeightRecord[]
   createdAt      DateTime        @default(now())
@@ -262,6 +264,7 @@ model Product {
   stock    Float
   unit     String
   batchId  String?
+  imageUrl String?
   sales    SaleItem[]
 }
 

@@ -7,6 +7,7 @@ import { notifications } from "@mantine/notifications";
 import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -22,7 +23,7 @@ const ENTITIES = {
 } as const;
 
 export default function RFIDScannerPage() {
-  const { data, reload } = useFarmData(ENTITIES);
+  const { data, reload, loading } = useFarmData(ENTITIES);
   const sessions = data.sessions as RFIDScanSession[];
   const tagReads = data.tagReads as RFIDTagRead[];
 
@@ -150,6 +151,8 @@ export default function RFIDScannerPage() {
       notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to delete", color: "red" });
     }
   }
+
+  if (loading) return <TableSkeleton />;
 
   return (
     <div style={{ padding: 24 }}>

@@ -19,7 +19,10 @@ export function ok<T>(data: T, status = 200) {
 
 export function fail(error: unknown) {
   if (error instanceof ApiError) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
+    return NextResponse.json(
+      { error: error.message },
+      { status: error.status },
+    );
   }
 
   const message = error instanceof Error ? error.message : "Unexpected error";

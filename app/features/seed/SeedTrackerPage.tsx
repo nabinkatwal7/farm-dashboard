@@ -3,6 +3,7 @@
 import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -14,6 +15,7 @@ import {
   type GerminationTest,
   type SeedLot,
 } from "@/app/base/services/farm-client";
+import { cropOptions } from "@/app/lib/crops";
 import { useCurrentUser } from "@/app/lib/user-context";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -27,6 +29,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { validate, hasErrors, type Errors, type Rule } from "@/app/lib/validate";
 import {
   Area,
   AreaChart,
@@ -57,7 +60,7 @@ const TREATMENT_COLORS: Record<string, string> = {
 export default function SeedTrackerPage() {
   const [tab, setTab] = useState<Tab>("inventory");
   const currentUser = useCurrentUser();
-  const { data, reload } = useFarmData(SEED_ENTITIES);
+  const { data, reload, loading } = useFarmData(SEED_ENTITIES);
   const fields = data.fields as CropField[];
   const seedLots = data.seedLots as SeedLot[];
   const germinationTests = data.germinationTests as GerminationTest[];
@@ -70,6 +73,8 @@ export default function SeedTrackerPage() {
   const [lotForm, setLotForm] = useState<Partial<SeedLot>>({});
   const [testForm, setTestForm] = useState<Partial<GerminationTest>>({});
   const [consignmentForm, setConsignmentForm] = useState<Partial<Consignment>>({});
+  const [lotErrors, setLotErrors] = useState<Errors>({});
+  const [testErrors, setTestErrors] = useState<Errors>({});
   const [selectedLotId, setSelectedLotId] = useState<string>("");
   const [viabilityData, setViabilityData] = useState<Array<{
     date: string;
@@ -79,6 +84,23 @@ export default function SeedTrackerPage() {
     declineRatePerMonth: number;
     projectedViability: number | null;
   } | null>(null);
+
+  const LOT_RULES: Rule[] = [
+    { key: "crop", label: "Crop", required: true },
+    { key: "lotNumber", label: "Lot number", required: true },
+    { key: "supplier", label: "Supplier", required: true },
+    { key: "quantity", label: "Quantity", required: true },
+    { key: "unit", label: "Unit", required: true },
+    { key: "purchaseDate", label: "Purchase date", required: true },
+    { key: "baselineGermination", label: "Baseline germination", required: true },
+  ];
+
+  const TEST_RULES: Rule[] = [
+    { key: "seedLotId", label: "Seed lot", required: true },
+    { key: "testDate", label: "Test date", required: true },
+    { key: "seedsTested", label: "Seeds tested", required: true },
+    { key: "seedsGerminated", label: "Seeds germinated", required: true },
+  ];
 
   const sortedLots = [...seedLots].sort((a, b) => b.lotNumber.localeCompare(a.lotNumber));
 
@@ -137,6 +159,8 @@ export default function SeedTrackerPage() {
       .reduce((s, c) => s + c.quantity, 0);
     return Math.max(0, lot.quantity - used);
   }
+
+  if (loading) return <TableSkeleton />;
 
   return (
     <div style={{ padding: 24 }}>
@@ -832,13 +856,15 @@ export default function SeedTrackerPage() {
                 as="select"
                 label="Crop"
                 name="crop"
+                required
+                error={lotErrors.crop}
                 value={lotForm.crop ?? ""}
                 onChange={(e) => setLotForm((f) => ({ ...f, crop: e.target.value }))}
               >
                 <option value="">Select crop...</option>
-                {cropModels.map((cm) => (
-                  <option key={cm.id} value={cm.crop}>
-                    {cm.crop}
+                {cropOptions(cropModels).map((c) => (
+                  <option key={c} value={c}>
+                    {c}
                   </option>
                 ))}
               </FormField>
@@ -856,6 +882,8 @@ export default function SeedTrackerPage() {
               name="lotNumber"
               type="text"
               placeholder="e.g. L-2024-001"
+              required
+              error={lotErrors.lotNumber}
               value={String(lotForm.lotNumber ?? "")}
               onChange={(e) => setLotForm((f) => ({ ...f, lotNumber: e.target.value }))}
             />
@@ -864,6 +892,8 @@ export default function SeedTrackerPage() {
                 label="Quantity"
                 name="quantity"
                 type="number"
+                required
+                error={lotErrors.quantity}
                 value={String(lotForm.quantity ?? "")}
                 onChange={(e) => setLotForm((f) => ({ ...f, quantity: +e.target.value }))}
               />
@@ -871,6 +901,8 @@ export default function SeedTrackerPage() {
                 as="select"
                 label="Unit"
                 name="unit"
+                required
+                error={lotErrors.unit}
                 value={lotForm.unit ?? "kg"}
                 onChange={(e) => setLotForm((f) => ({ ...f, unit: e.target.value }))}
               >
@@ -896,6 +928,8 @@ export default function SeedTrackerPage() {
                 as="select"
                 label="Supplier"
                 name="supplier"
+                required
+                error={lotErrors.supplier}
                 value={lotForm.supplier ?? ""}
                 onChange={(e) => setLotForm((f) => ({ ...f, supplier: e.target.value }))}
               >
@@ -912,6 +946,8 @@ export default function SeedTrackerPage() {
                 label="Baseline Germination (%)"
                 name="baselineGermination"
                 type="number"
+                required
+                error={lotErrors.baselineGermination}
                 value={String(lotForm.baselineGermination ?? "")}
                 onChange={(e) => setLotForm((f) => ({ ...f, baselineGermination: +e.target.value }))}
               />
@@ -919,16 +955,17 @@ export default function SeedTrackerPage() {
             <Group grow mt={4}>
               <Button
                 onClick={async () => {
+                  const errors = validate(lotForm, LOT_RULES);
+                  if (hasErrors(errors)) {
+                    setLotErrors(errors);
+                    return;
+                  }
                   try {
-                    if (!lotForm.crop?.trim() || !lotForm.lotNumber?.trim() || !lotForm.quantity) {
-                      notifications.show({ title: "Validation", message: "Crop, lot number, and quantity are required", color: "orange" });
-                      return;
-                    }
                     await saveData("seedLots", {
                       id: generateId(),
-                      crop: lotForm.crop.trim(),
+                      crop: (lotForm.crop ?? "").trim(),
                       variety: lotForm.variety?.trim() || undefined,
-                      lotNumber: lotForm.lotNumber.trim(),
+                      lotNumber: (lotForm.lotNumber ?? "").trim(),
                       supplier: lotForm.supplier?.trim() || undefined,
                       purchaseDate: lotForm.purchaseDate,
                       quantity: lotForm.quantity,
@@ -943,6 +980,7 @@ export default function SeedTrackerPage() {
                     await reload();
                     setShowAddLot(false);
                     setLotForm({});
+                    setLotErrors({});
                   } catch (e) {
                     notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to save lot", color: "red" });
                   }
@@ -950,7 +988,7 @@ export default function SeedTrackerPage() {
               >
                 Save Lot
               </Button>
-              <Button variant="default" onClick={() => { setShowAddLot(false); setLotForm({}); }}>
+              <Button variant="default" onClick={() => { setShowAddLot(false); setLotForm({}); setLotErrors({}); }}>
                 Cancel
               </Button>
             </Group>
@@ -961,13 +999,15 @@ export default function SeedTrackerPage() {
       {showAddTest && (
         <Modal
           title="Add Germination Test"
-          onClose={() => { setShowAddTest(false); setTestForm({}); }}
+          onClose={() => { setShowAddTest(false); setTestForm({}); setTestErrors({}); }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               label="Test Date"
               name="testDate"
               type="date"
+              required
+              error={testErrors.testDate}
               value={String(testForm.testDate ?? new Date().toISOString().slice(0, 10))}
               onChange={(e) => setTestForm((f) => ({ ...f, testDate: e.target.value }))}
             />
@@ -976,6 +1016,8 @@ export default function SeedTrackerPage() {
                 label="Seeds Tested"
                 name="seedsTested"
                 type="number"
+                required
+                error={testErrors.seedsTested}
                 value={String(testForm.seedsTested ?? "")}
                 onChange={(e) => setTestForm((f) => ({ ...f, seedsTested: +e.target.value }))}
               />
@@ -983,6 +1025,8 @@ export default function SeedTrackerPage() {
                 label="Seeds Germinated"
                 name="seedsGerminated"
                 type="number"
+                required
+                error={testErrors.seedsGerminated}
                 value={String(testForm.seedsGerminated ?? "")}
                 onChange={(e) => setTestForm((f) => ({ ...f, seedsGerminated: +e.target.value }))}
               />
@@ -1002,12 +1046,14 @@ export default function SeedTrackerPage() {
             <Group grow mt={4}>
               <Button
                 onClick={async () => {
+                  const testData = { ...testForm, seedLotId: selectedLotId };
+                  const errors = validate(testData, TEST_RULES);
+                  if (hasErrors(errors)) {
+                    setTestErrors(errors);
+                    return;
+                  }
                   try {
-                    if (!selectedLotId || !testForm.seedsTested || !testForm.seedsGerminated) {
-                      notifications.show({ title: "Validation", message: "Select a lot and fill tested/germinated counts", color: "orange" });
-                      return;
-                    }
-                    const percent = Math.round((testForm.seedsGerminated / testForm.seedsTested) * 1000) / 10;
+                    const percent = Math.round(((testForm.seedsGerminated ?? 0) / (testForm.seedsTested ?? 1)) * 1000) / 10;
                     await saveData("germinationTests", {
                       id: generateId(),
                       seedLotId: selectedLotId,
@@ -1022,6 +1068,7 @@ export default function SeedTrackerPage() {
                     await reload();
                     setShowAddTest(false);
                     setTestForm({});
+                    setTestErrors({});
                   } catch (e) {
                     notifications.show({ title: "Error", message: e instanceof Error ? e.message : "Failed to save test", color: "red" });
                   }
@@ -1029,7 +1076,7 @@ export default function SeedTrackerPage() {
               >
                 Save Test
               </Button>
-              <Button variant="default" onClick={() => { setShowAddTest(false); setTestForm({}); }}>
+              <Button variant="default" onClick={() => { setShowAddTest(false); setTestForm({}); setTestErrors({}); }}>
                 Cancel
               </Button>
             </Group>

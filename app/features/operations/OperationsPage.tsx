@@ -16,6 +16,8 @@ import { useEffect, useState } from "react";
 import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
+import EmptyState from "@/app/abstract/ui/EmptyState";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -27,6 +29,7 @@ import {
 } from "@/app/base/services/farm-client";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { validate, hasErrors, type Errors, type Rule } from "@/app/lib/validate";
 
 type Tab = "machinery" | "tasks";
 
@@ -39,7 +42,7 @@ const OPERATIONS_ENTITIES = {
 const PRIORITY_COLORS = { high: "#f87171", medium: "#fbbf24", low: "#60a5fa" };
 export default function OperationsPage() {
   const [tab, setTab] = useState<Tab>("machinery");
-  const { data, reload: load } = useFarmData(OPERATIONS_ENTITIES);
+  const { data, reload: load, loading } = useFarmData(OPERATIONS_ENTITIES);
   const machines = data.machines as Machine[];
   const tasks = data.tasks as Task[];
   const fields = data.fields as CropField[];
@@ -52,6 +55,14 @@ export default function OperationsPage() {
   const [taskForm, setTaskForm] = useState<Partial<Task>>({});
   const [machineErrors, setMachineErrors] = useState<Record<string, string>>({});
   const [taskErrors, setTaskErrors] = useState<Record<string, string>>({});
+  const [operationErrors, setOperationErrors] = useState<Errors>({});
+
+  const OPERATION_RULES: Rule[] = [
+    { key: "title", label: "Operation type", required: true },
+    { key: "fieldName", label: "Field", required: true },
+    { key: "assignee", label: "Assignee", required: true },
+    { key: "dueDate", label: "Date", required: true },
+  ];
 
   const editTask = (task: Task) => {
     setEditingTask(task);
@@ -66,6 +77,7 @@ export default function OperationsPage() {
       status: task.status,
       priority: task.priority,
     });
+    setOperationErrors({});
     setTaskErrors({});
     setShowAddTask(true);
   };
@@ -106,6 +118,7 @@ export default function OperationsPage() {
         ...machineForm,
       } as Machine);
       await load();
+      notifications.show({ title: "Success", message: "Machine saved", color: "green" });
       setShowAddMachine(false);
       setEditingMachine(null);
       setMachineForm({});
@@ -128,7 +141,11 @@ export default function OperationsPage() {
   };
 
   const saveTask = async () => {
-    if (!validateTask()) return;
+    const errors = validate(taskForm, OPERATION_RULES);
+    if (hasErrors(errors)) {
+      setOperationErrors(errors);
+      return;
+    }
     try {
       await saveData("tasks", {
         id: editingTask?.id || generateId(),
@@ -140,10 +157,12 @@ export default function OperationsPage() {
         ...taskForm,
       } as Task);
       await load();
+      notifications.show({ title: "Success", message: "Task saved", color: "green" });
       setShowAddTask(false);
       setEditingTask(null);
       setTaskForm({});
       setTaskErrors({});
+      setOperationErrors({});
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -157,6 +176,7 @@ export default function OperationsPage() {
     try {
       await saveData("tasks", { ...task, status });
       await load();
+      notifications.show({ title: "Success", message: "Task status updated", color: "green" });
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -172,6 +192,8 @@ export default function OperationsPage() {
 
   const maintenanceDue = machines.filter((m) => m.nextService < 200);
   const breakdown = machines.filter((m) => m.status === "breakdown");
+
+  if (loading) return <TableSkeleton rows={5} cols={5} />;
 
   return (
     <div style={{ padding: 24 }}>
@@ -412,7 +434,9 @@ export default function OperationsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {machines.map((m) => {
+                  {machines.length === 0 ? (
+                    <tr><td colSpan={99}><div style={{textAlign:"center",padding:"32px 16px",fontSize:"0.875rem",color:"var(--text-muted)"}}>No machinery registered yet.</div></td></tr>
+                  ) : machines.map((m) => {
                     const urgency =
                       m.nextService < 100
                         ? "#f87171"
@@ -544,6 +568,7 @@ export default function OperationsPage() {
                               try {
                                 await deleteData("machines", m.id);
                                 await load();
+                                notifications.show({ title: "Success", message: "Machine deleted", color: "green" });
                               } catch (error) {
                                 notifications.show({
                                   title: "Error",
@@ -619,7 +644,9 @@ export default function OperationsPage() {
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 10 }}
               >
-                {pendingTasks.map((task) => (
+                {pendingTasks.length === 0 ? (
+                  <EmptyState title="No pending tasks." />
+                ) : pendingTasks.map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -629,6 +656,7 @@ export default function OperationsPage() {
                       try {
                         await deleteData("tasks", task.id);
                         await load();
+                        notifications.show({ title: "Success", message: "Task deleted", color: "green" });
                       } catch (error) {
                         notifications.show({
                           title: "Error",
@@ -676,7 +704,9 @@ export default function OperationsPage() {
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 10 }}
               >
-                {inProgressTasks.map((task) => (
+                {inProgressTasks.length === 0 ? (
+                  <EmptyState title="No tasks in progress." />
+                ) : inProgressTasks.map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -686,6 +716,7 @@ export default function OperationsPage() {
                       try {
                         await deleteData("tasks", task.id);
                         await load();
+                        notifications.show({ title: "Success", message: "Task deleted", color: "green" });
                       } catch (error) {
                         notifications.show({
                           title: "Error",
@@ -733,7 +764,9 @@ export default function OperationsPage() {
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 10 }}
               >
-                  {doneTasks.map((task) => (
+                  {doneTasks.length === 0 ? (
+                  <EmptyState title="No completed tasks." />
+                ) : doneTasks.map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -743,6 +776,7 @@ export default function OperationsPage() {
                       try {
                         await deleteData("tasks", task.id);
                         await load();
+                        notifications.show({ title: "Success", message: "Task deleted", color: "green" });
                       } catch (error) {
                         notifications.show({
                           title: "Error",
@@ -873,9 +907,9 @@ export default function OperationsPage() {
               type="text"
               placeholder="Spray North Meadow"
               required
-              error={taskErrors.title}
-              value={String(taskForm.title ?? "")}
-              onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))}
+              error={operationErrors.title}
+               value={String(taskForm.title ?? "")}
+               onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))}
             />
             <FormField
               label="Description"
@@ -891,6 +925,8 @@ export default function OperationsPage() {
                 as="select"
                 label="Field / Location"
                 name="fieldName"
+                required
+                error={operationErrors.fieldName}
                 value={taskForm.fieldName ?? ""}
                 onChange={(e) => setTaskForm((f) => ({ ...f, fieldName: e.target.value }))}
               >
@@ -905,6 +941,8 @@ export default function OperationsPage() {
                 as="select"
                 label="Assignee"
                 name="assignee"
+                required
+                error={operationErrors.assignee}
                 value={taskForm.assignee ?? ""}
                 onChange={(e) => setTaskForm((f) => ({ ...f, assignee: e.target.value }))}
               >
@@ -941,9 +979,9 @@ export default function OperationsPage() {
               name="dueDate"
               type="date"
               required
-              error={taskErrors.dueDate}
-              value={String(taskForm.dueDate ?? "")}
-              onChange={(e) => setTaskForm((f) => ({ ...f, dueDate: e.target.value }))}
+              error={operationErrors.dueDate}
+               value={String(taskForm.dueDate ?? "")}
+               onChange={(e) => setTaskForm((f) => ({ ...f, dueDate: e.target.value }))}
             />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
@@ -971,7 +1009,7 @@ export default function OperationsPage() {
             </div>
             <Group grow mt={4}>
               <Button onClick={saveTask}>{editingTask ? "Update Task" : "Create Task"}</Button>
-              <Button variant="default" onClick={() => { setShowAddTask(false); setEditingTask(null); setTaskErrors({}); setTaskForm({}); }}>
+              <Button variant="default" onClick={() => { setShowAddTask(false); setEditingTask(null); setOperationErrors({}); setTaskErrors({}); setTaskForm({}); }}>
                 Cancel
               </Button>
             </Group>

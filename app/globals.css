@@ -444,3 +444,8 @@ textarea {
   --accent-purple: #7c3aed;
   --accent-teal: #0f766e;
 }
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

@@ -14,7 +14,10 @@ import {
   type InputLog,
   type YieldRecord,
 } from "@/app/base/services/farm-client";
+import { cropOptions } from "@/app/lib/crops";
 import { useCurrentUser } from "@/app/lib/user-context";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
+import EmptyState from "@/app/abstract/ui/EmptyState";
 import { Alert, Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -28,6 +31,12 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import {
+  validate,
+  hasErrors,
+  type Errors,
+  type Rule,
+} from "@/app/lib/validate";
 import {
   Bar,
   BarChart,
@@ -116,7 +125,7 @@ export default function CropsPage() {
     typeof currentUser?.farm.lng === "number"
       ? { lat: currentUser.farm.lat, lng: currentUser.farm.lng }
       : null;
-  const { data, reload: load } = useFarmData(CROP_ENTITIES);
+  const { data, reload: load, loading } = useFarmData(CROP_ENTITIES);
   const fields = data.fields as CropField[];
   const inputs = data.inputs as InputLog[];
   const yields = data.yields as YieldRecord[];
@@ -130,21 +139,28 @@ export default function CropsPage() {
   const [fieldForm, setFieldForm] = useState<Partial<CropField>>({});
   const [inputForm, setInputForm] = useState<Partial<InputLog>>({});
   const [yieldForm, setYieldForm] = useState<Partial<YieldRecord>>({});
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [fieldErrors, setFieldErrors] = useState<Errors>({});
   const [inputErrors, setInputErrors] = useState<Record<string, string>>({});
   const [yieldErrors, setYieldErrors] = useState<Record<string, string>>({});
   const [fieldSaveError, setFieldSaveError] = useState<string | null>(null);
 
+  const fieldRules: Rule[] = [
+    { key: "name", label: "Field name", required: true },
+    { key: "acres", label: "Acres", required: true },
+    { key: "currentCrop", label: "Current crop", required: true },
+    { key: "status", label: "Status", required: true },
+    { key: "sowDate", label: "Sow date", required: true },
+  ];
+
   const validateField = () => {
-    const errors: Record<string, string> = {};
-    if (!fieldForm.name?.trim()) errors.name = "Field name is required";
-    if (!fieldForm.sowDate) errors.sowDate = "Sow date is required";
-    if (!fieldForm.currentCrop?.trim())
-      errors.currentCrop = "Current crop is required";
+    const errors = validate(
+      fieldForm as Record<string, unknown>,
+      fieldRules,
+    );
     if (!fieldForm.boundary || fieldForm.boundary.length < 3)
       errors.boundary = "Mark at least 3 boundary points on the map";
     setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    return !hasErrors(errors);
   };
 
   const saveField = async () => {
@@ -175,6 +191,11 @@ export default function CropsPage() {
         boundary,
       } as CropField);
       await load();
+      notifications.show({
+        title: "Success",
+        message: editingField ? "Field updated" : "Field created",
+        color: "green",
+      });
       setShowAddField(false);
       setEditingField(null);
       setFieldForm({});
@@ -204,6 +225,11 @@ export default function CropsPage() {
         ...inputForm,
       } as InputLog);
       await load();
+      notifications.show({
+        title: "Success",
+        message: editingInput ? "Input updated" : "Input created",
+        color: "green",
+      });
       setShowAddInput(false);
       setEditingInput(null);
       setInputForm({});
@@ -238,6 +264,11 @@ export default function CropsPage() {
         ...yieldForm,
       } as YieldRecord);
       await load();
+      notifications.show({
+        title: "Success",
+        message: editingYield ? "Yield updated" : "Yield created",
+        color: "green",
+      });
       setShowAddYield(false);
       setEditingYield(null);
       setYieldForm({});
@@ -264,6 +295,8 @@ export default function CropsPage() {
   const totalAcres = fields.reduce((s, f) => s + f.acres, 0);
   const computedFieldAcres = boundaryAcres(fieldForm.boundary ?? []);
   const boundaryPointCount = fieldForm.boundary?.length ?? 0;
+
+  if (loading) return <TableSkeleton rows={5} cols={5} />;
 
   return (
     <div className="px-4 py-5 sm:px-6 lg:px-6">
@@ -551,6 +584,11 @@ export default function CropsPage() {
                         try {
                           await deleteData("fields", field.id);
                           await load();
+                          notifications.show({
+                            title: "Success",
+                            message: "Field deleted",
+                            color: "green",
+                          });
                         } catch (error) {
                           notifications.show({
                             title: "Error",
@@ -581,6 +619,9 @@ export default function CropsPage() {
                   </div>
                 </div>
               ))}
+              {fields.length === 0 && (
+                <EmptyState icon={Wheat} title="No fields yet" description="Create your first field to start tracking crops and operations." />
+              )}
             </div>
           </div>
         </div>
@@ -696,6 +737,11 @@ export default function CropsPage() {
                             try {
                               await deleteData("inputLogs", log.id);
                               await load();
+                              notifications.show({
+                                title: "Success",
+                                message: "Input record deleted",
+                                color: "green",
+                              });
                             } catch (error) {
                               notifications.show({
                                 title: "Error",
@@ -727,6 +773,13 @@ export default function CropsPage() {
                     </td>
                   </tr>
                 ))}
+                {inputs.length === 0 && (
+                  <tr>
+                    <td colSpan={99}>
+                      <EmptyState icon={Wheat} title="No input records" description="Log field inputs like fertiliser, sprays, and seed applications." />
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -897,6 +950,11 @@ export default function CropsPage() {
                               try {
                                 await deleteData("yieldRecords", y.id);
                                 await load();
+                                notifications.show({
+                                  title: "Success",
+                                  message: "Yield record deleted",
+                                  color: "green",
+                                });
                               } catch (error) {
                                 notifications.show({
                                   title: "Error",
@@ -929,6 +987,13 @@ export default function CropsPage() {
                     </tr>
                   );
                 })}
+                {yields.length === 0 && (
+                  <tr>
+                    <td colSpan={99}>
+                      <EmptyState icon={Wheat} title="No yield records" description="Add yield data to track harvest performance over time." />
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -1016,16 +1081,16 @@ export default function CropsPage() {
                 }
               >
                 <option value="">Select crop...</option>
-                {cropModels.map((cm) => (
-                  <option key={cm.id} value={cm.crop}>
-                    {cm.crop}
-                  </option>
+                {cropOptions(cropModels).map((c) => (
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </FormField>
               <FormField
                 as="select"
                 label="Field status"
                 name="status"
+                required
+                error={fieldErrors.status}
                 value={fieldForm.status ?? "planted"}
                 onChange={(e) =>
                   setFieldForm((f) => ({
@@ -1413,10 +1478,8 @@ export default function CropsPage() {
                 }
               >
                 <option value="">Select crop...</option>
-                {cropModels.map((cm) => (
-                  <option key={cm.id} value={cm.crop}>
-                    {cm.crop}
-                  </option>
+                {cropOptions(cropModels).map((c) => (
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </FormField>
               <FormField

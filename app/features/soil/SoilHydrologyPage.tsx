@@ -3,6 +3,7 @@
 import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -67,7 +68,7 @@ function getMethodColor(method: string) {
 export default function SoilHydrologyPage() {
   const [tab, setTab] = useState<Tab>("water-table");
   const currentUser = useCurrentUser();
-  const { data, reload } = useFarmData(SOIL_ENTITIES);
+  const { data, reload, loading } = useFarmData(SOIL_ENTITIES);
   const fields = data.fields as CropField[];
   const soilZones = data.soilZones as SoilZone[];
   const moistureRecords = data.soilMoistureRecords as SoilMoistureRecord[];
@@ -196,6 +197,8 @@ export default function SoilHydrologyPage() {
   const totalIrrigationMm = fieldIrrigation.reduce((s, e) => s + e.amountMm, 0);
 
   const latestReading = sortedReadings[sortedReadings.length - 1];
+
+  if (loading) return <TableSkeleton />;
 
   return (
     <div style={{ padding: 24 }}>

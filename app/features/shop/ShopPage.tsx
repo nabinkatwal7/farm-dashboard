@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
+import { validate, hasErrors, type Errors, type Rule } from "@/app/lib/validate";
 import {
   Bar,
   BarChart,
@@ -24,6 +25,7 @@ import {
 } from "recharts";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -33,6 +35,7 @@ import {
   type SaleRecord,
 } from "@/app/base/services/farm-client";
 import FormField from "@/app/abstract/ui/FormField";
+import ImageUpload from "@/app/components/ImageUpload";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 
@@ -50,13 +53,23 @@ interface CartItem {
 
 export default function ShopPage() {
   const [tab, setTab] = useState<Tab>("pos");
-  const { data, reload: load } = useFarmData(SHOP_ENTITIES);
+  const { data, reload: load, loading } = useFarmData(SHOP_ENTITIES);
   const products = data.products as Product[];
   const sales = data.sales as SaleRecord[];
   const [cart, setCart] = useState<CartItem[]>([]);
   const [checkoutDone, setCheckoutDone] = useState(false);
   const [showEditProduct, setShowEditProduct] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [productErrors, setProductErrors] = useState<Errors>({});
+
+  const PRODUCT_RULES: Rule[] = [
+    { key: "name", label: "Product name", required: true },
+    { key: "price", label: "Sale price", required: true },
+    { key: "cost", label: "Unit cost", required: true },
+    { key: "stock", label: "Stock on hand", required: true },
+    { key: "unit", label: "Unit of measure", required: true },
+    { key: "category", label: "Product category", required: true },
+  ];
   const [paymentMethod, setPaymentMethod] = useState<
     "card" | "cash" | "online"
   >("card");
@@ -85,12 +98,18 @@ export default function ShopPage() {
 
   const saveEditProduct = async () => {
     if (!editProduct) return;
+    const errors = validate(editProduct as unknown as Record<string, unknown>, PRODUCT_RULES);
+    setProductErrors(errors);
+    if (hasErrors(errors)) return;
     try {
       await saveData("products", editProduct);
+      setProductErrors({});
       await load();
+      notifications.show({ title: "Success", message: "Product saved", color: "green" });
       setShowEditProduct(false);
       setEditProduct(null);
     } catch (error) {
+      setProductErrors({});
       notifications.show({
         title: "Error",
         message: error instanceof Error ? error.message : "Failed to save product",
@@ -120,6 +139,7 @@ export default function ShopPage() {
       setCheckoutDone(true);
       setTimeout(() => setCheckoutDone(false), 3000);
       await load();
+      notifications.show({ title: "Success", message: "Sale completed", color: "green" });
     } catch (error) {
       notifications.show({
         title: "Error",
@@ -356,6 +376,13 @@ export default function ShopPage() {
                         ).style.borderColor = "rgba(167,139,250,0.2)";
                     }}
                   >
+                    {product.imageUrl && (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="mb-2 h-24 w-full rounded-lg object-cover"
+                      />
+                    )}
                     <div
                       className="text-primary"
                       style={{
@@ -435,6 +462,7 @@ export default function ShopPage() {
                         try {
                           await deleteData("products", product.id);
                           await load();
+                          notifications.show({ title: "Success", message: "Product deleted", color: "green" });
                         } catch (error) {
                           notifications.show({
                             title: "Error",
@@ -841,7 +869,9 @@ export default function ShopPage() {
                 {products.map((p) => {
                   const margin = p.price - p.cost;
                   const marginPct = ((margin / p.price) * 100).toFixed(1);
-                  return (
+  if (loading) return <TableSkeleton rows={5} cols={4} />;
+
+  return (
                     <tr key={p.id}>
                       <td
                         className="text-primary"
@@ -900,6 +930,17 @@ export default function ShopPage() {
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <ImageUpload
+              currentUrl={editProduct.imageUrl}
+              folder="products"
+              onUpload={(url) =>
+                setEditProduct((p) => (p ? { ...p, imageUrl: url } : p))
+              }
+              onRemove={() =>
+                setEditProduct((p) => (p ? { ...p, imageUrl: "" } : p))
+              }
+              label="Product image"
+            />
             {(
               [
                 ["Product name", "name", "text"],
@@ -914,7 +955,9 @@ export default function ShopPage() {
                 label={label}
                 name={key}
                 type={type}
+                required
                 value={editProduct[key] as string | number}
+                error={productErrors[key]}
                 onChange={(e) =>
                   setEditProduct((p) =>
                     p
@@ -934,7 +977,9 @@ export default function ShopPage() {
               as="select"
               label="Product category"
               name="category"
+              required
               value={editProduct?.category ?? ""}
+              error={productErrors.category}
               onChange={(e) =>
                 setEditProduct((p) =>
                   p ? { ...p, category: e.target.value } : p

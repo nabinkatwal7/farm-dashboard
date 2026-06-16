@@ -7,6 +7,7 @@ import { notifications } from "@mantine/notifications";
 import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
+import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -41,7 +42,7 @@ function formatWeight(n: number, unit: string): string {
 }
 
 export default function DrydownPage() {
-  const { data, reload } = useFarmData(ENTITIES);
+  const { data, reload, loading } = useFarmData(ENTITIES);
   const batches = data.drydownBatches as DrydownBatch[];
 
   const [showAdd, setShowAdd] = useState(false);
@@ -105,6 +106,8 @@ export default function DrydownPage() {
     setSimBatch(batch);
     setSimTarget(String(batch.targetMoisture ?? batch.currentMoisture));
   }
+
+  if (loading) return <TableSkeleton />;
 
   return (
     <div style={{ padding: 24 }}>

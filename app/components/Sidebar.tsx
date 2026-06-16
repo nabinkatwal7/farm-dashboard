@@ -18,6 +18,7 @@ import {
   Package,
   PanelLeftClose,
   PanelLeftOpen,
+  QrCode,
   Satellite,
   Settings,
   ShieldCheck,
@@ -70,6 +71,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     label: "Commerce",
     items: [
       { href: "/inventory", label: "Inventory", icon: Package },
+      { href: "/qrcodes", label: "QR Codes", icon: QrCode },
       { label: "Orders", icon: ShoppingBag },
       { href: "/shop", label: "Shop & POS", icon: ShoppingCart },
       { label: "Customers", icon: UsersRound },
@@ -80,7 +82,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: "/finance", label: "Finance", icon: CircleDollarSign },
       { href: "/users", label: "Users", icon: ShieldCheck, adminOnly: true },
-      { label: "Settings", icon: Settings },
+      { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
 ];

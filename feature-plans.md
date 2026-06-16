@@ -164,7 +164,7 @@ _Connecting raw, real-world physical sensor devices into software operations._
 _Bridging the gap between the field and the dinner plate via consumer-facing transparency._
 
 - [x] **91. Unique Batch Lineage Engine:** Relational tracking mapper joining a finished shop batch SKU directly through intermediate processing steps back to its originating field or animal herd.
-- [-] **92. Public Traceability Portal:** Lightweight, consumer-facing read-only web view displaying field maps, animal breed history, and harvest dates for a specific batch. (not quite right)
+- [x] **92. Public Traceability Portal:** Lightweight, consumer-facing read-only web view displaying field maps, animal breed history, and harvest dates for a specific batch.
 - [ ] **93. Consumer QR Code Generator:** Automation tool producing unique, printable vector QR codes for product packaging links pointing directly to the public traceability page.
 - [ ] **94. Carbon Footprint Product Labeling Metric:** Front-facing computational module appending precise carbon output estimation scores to consumer receipt profiles and product web pages.
 - [ ] **95. Local Producer Storyboard Content CMS:** Content management interface linking regional guest craft products to digital bios, farm maps, and sustainable practice descriptions.
