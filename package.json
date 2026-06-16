@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/prisma-with-env.mjs generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prisma:generate": "node scripts/prisma-with-env.mjs generate",
+    "db:push": "node scripts/prisma-with-env.mjs db push"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

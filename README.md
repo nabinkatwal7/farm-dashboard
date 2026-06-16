@@ -1,6 +1,6 @@
 # FieldPilot — Farm Management Platform
 
-A comprehensive, data-driven farm management platform built with **Next.js 16**, **Prisma**, and **SQLite**. FieldPilot integrates precision agriculture, livestock traceability, financial tracking, and regulatory compliance into a single unified dashboard.
+A comprehensive, data-driven farm management platform built with **Next.js 16**, **Prisma**, and **PostgreSQL**. FieldPilot integrates precision agriculture, livestock traceability, financial tracking, and regulatory compliance into a single unified dashboard.
 
 ---
 
@@ -57,7 +57,7 @@ FieldPilot is designed for **modern commercial farms** that need to:
 │  └───────────────────┬──────────────────────────┘  │
 │                      │                              │
 │  ┌───────────────────▼──────────────────────────┐  │
-│  │         Prisma ORM + SQLite                  │  │
+│  │       Prisma ORM + PostgreSQL                │  │
 │  │         (43 models, auto-generated client)   │  │
 │  └──────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────┘
@@ -71,7 +71,7 @@ FieldPilot is designed for **modern commercial farms** that need to:
 | **Client** | Custom `useFarmData` hook + `fetch()` | Data fetching, CRUD helpers (`getData`, `saveData`, `deleteData`) |
 | **API** | Next.js App Router (`route.ts`) | REST endpoints — generic CRUD (`/api/farm/[entity]`) + custom business logic endpoints |
 | **Server** | Server-only modules | Business logic engines, RBAC, payload sanitisation, scope-based filtering |
-| **Persistence** | Prisma 5 + SQLite | 43 models, auto-generated client, migration via `prisma db push` |
+| **Persistence** | Prisma 5 + PostgreSQL | 43 models, auto-generated client, schema sync via `npm run db:push` |
 
 ---
 
@@ -281,7 +281,7 @@ Each entity in `app/lib/rbac.ts` defines its own `read` and `write` role lists.
 | **Charts** | Recharts |
 | **Maps** | Leaflet (react-leaflet) |
 | **ORM** | Prisma 5.20 (auto-generated client) |
-| **Database** | SQLite (dev.db) |
+| **Database** | PostgreSQL (`POSTGRES_PRISMA_URL`, direct URL via `POSTGRES_URL_NON_POOLING`) |
 | **Auth** | Custom session-based (SHA-256 password hashing) |
 | **Notifications** | Mantine Notifications |
 | **CSS** | Custom CSS variables + inline styles |
@@ -294,8 +294,8 @@ Each entity in `app/lib/rbac.ts` defines its own `read` and `write` role lists.
 # Install dependencies
 npm install
 
-# Generate Prisma client and sync database
-npx prisma db push
+# Generate Prisma client and sync PostgreSQL schema
+npm run db:push
 
 # Start development server
 npm run dev
