@@ -8,6 +8,8 @@ import {
   UnstyledButton,
   useMantineColorScheme,
 } from "@mantine/core";
+import { authMeQueryKey } from "@/app/lib/query-client";
+import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, Menu as MenuIcon, Moon, Sun, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -68,6 +70,7 @@ export default function AppTopBar({
   onOpenNavigation: () => void;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const currentPage = pageMeta(pathname);
@@ -75,6 +78,11 @@ export default function AppTopBar({
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    queryClient.setQueryData(authMeQueryKey, {
+      authenticated: false,
+      setupRequired: false,
+      user: null,
+    });
     router.replace("/login");
   }
 
@@ -92,11 +100,11 @@ export default function AppTopBar({
               <MenuIcon size={18} />
             </button>
             <div className="min-w-0">
-              <div className="truncate text-base font-semibold tracking-tight text-primary">
-                {currentPage.title}
-              </div>
-              <div className="truncate text-xs text-muted">
+              <div className="truncate text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted">
                 {currentPage.section}
+              </div>
+              <div className="truncate text-base font-semibold tracking-tight text-primary sm:text-lg">
+                {currentPage.title}
               </div>
             </div>
           </div>
@@ -112,7 +120,10 @@ export default function AppTopBar({
             </Avatar>
           </button>
 
-          <div className="hidden sm:block">
+          <div className="hidden items-center gap-3 sm:flex">
+            <Link href="/dashboard" className="btn-ghost">
+              Workspace home
+            </Link>
             <Menu position="bottom-end" width={260} shadow="none">
               <Menu.Target>
                 <UnstyledButton className="flex items-center gap-3 rounded-xl border border-border bg-card px-2.5 py-2 transition-colors hover:bg-card-hover">

@@ -1,6 +1,7 @@
 "use client";
 
 import FormField from "@/app/abstract/ui/FormField";
+import HelpHint from "@/app/abstract/ui/HelpHint";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
@@ -161,6 +162,8 @@ export default function SeedTrackerPage() {
   }
 
   if (loading) return <TableSkeleton />;
+
+  const cropChoices = cropOptions(cropModels);
 
   return (
     <div style={{ padding: 24 }}>
@@ -854,15 +857,21 @@ export default function SeedTrackerPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
                 as="select"
-                label="Crop"
+                label={<span className="inline-flex items-center gap-1.5">Crop <HelpHint label="Seed lots should match a crop type already defined in Settings so germination and planning screens stay aligned." /></span>}
                 name="crop"
                 required
                 error={lotErrors.crop}
+                helperText={
+                  cropChoices.length > 0
+                    ? "Choose a crop already defined in your workspace."
+                    : "No crop types yet. Add one in Settings before creating a seed lot."
+                }
+                disabled={cropChoices.length === 0}
                 value={lotForm.crop ?? ""}
                 onChange={(e) => setLotForm((f) => ({ ...f, crop: e.target.value }))}
               >
                 <option value="">Select crop...</option>
-                {cropOptions(cropModels).map((c) => (
+                {cropChoices.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
@@ -925,23 +934,15 @@ export default function SeedTrackerPage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
-                as="select"
-                label="Supplier"
+                label={<span className="inline-flex items-center gap-1.5">Supplier <HelpHint label="Use the supplier or merchant name exactly as you want it to appear in future lots and purchase history." /></span>}
                 name="supplier"
+                placeholder="e.g. Frontier Seeds"
+                helperText="Enter the supplier directly. Reuse the same name for clearer lot history."
                 required
                 error={lotErrors.supplier}
                 value={lotForm.supplier ?? ""}
                 onChange={(e) => setLotForm((f) => ({ ...f, supplier: e.target.value }))}
-              >
-                <option value="">Select supplier...</option>
-                {[...new Set(seedLots.map((l) => l.supplier).filter(Boolean))].map(
-                  (s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ),
-                )}
-              </FormField>
+              />
               <FormField
                 label="Baseline Germination (%)"
                 name="baselineGermination"
@@ -1092,8 +1093,14 @@ export default function SeedTrackerPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               as="select"
-              label="Seed Lot"
+              label={<span className="inline-flex items-center gap-1.5">Seed Lot <HelpHint label="Choose the source lot being issued out. Remaining quantity is shown in the option label to reduce over-allocation." /></span>}
               name="seedLotId"
+              helperText={
+                sortedLots.length > 0
+                  ? "Choose the lot being sent out."
+                  : "No seed lots available yet. Add a seed lot before recording a consignment."
+              }
+              disabled={sortedLots.length === 0}
               value={consignmentForm.seedLotId ?? ""}
               onChange={(e) => setConsignmentForm((f) => ({ ...f, seedLotId: e.target.value }))}
             >
@@ -1125,6 +1132,12 @@ export default function SeedTrackerPage() {
                 as="select"
                 label="Field (optional)"
                 name="fieldId"
+                helperText={
+                  fields.length > 0
+                    ? "Optional. Link this consignment to a receiving field."
+                    : "No active fields available yet. Create one in Crops & Fields if you want field-level seed allocation."
+                }
+                disabled={fields.length === 0}
                 value={consignmentForm.fieldId ?? ""}
                 onChange={(e) => setConsignmentForm((f) => ({ ...f, fieldId: e.target.value }))}
               >

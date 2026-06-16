@@ -6,6 +6,8 @@ import {
   localStorageColorSchemeManager,
 } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { getQueryClient } from "@/app/lib/query-client";
 import { ThemeSync } from "./ThemeProvider";
 
 const colorSchemeManager = localStorageColorSchemeManager({
@@ -59,15 +61,19 @@ const theme = createTheme({
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const queryClient = getQueryClient();
+
   return (
-    <MantineProvider
-      colorSchemeManager={colorSchemeManager}
-      defaultColorScheme="auto"
-      theme={theme}
-    >
-      <Notifications position="top-right" />
-      <ThemeSync />
-      {children}
-    </MantineProvider>
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider
+        colorSchemeManager={colorSchemeManager}
+        defaultColorScheme="auto"
+        theme={theme}
+      >
+        <Notifications position="top-right" />
+        <ThemeSync />
+        {children}
+      </MantineProvider>
+    </QueryClientProvider>
   );
 }

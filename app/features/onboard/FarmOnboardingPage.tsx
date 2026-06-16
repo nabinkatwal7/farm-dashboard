@@ -1,6 +1,7 @@
 "use client";
 
 import FieldPilotLogo from "@/app/components/brand/FieldPilotLogo";
+import HelpHint from "@/app/abstract/ui/HelpHint";
 import FarmLocationPicker from "@/app/components/FarmLocationPicker";
 import type { FieldBoundaryPoint } from "@/app/base/services/farm-client";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -155,7 +156,10 @@ export default function FarmOnboardingPage() {
           <div className="mb-6 rounded-2xl border border-border bg-surface p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-xl font-bold text-primary">Create your farm account</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-primary">Create your farm account</h2>
+                  <HelpHint label="Set up the workspace first, then add fields, products, and team members after you enter the dashboard." />
+                </div>
                 <p className="mt-1 text-sm text-muted">
                   Start with the basics. You can add fields, products, team
                   members, and more once you are inside.
@@ -172,6 +176,7 @@ export default function FarmOnboardingPage() {
               <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-primary">
                 <CheckCircle2 size={16} className="text-green" />
                 Farm details
+                <HelpHint label="Name the farm, place the pin on the main operating location, and add rough acreage. Precision can be refined later." />
               </div>
               <div className="grid gap-4">
             <TextInput
@@ -211,6 +216,7 @@ export default function FarmOnboardingPage() {
               <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-primary">
                 <CheckCircle2 size={16} className="text-green" />
                 Account owner
+                <HelpHint label="This first user starts with full access. Additional managers, workers, and specialists can be invited later." />
               </div>
               <p className="mb-4 text-sm text-muted">
                 This account gets full access first. You can invite the rest of

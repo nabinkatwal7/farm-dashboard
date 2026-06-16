@@ -4,6 +4,7 @@ import FormField from "@/app/abstract/ui/FormField";
 import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
+import HelpHint from "@/app/abstract/ui/HelpHint";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -1113,8 +1114,14 @@ export default function SoilHydrologyPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               as="select"
-              label="Field"
+              label={<span className="inline-flex items-center gap-1.5">Field <HelpHint label="Add soil zones to the field you want to monitor. Zones split a field into meaningful depth or soil-type areas." /></span>}
               name="fieldId"
+              helperText={
+                activeFields.length > 0
+                  ? "Choose the field this soil zone belongs to."
+                  : "No active fields available yet. Create one in Crops & Fields before adding soil zones."
+              }
+              disabled={activeFields.length === 0}
               value={zoneForm.fieldId ?? ""}
               onChange={(e) =>
                 setZoneForm((f) => ({ ...f, fieldId: e.target.value }))
@@ -1319,8 +1326,14 @@ export default function SoilHydrologyPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               as="select"
-              label="Field"
+              label={<span className="inline-flex items-center gap-1.5">Field <HelpHint label="Record irrigation against the specific field that received water so budgets and efficiency stay accurate." /></span>}
               name="fieldId"
+              helperText={
+                activeFields.length > 0
+                  ? "Choose the irrigated field."
+                  : "No active fields available yet. Create one in Crops & Fields before logging irrigation."
+              }
+              disabled={activeFields.length === 0}
               value={irrigationForm.fieldId ?? ""}
               onChange={(e) =>
                 setIrrigationForm((f) => ({ ...f, fieldId: e.target.value }))

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Group, Text } from "@mantine/core";
+import HelpHint from "@/app/abstract/ui/HelpHint";
 import { Crosshair } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { LayerGroup, Map as LeafletMap } from "leaflet";
@@ -170,9 +171,12 @@ export default function FarmLocationPicker({
     <div className="rounded-lg border border-border bg-surface p-3">
       <Group justify="space-between" gap="sm" mb="xs">
         <div>
-          <Text size="sm" fw={600} c="var(--content-primary)">
-            Farm location
-          </Text>
+          <div className="flex items-center gap-1.5">
+            <Text size="sm" fw={600} c="var(--content-primary)">
+              Farm location
+            </Text>
+            <HelpHint label="Click the map to drop a pin at the farm's main base. This becomes the starting point for field mapping and local weather context." />
+          </div>
           <Text size="xs" c="var(--content-muted)">
             Drop a pin where the farm is based. You can fine-tune it later.
           </Text>

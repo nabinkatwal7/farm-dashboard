@@ -4,10 +4,11 @@ import { TextInput, Select, Textarea, NumberInput } from "@mantine/core";
 import React from "react";
 
 type BaseProps = {
-  label: string;
+  label: React.ReactNode;
   error?: string | null;
   required?: boolean;
   helperText?: string;
+  disabled?: boolean;
   id?: string;
   name?: string;
 };
@@ -42,8 +43,13 @@ type TextareaFieldProps = BaseProps & {
 type Props = InputFieldProps | SelectFieldProps | TextareaFieldProps;
 
 export default function FormField(props: Props) {
-  const { label, error, required, helperText, id, name, as, ...rest } = props;
-  const fieldId = id ?? name ?? label.toLowerCase().replace(/\s+/g, "-");
+  const { label, error, required, helperText, disabled, id, name, as, ...rest } = props;
+  const fieldId =
+    id ??
+    name ??
+    (typeof label === "string"
+      ? label.toLowerCase().replace(/\s+/g, "-")
+      : "field");
 
   if (as === "select") {
     const { children, value, onChange } = rest as SelectFieldProps;
@@ -63,6 +69,7 @@ export default function FormField(props: Props) {
         name={name}
         data={data}
         value={value}
+        disabled={disabled}
         onChange={(v) => onChange?.({ target: { value: v ?? "" } } as React.ChangeEvent<HTMLSelectElement>)}
       />
     );
@@ -81,6 +88,7 @@ export default function FormField(props: Props) {
         placeholder={placeholder}
         rows={rows}
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange?.(e as unknown as React.ChangeEvent<HTMLTextAreaElement>)}
       />
     );
@@ -107,6 +115,7 @@ export default function FormField(props: Props) {
         }
         onChange={(v) => onChange?.({ target: { value: String(v ?? "") } } as React.ChangeEvent<HTMLInputElement>)}
         readOnly={readOnly}
+        disabled={disabled}
         min={min ? parseFloat(min) : undefined}
         max={max ? parseFloat(max) : undefined}
         step={step ? parseFloat(step) : undefined}
@@ -125,6 +134,7 @@ export default function FormField(props: Props) {
       placeholder={placeholder}
       type={type}
       value={value}
+      disabled={disabled}
       onChange={onChange}
       readOnly={readOnly}
     />

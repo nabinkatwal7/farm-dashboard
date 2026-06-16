@@ -87,11 +87,16 @@
 
 html {
   background: var(--color-background);
+  color: var(--text-primary);
+  scroll-behavior: smooth;
 }
 
 body {
   min-width: 320px;
   overflow-x: hidden;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -239,21 +244,24 @@ textarea {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-transparent px-3.5 py-2 text-sm font-semibold text-white transition-colors duration-150 disabled:pointer-events-none disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent px-4 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(35,61,41,0.16)] transition-all duration-150 disabled:pointer-events-none disabled:opacity-60;
     background: var(--interactive-default);
   }
 
   .btn-primary:hover {
     background: var(--interactive-hover);
+    transform: translateY(-1px);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-secondary transition-colors duration-150 disabled:pointer-events-none disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm font-medium text-secondary shadow-[0_8px_20px_rgba(34,43,37,0.04)] transition-all duration-150 disabled:pointer-events-none disabled:opacity-60;
   }
 
   .btn-ghost:hover {
     border-color: var(--interactive-default);
+    background: var(--bg-card-hover);
     color: var(--interactive-default);
+    transform: translateY(-1px);
   }
 
   .btn-danger {
@@ -261,7 +269,7 @@ textarea {
   }
 
   .farm-input {
-    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-primary outline-none transition-colors duration-150 placeholder:text-muted disabled:cursor-not-allowed disabled:opacity-60;
+    @apply w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-primary shadow-[0_6px_16px_rgba(34,43,37,0.03)] outline-none transition-colors duration-150 placeholder:text-muted disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .farm-input:focus {
@@ -296,6 +304,30 @@ textarea {
 
   .section-title {
     @apply text-sm font-semibold text-primary;
+  }
+
+  .surface-panel {
+    @apply rounded-[22px] border border-border bg-card shadow-[0_20px_48px_rgba(30,41,33,0.06)];
+  }
+
+  .surface-panel-soft {
+    @apply rounded-[20px] border border-border bg-surface shadow-[0_12px_32px_rgba(30,41,33,0.04)];
+  }
+
+  .surface-inset {
+    @apply rounded-2xl border border-border bg-card-hover/60;
+  }
+
+  .section-kicker {
+    @apply text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted;
+  }
+
+  .section-heading {
+    @apply text-3xl font-semibold tracking-tight text-primary sm:text-[2.2rem];
+  }
+
+  .section-copy {
+    @apply text-base leading-7 text-secondary;
   }
 
   .badge-green,
@@ -380,7 +412,7 @@ textarea {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 18px;
 }
 
 .accent-text {

@@ -1115,21 +1115,13 @@ export default function FinancePage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
-                as="select"
                 label="Supplier"
                 name="supplier"
+                placeholder="e.g. Northern Ag Supply"
+                helperText="Enter the supplier directly. Reuse the same name for cleaner reporting."
                 value={expenseForm.supplier ?? ""}
                 onChange={(e) => setExpenseForm((f) => ({ ...f, supplier: e.target.value }))}
-              >
-                <option value="">Select supplier...</option>
-                {[...new Set(expenses.map((e) => e.supplier).filter(Boolean))].map(
-                  (s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ),
-                )}
-              </FormField>
+              />
               <FormField
                 label="Invoice reference"
                 name="invoiceRef"
@@ -1143,6 +1135,12 @@ export default function FinancePage() {
               as="select"
               label="Field or area"
               name="fieldName"
+              helperText={
+                fields.length > 0
+                  ? "Optional. Attribute the expense to a field when it applies."
+                  : "No fields available yet. Create one in Crops & Fields if you want field-level cost tracking."
+              }
+              disabled={fields.length === 0}
               value={expenseForm.fieldName ?? ""}
               onChange={(e) => setExpenseForm((f) => ({ ...f, fieldName: e.target.value }))}
             >

@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
+  GripVertical,
   MapPin,
   Pencil,
   Plus,
@@ -18,6 +19,7 @@ import Modal from "@/app/abstract/ui/Modal";
 import StatCard from "@/app/abstract/ui/StatCard";
 import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import EmptyState from "@/app/abstract/ui/EmptyState";
+import HelpHint from "@/app/abstract/ui/HelpHint";
 import { useFarmData } from "@/app/base/hooks/useFarmData";
 import {
   deleteData,
@@ -40,6 +42,35 @@ const OPERATIONS_ENTITIES = {
 } as const;
 
 const PRIORITY_COLORS = { high: "#f87171", medium: "#fbbf24", low: "#60a5fa" };
+const TASK_COLUMNS: Array<{
+  status: Task["status"];
+  title: string;
+  dot: string;
+  badgeClassName: string;
+  description: string;
+}> = [
+  {
+    status: "pending",
+    title: "Pending",
+    dot: "#64748b",
+    badgeClassName: "badge-blue",
+    description: "New work that is ready to be picked up.",
+  },
+  {
+    status: "in-progress",
+    title: "In Progress",
+    dot: "#fbbf24",
+    badgeClassName: "badge-amber",
+    description: "Tasks currently being worked on in the field or yard.",
+  },
+  {
+    status: "done",
+    title: "Done",
+    dot: "#4ade80",
+    badgeClassName: "badge-green",
+    description: "Completed work kept here for quick visibility and handoff.",
+  },
+];
 export default function OperationsPage() {
   const [tab, setTab] = useState<Tab>("machinery");
   const { data, reload: load, loading } = useFarmData(OPERATIONS_ENTITIES);
@@ -56,6 +87,9 @@ export default function OperationsPage() {
   const [machineErrors, setMachineErrors] = useState<Record<string, string>>({});
   const [taskErrors, setTaskErrors] = useState<Record<string, string>>({});
   const [operationErrors, setOperationErrors] = useState<Errors>({});
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dropTargetStatus, setDropTargetStatus] = useState<Task["status"] | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
 
   const OPERATION_RULES: Rule[] = [
     { key: "title", label: "Operation type", required: true },
@@ -173,7 +207,9 @@ export default function OperationsPage() {
   };
 
   const updateTaskStatus = async (task: Task, status: Task["status"]) => {
+    if (task.status === status) return;
     try {
+      setUpdatingTaskId(task.id);
       await saveData("tasks", { ...task, status });
       await load();
       notifications.show({ title: "Success", message: "Task status updated", color: "green" });
@@ -183,15 +219,40 @@ export default function OperationsPage() {
         message: error instanceof Error ? error.message : "Failed to update task status",
         color: "red",
       });
+    } finally {
+      setUpdatingTaskId(null);
+      setDraggedTaskId(null);
+      setDropTargetStatus(null);
     }
   };
 
   const pendingTasks = tasks.filter((t) => t.status === "pending");
   const inProgressTasks = tasks.filter((t) => t.status === "in-progress");
   const doneTasks = tasks.filter((t) => t.status === "done");
+  const tasksByStatus: Record<Task["status"], Task[]> = {
+    pending: pendingTasks,
+    "in-progress": inProgressTasks,
+    done: doneTasks,
+  };
 
   const maintenanceDue = machines.filter((m) => m.nextService < 200);
   const breakdown = machines.filter((m) => m.status === "breakdown");
+
+  const startTaskDrag = (taskId: string) => {
+    setDraggedTaskId(taskId);
+  };
+
+  const finishTaskDrag = () => {
+    setDraggedTaskId(null);
+    setDropTargetStatus(null);
+  };
+
+  const moveTaskToColumn = async (status: Task["status"]) => {
+    if (!draggedTaskId) return;
+    const task = tasks.find((item) => item.id === draggedTaskId);
+    if (!task) return;
+    await updateTaskStatus(task, status);
+  };
 
   if (loading) return <TableSkeleton rows={5} cols={5} />;
 
@@ -595,61 +656,119 @@ export default function OperationsPage() {
       {/* Task Board */}
       {tab === "tasks" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button
-              className="btn-primary"
-              onClick={() => setShowAddTask(true)}
+          <div
+            className="surface-panel"
+            style={{
+              padding: 18,
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 14,
+              }}
             >
-              <Plus size={14} /> Create Task
-            </button>
+              <div>
+                <div className="section-kicker">Task board</div>
+                <div
+                  className="text-primary"
+                  style={{ marginTop: 6, fontSize: "1.2rem", fontWeight: 700 }}
+                >
+                  Assign work, move it across the board, and keep ownership clear.
+                </div>
+                <p
+                  className="text-secondary"
+                  style={{ marginTop: 6, fontSize: "0.9rem", maxWidth: 720, lineHeight: 1.6 }}
+                >
+                  Drag a task from one column to another to update its status. Every card carries the
+                  assignee, due date, field context, and priority so the whole farm can see what is moving.
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <div className="surface-inset" style={{ padding: "10px 14px", minWidth: 132 }}>
+                  <div className="text-muted" style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                    Open tasks
+                  </div>
+                  <div className="text-primary" style={{ marginTop: 6, fontSize: "1.35rem", fontWeight: 700 }}>
+                    {pendingTasks.length + inProgressTasks.length}
+                  </div>
+                </div>
+                <div className="surface-inset" style={{ padding: "10px 14px", minWidth: 132 }}>
+                  <div className="text-muted" style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                    Completed
+                  </div>
+                  <div className="text-primary" style={{ marginTop: 6, fontSize: "1.35rem", fontWeight: 700 }}>
+                    {doneTasks.length}
+                  </div>
+                </div>
+                <button
+                  className="btn-primary"
+                  onClick={() => setShowAddTask(true)}
+                >
+                  <Plus size={14} /> Create Task
+                </button>
+              </div>
+            </div>
+            <div className="surface-inset" style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+              <GripVertical size={14} className="text-muted" />
+              <span className="text-secondary" style={{ fontSize: "0.82rem" }}>
+                Drag cards between columns to update status. Changes save immediately.
+              </span>
+            </div>
           </div>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
+              gridTemplateColumns: "repeat(3, minmax(260px, 1fr))",
               gap: 16,
+              overflowX: "auto",
+              alignItems: "start",
             }}
           >
-            {/* Pending */}
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 12,
-                }}
+            {TASK_COLUMNS.map((column) => (
+              <TaskColumn
+                key={column.status}
+                column={column}
+                tasks={tasksByStatus[column.status]}
+                isActiveDropTarget={dropTargetStatus === column.status}
+                onDragOver={() => setDropTargetStatus(column.status)}
+                onDrop={() => void moveTaskToColumn(column.status)}
               >
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: "#64748b",
-                  }}
-                />
-                <span
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "0.8rem",
-                    color: "var(--text-secondary)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  Pending
-                </span>
-                <span className="badge-blue">{pendingTasks.length}</span>
-              </div>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 10 }}
-              >
-                {pendingTasks.length === 0 ? (
-                  <EmptyState title="No pending tasks." />
-                ) : pendingTasks.map((task) => (
+                {tasksByStatus[column.status].length === 0 ? (
+                  <div
+                    className="surface-inset"
+                    style={{
+                      minHeight: 180,
+                      padding: 18,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                    }}
+                  >
+                    <div>
+                      <div className="text-primary" style={{ fontSize: "0.88rem", fontWeight: 600 }}>
+                        No {column.title.toLowerCase()} tasks.
+                      </div>
+                      <div className="text-muted" style={{ marginTop: 6, fontSize: "0.78rem", lineHeight: 1.5 }}>
+                        Tasks moved into {column.title.toLowerCase()} will appear here.
+                      </div>
+                    </div>
+                  </div>
+                ) : tasksByStatus[column.status].map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
+                    isDragging={draggedTaskId === task.id}
+                    isUpdating={updatingTaskId === task.id}
+                    onDragStart={() => startTaskDrag(task.id)}
+                    onDragEnd={finishTaskDrag}
                     onUpdateStatus={updateTaskStatus}
                     onEdit={() => editTask(task)}
                     onDelete={async () => {
@@ -667,128 +786,8 @@ export default function OperationsPage() {
                     }}
                   />
                 ))}
-              </div>
-            </div>
-
-            {/* In Progress */}
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 12,
-                }}
-              >
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: "#fbbf24",
-                  }}
-                />
-                <span
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "0.8rem",
-                    color: "var(--text-secondary)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  In Progress
-                </span>
-                <span className="badge-amber">{inProgressTasks.length}</span>
-              </div>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 10 }}
-              >
-                {inProgressTasks.length === 0 ? (
-                  <EmptyState title="No tasks in progress." />
-                ) : inProgressTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onUpdateStatus={updateTaskStatus}
-                    onEdit={() => editTask(task)}
-                    onDelete={async () => {
-                      try {
-                        await deleteData("tasks", task.id);
-                        await load();
-                        notifications.show({ title: "Success", message: "Task deleted", color: "green" });
-                      } catch (error) {
-                        notifications.show({
-                          title: "Error",
-                          message: error instanceof Error ? error.message : "Failed to delete task",
-                          color: "red",
-                        });
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Done */}
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 12,
-                }}
-              >
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: "#4ade80",
-                  }}
-                />
-                <span
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "0.8rem",
-                    color: "var(--text-secondary)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  Done
-                </span>
-                <span className="badge-green">{doneTasks.length}</span>
-              </div>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 10 }}
-              >
-                  {doneTasks.length === 0 ? (
-                  <EmptyState title="No completed tasks." />
-                ) : doneTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onUpdateStatus={updateTaskStatus}
-                    onEdit={() => editTask(task)}
-                    onDelete={async () => {
-                      try {
-                        await deleteData("tasks", task.id);
-                        await load();
-                        notifications.show({ title: "Success", message: "Task deleted", color: "green" });
-                      } catch (error) {
-                        notifications.show({
-                          title: "Error",
-                          message: error instanceof Error ? error.message : "Failed to delete task",
-                          color: "red",
-                        });
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
+              </TaskColumn>
+            ))}
           </div>
         </div>
       )}
@@ -923,10 +922,16 @@ export default function OperationsPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
                 as="select"
-                label="Field / Location"
+              label={<span className="inline-flex items-center gap-1.5">Field / Location <HelpHint label="Pick the field this work belongs to. If the task is not field-specific, use the nearest operational area naming convention." /></span>}
                 name="fieldName"
                 required
                 error={operationErrors.fieldName}
+                helperText={
+                  fields.length > 0
+                    ? "Choose the field or location for this task."
+                    : "No fields available yet. Create one in Crops & Fields before assigning field work."
+                }
+                disabled={fields.length === 0}
                 value={taskForm.fieldName ?? ""}
                 onChange={(e) => setTaskForm((f) => ({ ...f, fieldName: e.target.value }))}
               >
@@ -938,23 +943,15 @@ export default function OperationsPage() {
                 ))}
               </FormField>
               <FormField
-                as="select"
-                label="Assignee"
+                label={<span className="inline-flex items-center gap-1.5">Assignee <HelpHint label="Use the person, crew, or contractor responsible for completing the work so task ownership stays clear." /></span>}
                 name="assignee"
+                placeholder="e.g. Field crew A"
+                helperText="Enter the assignee directly. Use a consistent name to keep task history clean."
                 required
                 error={operationErrors.assignee}
                 value={taskForm.assignee ?? ""}
                 onChange={(e) => setTaskForm((f) => ({ ...f, assignee: e.target.value }))}
-              >
-                <option value="">Select assignee...</option>
-                {[...new Set(tasks.map((t) => t.assignee).filter(Boolean))].map(
-                  (a) => (
-                    <option key={a} value={a}>
-                      {a}
-                    </option>
-                  ),
-                )}
-              </FormField>
+              />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <FormField
@@ -1020,25 +1017,111 @@ export default function OperationsPage() {
   );
 }
 
+function TaskColumn({
+  column,
+  tasks,
+  children,
+  isActiveDropTarget,
+  onDragOver,
+  onDrop,
+}: {
+  column: (typeof TASK_COLUMNS)[number];
+  tasks: Task[];
+  children: React.ReactNode;
+  isActiveDropTarget: boolean;
+  onDragOver: () => void;
+  onDrop: () => void;
+}) {
+  return (
+    <section
+      className="surface-panel"
+      style={{
+        minWidth: 260,
+        padding: 14,
+        background: isActiveDropTarget ? "var(--bg-card-hover)" : undefined,
+        borderColor: isActiveDropTarget ? "var(--border-accent)" : undefined,
+      }}
+      onDragOver={(event) => {
+        event.preventDefault();
+        onDragOver();
+      }}
+      onDragLeave={() => undefined}
+      onDrop={(event) => {
+        event.preventDefault();
+        onDrop();
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 8,
+        }}
+      >
+        <div
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: "50%",
+            background: column.dot,
+          }}
+        />
+        <span
+          style={{
+            fontWeight: 700,
+            fontSize: "0.8rem",
+            color: "var(--text-secondary)",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+          }}
+        >
+          {column.title}
+        </span>
+        <span className={column.badgeClassName}>{tasks.length}</span>
+      </div>
+      <p className="text-muted" style={{ fontSize: "0.76rem", lineHeight: 1.5, marginBottom: 12 }}>
+        {column.description}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
 function TaskCard({
   task,
   onUpdateStatus,
   onDelete,
   onEdit,
+  onDragStart,
+  onDragEnd,
+  isDragging,
+  isUpdating,
 }: {
   task: Task;
   onUpdateStatus: (task: Task, status: Task["status"]) => void;
   onDelete: () => void;
   onEdit?: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
+  isUpdating: boolean;
 }) {
   return (
     <div
       className="bg-card"
+      draggable={!isUpdating}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       style={{
         border: `1px solid ${task.priority === "high" ? "rgba(248,113,113,0.2)" : task.priority === "medium" ? "rgba(251,191,36,0.15)" : "var(--border)"}`,
         borderRadius: 10,
         padding: "14px",
-        cursor: "default",
+        cursor: isUpdating ? "progress" : "grab",
+        opacity: isDragging ? 0.55 : 1,
+        boxShadow: isDragging ? "0 18px 36px rgba(30,41,33,0.12)" : undefined,
       }}
     >
       <div
@@ -1049,16 +1132,19 @@ function TaskCard({
           marginBottom: 8,
         }}
       >
-        <span
-          className="text-primary"
-          style={{
-            fontWeight: 600,
-            fontSize: "0.82rem",
-            lineHeight: 1.3,
-          }}
-        >
-          {task.title}
-        </span>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, minWidth: 0 }}>
+          <GripVertical size={15} className="text-muted" style={{ flexShrink: 0, marginTop: 1 }} />
+          <span
+            className="text-primary"
+            style={{
+              fontWeight: 600,
+              fontSize: "0.82rem",
+              lineHeight: 1.3,
+            }}
+          >
+            {task.title}
+          </span>
+        </div>
         <span
           style={{
             background: `${PRIORITY_COLORS[task.priority]}18`,
@@ -1132,6 +1218,11 @@ function TaskCard({
       >
         👤 {task.assignee}
       </div>
+      {isUpdating && (
+        <div className="text-muted" style={{ fontSize: "0.7rem", marginBottom: 10 }}>
+          Saving board update...
+        </div>
+      )}
       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
         {task.status !== "pending" && (
           <button
@@ -1142,9 +1233,10 @@ function TaskCard({
               padding: "5px",
               borderRadius: 5,
               background: "transparent",
-              cursor: "pointer",
+              cursor: isUpdating ? "progress" : "pointer",
               fontSize: "0.68rem",
             }}
+            disabled={isUpdating}
           >
             Pending
           </button>
@@ -1158,10 +1250,11 @@ function TaskCard({
               borderRadius: 5,
               border: "1px solid rgba(251,191,36,0.3)",
               background: "rgba(251,191,36,0.08)",
-              cursor: "pointer",
+              cursor: isUpdating ? "progress" : "pointer",
               fontSize: "0.68rem",
               color: "#fbbf24",
             }}
+            disabled={isUpdating}
           >
             In Progress
           </button>
@@ -1175,10 +1268,11 @@ function TaskCard({
               borderRadius: 5,
               border: "1px solid rgba(74,222,128,0.3)",
               background: "rgba(74,222,128,0.08)",
-              cursor: "pointer",
+              cursor: isUpdating ? "progress" : "pointer",
               fontSize: "0.68rem",
               color: "#4ade80",
             }}
+            disabled={isUpdating}
           >
             Done ✓
           </button>
@@ -1192,12 +1286,13 @@ function TaskCard({
               borderRadius: 5,
               border: "1px solid rgba(96,165,250,0.3)",
               background: "rgba(96,165,250,0.08)",
-              cursor: "pointer",
+              cursor: isUpdating ? "progress" : "pointer",
               color: "#60a5fa",
               display: "flex",
               alignItems: "center",
               flexShrink: 0,
             }}
+            disabled={isUpdating}
           >
             <Pencil size={12} />
           </button>
@@ -1210,12 +1305,13 @@ function TaskCard({
             borderRadius: 5,
             border: "1px solid rgba(248,113,113,0.3)",
             background: "rgba(248,113,113,0.08)",
-            cursor: "pointer",
+            cursor: isUpdating ? "progress" : "pointer",
             color: "#f87171",
             display: "flex",
             alignItems: "center",
             flexShrink: 0,
           }}
+          disabled={isUpdating}
         >
           <Trash2 size={12} />
         </button>

@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import EmptyState from "@/app/abstract/ui/EmptyState";
+import HelpHint from "@/app/abstract/ui/HelpHint";
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import FormField from "@/app/abstract/ui/FormField";
@@ -205,6 +206,15 @@ const ADJUST_RULES: Rule[] = [
 
   const lowStock = stock.filter((s) => s.quantity <= s.minStock);
   const totalValue = stock.reduce((s, item) => s + item.quantity, 0);
+  const productOptions = [...new Set(stock.map((s) => s.name).filter(Boolean))];
+  const hasFields = fields.length > 0;
+  const hasAnimals = animals.length > 0;
+  const hasBatchOrigins =
+    batchForm.originType === "animal" ? hasAnimals : hasFields;
+  const batchOriginHelper =
+    batchForm.originType === "animal"
+      ? "No animals available yet. Register livestock in Livestock before creating an animal-based batch."
+      : "No fields available yet. Create a field in Crops & Fields before creating a field-based batch.";
 
   if (loading) return <TableSkeleton rows={5} cols={6} />;
 
@@ -689,6 +699,7 @@ const ADJUST_RULES: Rule[] = [
               <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
                 All Batches
               </span>
+              <HelpHint label="Typical flow: create fields or livestock first, add stock if needed, then create batches so products can be traced back to a real origin." />
               <button
                 className="btn-primary"
                 onClick={() => setShowAddBatch(true)}
@@ -882,6 +893,12 @@ const ADJUST_RULES: Rule[] = [
               as="select"
               label="Field Origin"
               name="fieldOrigin"
+              helperText={
+                hasFields
+                  ? "Optional. Link this stock item to a field when it comes from crop production."
+                  : "No fields available yet. Create a field in Crops & Fields to attach field origin."
+              }
+              disabled={!hasFields}
               value={stockForm.fieldOrigin ?? ""}
               onChange={(e) =>
                 setStockForm((f) => ({ ...f, fieldOrigin: e.target.value }))
@@ -898,6 +915,12 @@ const ADJUST_RULES: Rule[] = [
               as="select"
               label="Animal Origin"
               name="animalOrigin"
+              helperText={
+                hasAnimals
+                  ? "Optional. Link this stock item to an animal when it comes from livestock production."
+                  : "No animals available yet. Register livestock before attaching animal origin."
+              }
+              disabled={!hasAnimals}
               value={stockForm.animalOrigin ?? ""}
               onChange={(e) =>
                 setStockForm((f) => ({ ...f, animalOrigin: e.target.value }))
@@ -980,23 +1003,15 @@ const ADJUST_RULES: Rule[] = [
               required
             />
             <FormField
-              as="select"
               label="Operator name"
               name="operator"
+              placeholder="e.g. A. Johnson"
+              helperText="Enter the operator directly. Reuse a consistent name for clearer stock history."
               value={adjustForm.operator ?? ""}
               onChange={(e) =>
                 setAdjustForm((f) => ({ ...f, operator: e.target.value }))
               }
-            >
-              <option value="">Select operator...</option>
-              {["Tom Greene", "John Smith", "Sarah Jones", "Mike Wilson", "Emma Davis"].map(
-                (o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ),
-              )}
-            </FormField>
+            />
             <Group grow mt={4}>
               <Button onClick={saveAdjustment}>Save Adjustment</Button>
               <Button
@@ -1050,29 +1065,27 @@ const ADJUST_RULES: Rule[] = [
               required
             />
             <FormField
-              as="select"
-              label="Product"
+              label={<span className="inline-flex items-center gap-1.5">Product <HelpHint label="Use the customer-facing or inventory product name. You can type a new one here even if stock records have not been created yet." /></span>}
               name="product"
+              placeholder="e.g. Washed carrots"
+              helperText={
+                productOptions.length > 0
+                  ? `Type a new product or reuse one such as ${productOptions.slice(0, 3).join(", ")}.`
+                  : "Type the product name directly. Stock items can be added separately in Inventory."
+              }
               value={batchForm.product ?? ""}
               onChange={(e) =>
                 setBatchForm((f) => ({ ...f, product: e.target.value }))
               }
               error={batchErrors.product}
               required
-            >
-              <option value="">Select product...</option>
-              {[...new Set(stock.map((s) => s.name).filter(Boolean))].map(
-                (p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ),
-              )}
-            </FormField>
+            />
             <FormField
               as="select"
-              label="Origin"
+              label={<span className="inline-flex items-center gap-1.5">Origin <HelpHint label="The origin is the actual source record for this batch: usually a field for crops or an animal for livestock." /></span>}
               name="origin"
+              helperText={hasBatchOrigins ? "Choose the source record for this batch." : batchOriginHelper}
+              disabled={!hasBatchOrigins}
               value={batchForm.origin ?? ""}
               onChange={(e) =>
                 setBatchForm((f) => ({ ...f, origin: e.target.value }))
@@ -1113,13 +1126,14 @@ const ADJUST_RULES: Rule[] = [
             </FormField>
             <FormField
               as="select"
-              label="Origin type"
+              label={<span className="inline-flex items-center gap-1.5">Origin type <HelpHint label="Choose Field for crop-based batches and Animal for livestock-based batches. The origin list updates based on this choice." /></span>}
               name="originType"
               value={batchForm.originType ?? "field"}
               onChange={(e) =>
                 setBatchForm((f) => ({
                   ...f,
                   originType: e.target.value as "field" | "animal",
+                  origin: "",
                 }))
               }
               error={batchErrors.originType}

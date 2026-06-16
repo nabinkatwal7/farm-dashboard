@@ -156,7 +156,7 @@ function EmptyState({
   href: string;
 }) {
   return (
-    <div className="flex min-h-55 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card-hover/40 p-6 text-center">
+    <div className="flex min-h-55 flex-col items-center justify-center rounded-[22px] border border-dashed border-border bg-card-hover/40 p-6 text-center">
       <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl border border-border bg-surface text-green">
         <Leaf size={22} />
       </div>
@@ -184,14 +184,14 @@ function SectionTitle({
   href?: string;
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-4">
+    <div className="mb-5 flex items-end justify-between gap-4">
       <div>
         {eyebrow && (
-          <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-widest text-muted">
+          <div className="mb-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted">
             {eyebrow}
           </div>
         )}
-        <h2 className="text-lg font-semibold tracking-tight text-primary">
+        <h2 className="text-xl font-semibold tracking-tight text-primary">
           {title}
         </h2>
       </div>
@@ -251,9 +251,9 @@ function KpiCard({
 }) {
   const TrendIcon = trend === "down" ? TrendingDown : TrendingUp;
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="surface-panel p-5">
       <div className="mb-5 flex items-start justify-between gap-4">
-        <div className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-card-hover text-green">
+        <div className="grid h-11 w-11 place-items-center rounded-xl border border-border bg-card-hover text-green">
           <Icon size={20} />
         </div>
         {trend && (
@@ -641,43 +641,73 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background px-3 py-4 text-primary sm:px-4 lg:px-4 lg:py-4">
       <div className="flex w-full flex-col gap-6">
-        <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 xl:flex xl:items-center xl:justify-between xl:gap-6">
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-primary">
-              Good morning, {currentUser?.name ?? "there"}
+        <section className="surface-panel overflow-hidden p-4 sm:p-5">
+          <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
+            <div className="min-w-0">
+              <div className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                Today
+              </div>
+              <div className="mt-2 text-xl font-semibold text-primary sm:text-2xl">
+                Good morning, {currentUser?.name ?? "there"}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted">
+                <span>
+                  {new Date().toLocaleDateString("en-GB", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+                <span>{currentUser?.farm.location ?? "Location not set"}</span>
+                {currentUser?.farm.acreage ? (
+                  <span>{currentUser.farm.acreage} acres under management</span>
+                ) : null}
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <div className="surface-inset px-4 py-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                    Open priorities
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold text-primary">{priorities.length}</div>
+                </div>
+                <div className="surface-inset px-4 py-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                    Due today
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold text-primary">{todayTasks.length}</div>
+                </div>
+                <div className="surface-inset px-4 py-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                    Online sales today
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold text-primary">{onlineSalesToday.length}</div>
+                </div>
+              </div>
             </div>
-            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
-              <span>
-                {new Date().toLocaleDateString("en-GB", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
-              <span>{currentUser?.farm.location ?? "Location not set"}</span>
-              {currentUser?.farm.acreage ? (
-                <span>{currentUser.farm.acreage} acres under management</span>
-              ) : null}
-            </div>
-          </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:mt-0 xl:justify-end">
-            {quickActions.map(({ label, href, icon: Icon }) => (
-              <Link
-                href={href}
-                key={label}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-secondary no-underline transition-colors hover:border-green hover:text-green"
-              >
-                <Icon size={15} />
-                {label}
-              </Link>
-            ))}
+            <div className="surface-panel-soft p-4">
+              <div className="mb-3 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                Quick actions
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {quickActions.map(({ label, href, icon: Icon }) => (
+                  <Link
+                    href={href}
+                    key={label}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3 py-3 text-sm font-medium text-secondary no-underline transition-colors hover:border-green hover:text-green"
+                  >
+                    <Icon size={15} />
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <div className="surface-panel p-5 sm:p-6">
             <SectionTitle
               eyebrow="Today"
               title="Priorities that need a decision"
@@ -737,7 +767,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <div className="surface-panel p-5 sm:p-6">
             <SectionTitle eyebrow="Score" title="Farm Health" />
             <div className="mb-6 flex items-end gap-3">
               <div className="text-5xl font-semibold tracking-tight text-primary">
@@ -778,7 +808,7 @@ export default function DashboardPage() {
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <div className="surface-panel p-5 sm:p-6">
             <SectionTitle
               eyebrow="Weather"
               title="Smart Weather Center"
@@ -797,7 +827,7 @@ export default function DashboardPage() {
             )}
             {weather && !weatherLoading && (
               <div className="grid gap-5">
-                <div className="flex items-center justify-between rounded-xl border border-border bg-card-hover/40 p-4">
+                <div className="surface-inset flex items-center justify-between p-4">
                   <div>
                     <div className="text-sm font-medium text-secondary">
                       Current conditions
@@ -945,7 +975,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid gap-5 lg:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-card p-5">
+              <div className="surface-panel p-5">
                 <SectionTitle title="Recent activity" />
                 {recentActivity.length > 0 ? (
                   <div className="space-y-3">
@@ -985,7 +1015,7 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-5">
+              <div className="surface-panel p-5">
                 <SectionTitle
                   title="Upcoming tasks"
                   action="Manage tasks"

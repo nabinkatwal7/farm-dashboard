@@ -1,6 +1,9 @@
 "use client";
 
+import { useAuthMe } from "@/app/base/hooks/useAuthMe";
 import FieldPilotLogo from "@/app/components/brand/FieldPilotLogo";
+import { authMeQueryKey } from "@/app/lib/query-client";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -45,9 +48,10 @@ type Mode = "login" | "setup";
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [mode, setMode] = useState<Mode>("login");
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const authMeQuery = useAuthMe(true);
 
   const isSetup = mode === "setup";
 
@@ -97,15 +101,9 @@ export default function LoginPage() {
   );
 
   useEffect(() => {
-    async function checkSetup() {
-      const response = await fetch("/api/auth/me", { cache: "no-store" });
-      const data = (await response.json()) as { setupRequired: boolean };
-      setMode(data.setupRequired ? "setup" : "login");
-      setLoading(false);
-    }
-
-    void checkSetup();
-  }, []);
+    if (!authMeQuery.data) return;
+    setMode(authMeQuery.data.setupRequired ? "setup" : "login");
+  }, [authMeQuery.data]);
 
   async function submit(data: LoginData | SetupData) {
     setError(null);
@@ -131,10 +129,9 @@ export default function LoginPage() {
       return;
     }
 
+    await queryClient.invalidateQueries({ queryKey: authMeQueryKey });
     router.replace("/dashboard");
   }
-
-  if (loading) return null;
 
   return (
     <main className="min-h-screen w-full grid place-items-center p-6">
@@ -155,6 +152,12 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
+
+        {authMeQuery.isPending && (
+          <Alert color="gray" variant="light" p="xs">
+            Checking workspace status...
+          </Alert>
+        )}
 
         {isSetup && (
           <>

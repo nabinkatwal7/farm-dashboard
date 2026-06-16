@@ -30,6 +30,7 @@ import { notifications } from "@mantine/notifications";
 import { validate, hasErrors, type Errors, type Rule } from "@/app/lib/validate";
 import { cropOptions } from "@/app/lib/crops";
 import FormField from "@/app/abstract/ui/FormField";
+import HelpHint from "@/app/abstract/ui/HelpHint";
 
 const SEEDING_ENTITIES = {
   fields: "fields",
@@ -110,6 +111,7 @@ export default function SeedingPage() {
 
   const activeMaps = prescriptionMaps.filter((m) => m.status === "active");
   const activeIntegrations = integrations.filter((i) => i.isActive);
+  const cropChoices = cropOptions(cropModels);
 
   const totalPrescriptionAcres = prescriptionMaps
     .filter((m) => m.status === "active" || m.status === "draft")
@@ -965,10 +967,16 @@ export default function SeedingPage() {
             />
             <FormField
               as="select"
-              label="Field"
+              label={<span className="inline-flex items-center gap-1.5">Field <HelpHint label="Choose the field that needs a prescription. The map and generated zones will be anchored to this field." /></span>}
               name="fieldId"
               required
               error={prescriptionErrors.fieldId}
+              helperText={
+                fields.length > 0
+                  ? "Choose the field for this prescription."
+                  : "No fields available yet. Create one in Crops & Fields before building a prescription."
+              }
+              disabled={fields.length === 0}
               value={prescriptionForm.fieldId ?? ""}
               onChange={(e) => {
                 const f = fields.find((f) => f.id === e.target.value);
@@ -989,15 +997,21 @@ export default function SeedingPage() {
             </FormField>
             <FormField
               as="select"
-              label="Crop"
+              label={<span className="inline-flex items-center gap-1.5">Crop <HelpHint label="Use the crop being planted in this prescription. Crop types come from Settings." /></span>}
               name="crop"
               required
               error={prescriptionErrors.crop}
+              helperText={
+                cropChoices.length > 0
+                  ? "Choose a crop already defined in your workspace."
+                  : "No crop types yet. Add one in Settings before building a prescription."
+              }
+              disabled={cropChoices.length === 0}
               value={prescriptionForm.crop ?? ""}
               onChange={(e) => setPrescriptionForm((f) => ({ ...f, crop: e.target.value }))}
             >
               <option value="">Select crop...</option>
-              {cropOptions(cropModels).map((c) => (
+              {cropChoices.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>

@@ -2,6 +2,7 @@
 
 import Modal from "@/app/abstract/ui/Modal";
 import FormField from "@/app/abstract/ui/FormField";
+import HelpHint from "@/app/abstract/ui/HelpHint";
 import StatCard from "@/app/abstract/ui/StatCard";
 import ImageUpload from "@/app/components/ImageUpload";
 import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
@@ -1269,8 +1270,14 @@ export default function LivestockPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               as="select"
-              label="Animal"
+              label={<span className="inline-flex items-center gap-1.5">Animal <HelpHint label="Choose the animal receiving treatment or being checked. Register animals first so health records stay linked correctly." /></span>}
               name="medicalAnimal"
+              helperText={
+                animals.length > 0
+                  ? "Choose the animal this record belongs to."
+                  : "No animals available yet. Register livestock before adding medical records."
+              }
+              disabled={animals.length === 0}
               value={medForm.earTag ?? ""}
               onChange={(e) =>
                 setMedForm((f) => ({ ...f, earTag: e.target.value }))
@@ -1360,8 +1367,14 @@ export default function LivestockPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               as="select"
-              label="Animal"
+              label={<span className="inline-flex items-center gap-1.5">Animal <HelpHint label="Choose the animal being weighed so growth history builds on the correct record." /></span>}
               name="weightAnimal"
+              helperText={
+                animals.length > 0
+                  ? "Choose the animal for this weight record."
+                  : "No animals available yet. Register livestock before logging weights."
+              }
+              disabled={animals.length === 0}
               value={weightForm.earTag ?? ""}
               onChange={(e) =>
                 setWeightForm((f) => ({ ...f, earTag: e.target.value }))
@@ -1430,8 +1443,14 @@ export default function LivestockPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               as="select"
-              label="Dam"
+              label={<span className="inline-flex items-center gap-1.5">Dam <HelpHint label="Select the female parent for this breeding event. This keeps pregnancy and offspring history attached to the right animal." /></span>}
               name="damEarTag"
+              helperText={
+                animals.some((animal) => animal.sex === "F")
+                  ? "Choose the female animal for this breeding record."
+                  : "No female animals available yet. Register a female animal before adding breeding records."
+              }
+              disabled={!animals.some((animal) => animal.sex === "F")}
               value={breedForm.damEarTag ?? ""}
               onChange={(e) =>
                 setBreedForm((f) => ({ ...f, damEarTag: e.target.value }))
@@ -1450,8 +1469,14 @@ export default function LivestockPage() {
             </FormField>
             <FormField
               as="select"
-              label="Sire ear tag"
+              label={<span className="inline-flex items-center gap-1.5">Sire ear tag <HelpHint label="Select the male parent used in the breeding event. Keep naming consistent so breeding history stays easy to audit." /></span>}
               name="sireEarTag"
+              helperText={
+                animals.some((animal) => animal.sex === "M")
+                  ? "Choose the sire for this breeding record."
+                  : "No male animals available yet. Register a male animal before adding breeding records."
+              }
+              disabled={!animals.some((animal) => animal.sex === "M")}
               value={breedForm.sireEarTag ?? ""}
               onChange={(e) =>
                 setBreedForm((f) => ({ ...f, sireEarTag: e.target.value }))

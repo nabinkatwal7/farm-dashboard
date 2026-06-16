@@ -18,6 +18,7 @@ import { cropOptions } from "@/app/lib/crops";
 import { useCurrentUser } from "@/app/lib/user-context";
 import TableSkeleton from "@/app/abstract/ui/TableSkeleton";
 import EmptyState from "@/app/abstract/ui/EmptyState";
+import HelpHint from "@/app/abstract/ui/HelpHint";
 import { Alert, Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -295,6 +296,9 @@ export default function CropsPage() {
   const totalAcres = fields.reduce((s, f) => s + f.acres, 0);
   const computedFieldAcres = boundaryAcres(fieldForm.boundary ?? []);
   const boundaryPointCount = fieldForm.boundary?.length ?? 0;
+  const cropChoices = cropOptions(cropModels);
+  const knownInputProducts = [...new Set(inputs.map((input) => input.product).filter(Boolean))];
+  const knownOperators = [...new Set(inputs.map((input) => input.operator).filter(Boolean))];
 
   if (loading) return <TableSkeleton rows={5} cols={5} />;
 
@@ -425,6 +429,7 @@ export default function CropsPage() {
                   ? ` - ${currentUser.farm.location}`
                   : ""}
               </span>
+              <HelpHint label="Start here for crop setup: create a field, draw its boundary, then use that field for inputs, yields, and planning across the rest of the workspace." />
               <button
                 className="btn-primary"
                 onClick={() => setShowAddField(true)}
@@ -1019,10 +1024,11 @@ export default function CropsPage() {
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="rounded-xl border border-border bg-surface p-4">
-              <div className="text-sm font-semibold text-primary">
+              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
                 {editingField
                   ? "Refine the field record"
                   : "Start with the essentials"}
+                <HelpHint label="Give the field a clear name, choose the current crop, and draw the outline on the map. Acreage is calculated from the boundary." />
               </div>
               <p className="mt-1 text-sm leading-6 text-secondary">
                 Give the field a clear name, confirm the crop, then trace the
@@ -1071,17 +1077,23 @@ export default function CropsPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <FormField
                 as="select"
-                label="Current Crop"
+                label={<span className="inline-flex items-center gap-1.5">Current Crop <HelpHint label="Crop types come from Settings. Add the crop there first if it does not appear here." /></span>}
                 name="currentCrop"
                 required
                 error={fieldErrors.currentCrop}
+                helperText={
+                  cropChoices.length > 0
+                    ? "Pick a crop already defined in your workspace."
+                    : "No crop types yet. Add one in Settings before creating a field."
+                }
+                disabled={cropChoices.length === 0}
                 value={fieldForm.currentCrop ?? ""}
                 onChange={(e) =>
                   setFieldForm((f) => ({ ...f, currentCrop: e.target.value }))
                 }
               >
                 <option value="">Select crop...</option>
-                {cropOptions(cropModels).map((c) => (
+                {cropChoices.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </FormField>
@@ -1261,10 +1273,16 @@ export default function CropsPage() {
             />
             <FormField
               as="select"
-              label="Field"
+              label={<span className="inline-flex items-center gap-1.5">Field <HelpHint label="Select the field where the application took place. Fields are created from the Field Boundaries tab." /></span>}
               name="fieldId"
               required
               error={inputErrors.fieldId}
+              helperText={
+                fields.length > 0
+                  ? "Choose the field where this application happened."
+                  : "No fields available yet. Create a field first in the field registry."
+              }
+              disabled={fields.length === 0}
               value={inputForm.fieldId ?? ""}
               onChange={(e) => {
                 const f = fields.find((f) => f.id === e.target.value);
@@ -1314,25 +1332,21 @@ export default function CropsPage() {
                 ))}
               </FormField>
               <FormField
-                as="select"
-                label="Product"
+                label={<span className="inline-flex items-center gap-1.5">Product <HelpHint label="Enter the exact product used, such as the seed variety, fertiliser blend, or spray product." /></span>}
                 name="product"
+                placeholder="e.g. Urea 46-0-0"
+                helperText={
+                  knownInputProducts.length > 0
+                    ? `Type a new product or reuse one such as ${knownInputProducts.slice(0, 3).join(", ")}.`
+                    : "Type the product name directly to create your first input record."
+                }
                 required
                 error={inputErrors.product}
                 value={inputForm.product ?? ""}
                 onChange={(e) =>
                   setInputForm((f) => ({ ...f, product: e.target.value }))
                 }
-              >
-                <option value="">Select product...</option>
-                {[...new Set(inputs.map((i) => i.product).filter(Boolean))].map(
-                  (p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ),
-                )}
-              </FormField>
+              />
             </div>
             <div
               style={{
@@ -1380,23 +1394,19 @@ export default function CropsPage() {
               </FormField>
             </div>
             <FormField
-              as="select"
-              label="Operator"
+              label={<span className="inline-flex items-center gap-1.5">Operator <HelpHint label="Use the person or crew responsible for the application so later records stay easy to filter." /></span>}
               name="operator"
+              placeholder="e.g. M. Patel"
+              helperText={
+                knownOperators.length > 0
+                  ? `Enter the operator directly. Existing names include ${knownOperators.slice(0, 3).join(", ")}.`
+                  : "Enter the operator name directly."
+              }
               value={inputForm.operator ?? ""}
               onChange={(e) =>
                 setInputForm((f) => ({ ...f, operator: e.target.value }))
               }
-            >
-              <option value="">Select operator...</option>
-              {[...new Set(inputs.map((i) => i.operator).filter(Boolean))].map(
-                (o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ),
-              )}
-            </FormField>
+            />
             <FormField
               label="Notes"
               name="notes"
@@ -1434,10 +1444,16 @@ export default function CropsPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <FormField
               as="select"
-              label="Field"
+              label={<span className="inline-flex items-center gap-1.5">Field <HelpHint label="Link the yield record back to the source field so performance and traceability stay connected." /></span>}
               name="yieldFieldId"
               required
               error={yieldErrors.fieldId}
+              helperText={
+                fields.length > 0
+                  ? "Choose the field this yield belongs to."
+                  : "No fields available yet. Create a field first before logging yield."
+              }
+              disabled={fields.length === 0}
               value={yieldForm.fieldId ?? ""}
               onChange={(e) => {
                 const f = fields.find((f) => f.id === e.target.value);
@@ -1470,15 +1486,21 @@ export default function CropsPage() {
             >
               <FormField
                 as="select"
-                label="Crop"
+                label={<span className="inline-flex items-center gap-1.5">Crop <HelpHint label="Usually this matches the field's current crop. Change it only when the harvested crop differs from the default." /></span>}
                 name="crop"
+                helperText={
+                  cropChoices.length > 0
+                    ? "Pick a crop already defined in your workspace."
+                    : "No crop types yet. Add one in Settings before logging yield."
+                }
+                disabled={cropChoices.length === 0}
                 value={yieldForm.crop ?? ""}
                 onChange={(e) =>
                   setYieldForm((f) => ({ ...f, crop: e.target.value }))
                 }
               >
                 <option value="">Select crop...</option>
-                {cropOptions(cropModels).map((c) => (
+                {cropChoices.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </FormField>

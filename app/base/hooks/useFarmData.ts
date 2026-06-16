@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { getData } from "@/app/base/services/farm-client";
+import { farmEntityQueryKey } from "@/app/lib/query-client";
 
 type EntityMap = Record<string, string>;
 
@@ -14,30 +16,49 @@ type FarmDataResult<T extends EntityMap> = {
 export function useFarmData<T extends EntityMap>(
   entities: T,
 ): FarmDataResult<T> {
-  const [data, setData] = useState<{ [K in keyof T]: unknown[] }>(() => {
-    const initial = {} as { [K in keyof T]: unknown[] };
-    for (const key of Object.keys(entities) as Array<keyof T>) {
-      initial[key] = [];
-    }
-    return initial;
+  const queryClient = useQueryClient();
+
+  const entries = useMemo(
+    () =>
+      (Object.entries(entities) as Array<[keyof T, string]>).map(
+        ([key, entity]) => ({ key, entity }),
+      ),
+    [entities],
+  );
+
+  const queries = useQueries({
+    queries: entries.map(({ entity }) => ({
+      queryKey: farmEntityQueryKey(entity),
+      queryFn: () => getData(entity),
+    })),
   });
-  const [loading, setLoading] = useState(true);
+
+  const data = useMemo(() => {
+    const initial = {} as { [K in keyof T]: unknown[] };
+
+    entries.forEach(({ key }, index) => {
+      initial[key] = (queries[index]?.data as unknown[] | undefined) ?? [];
+    });
+
+    return initial;
+  }, [entries, queries]);
+
+  const loading = queries.some(
+    (query) => query.isPending && typeof query.data === "undefined",
+  );
 
   const reload = useCallback(async () => {
-    setLoading(true);
-    const entries = await Promise.all(
-      (Object.entries(entities) as Array<[keyof T, string]>).map(
-        async ([key, entity]) => [key, await getData(entity)] as const,
+    const uniqueEntities = [...new Set(entries.map(({ entity }) => entity))];
+
+    await Promise.all(
+      uniqueEntities.map((entity) =>
+        queryClient.invalidateQueries({
+          queryKey: farmEntityQueryKey(entity),
+          refetchType: "active",
+        }),
       ),
     );
-
-    setData(Object.fromEntries(entries) as { [K in keyof T]: unknown[] });
-    setLoading(false);
-  }, [entities]);
-
-  useEffect(() => {
-    void Promise.resolve().then(reload);
-  }, [reload]);
+  }, [entries, queryClient]);
 
   return { data, reload, loading };
 }

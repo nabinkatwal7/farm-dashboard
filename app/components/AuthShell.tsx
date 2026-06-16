@@ -1,16 +1,13 @@
 "use client";
 
+import { useAuthMe } from "@/app/base/hooks/useAuthMe";
 import { type CurrentUser, UserProvider } from "@/app/lib/user-context";
+import { authMeQueryKey } from "@/app/lib/query-client";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AppTopBar from "./AppTopBar";
 import Sidebar from "./Sidebar";
-
-type MeResponse = {
-  authenticated: boolean;
-  setupRequired: boolean;
-  user: CurrentUser | null;
-};
 
 function isPublicPath(pathname: string) {
   return (
@@ -22,69 +19,61 @@ function isPublicPath(pathname: string) {
     pathname === "/login" ||
     pathname === "/onboard" ||
     pathname === "/traceability" ||
-    pathname.startsWith("/traceability/") ||
-    pathname === "/roles" ||
-    pathname === "/pricing"
+    pathname.startsWith("/traceability/")
   );
 }
 
 export default function AuthShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [me, setMe] = useState<MeResponse | null>(null);
+  const queryClient = useQueryClient();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const isLogin = pathname === "/login";
   const isOnboard = pathname === "/onboard";
   const publicPath = isPublicPath(pathname);
+  const shouldCheckSession = !publicPath || isLogin || isOnboard;
+  const sessionQuery = useAuthMe(shouldCheckSession);
+  const me = sessionQuery.data ?? null;
 
   useEffect(() => {
-    let active = true;
+    if (!shouldCheckSession || !sessionQuery.data) return;
 
-    async function loadSession() {
-      const response = await fetch("/api/auth/me", { cache: "no-store" });
-      const data = (await response.json()) as MeResponse;
-      if (!active) return;
-
-      setMe(data);
-
-      if (!data.authenticated && !publicPath) {
-        router.replace(data.setupRequired ? "/onboard" : "/login");
-      }
-
-      if (data.authenticated && (isLogin || isOnboard)) {
-        router.replace("/dashboard");
-      }
+    if (!sessionQuery.data.authenticated && !publicPath) {
+      router.replace(sessionQuery.data.setupRequired ? "/onboard" : "/login");
     }
 
-    void loadSession();
-
-    return () => {
-      active = false;
-    };
-  }, [isLogin, isOnboard, publicPath, router]);
+    if (sessionQuery.data.authenticated && (isLogin || isOnboard)) {
+      router.replace("/dashboard");
+    }
+  }, [isLogin, isOnboard, publicPath, router, sessionQuery.data, shouldCheckSession]);
 
   useEffect(() => {
     setMobileNavOpen(false);
   }, [pathname]);
 
-  if (!me && !publicPath) return null;
-
   if (publicPath) {
     return <>{children}</>;
   }
 
+  const sessionResolved = !shouldCheckSession || sessionQuery.isSuccess || sessionQuery.isError;
+  const currentUser = me?.user ?? null;
+
   return (
     <UserProvider
-      user={me?.user ?? null}
-      setUser={(user) =>
-        setMe((current) => (current ? { ...current, user } : current))
-      }
+      user={currentUser}
+      setUser={(user) => {
+        queryClient.setQueryData(authMeQueryKey, (current: typeof me) =>
+          current
+            ? { ...current, authenticated: Boolean(user), user }
+            : { authenticated: Boolean(user), setupRequired: false, user },
+        );
+      }}
     >
-      <div className="min-h-screen lg:flex">
+      <div className="min-h-screen bg-background lg:flex">
         <Sidebar
-          user={me?.user ?? null}
+          user={currentUser}
           collapsed={sidebarCollapsed}
           onToggleCollapsed={() => setSidebarCollapsed((current) => !current)}
           mobileOpen={mobileNavOpen}
@@ -96,10 +85,27 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
           }`}
         >
           <AppTopBar
-            user={me?.user ?? null}
+            user={currentUser}
             onOpenNavigation={() => setMobileNavOpen(true)}
           />
-          {children}
+          {sessionResolved ? (
+            children
+          ) : (
+            <div className="px-4 py-6 sm:px-6 lg:px-6">
+              <div className="mx-auto max-w-6xl space-y-4">
+                <div className="h-8 w-48 animate-pulse rounded-xl bg-card-hover" />
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="surface-panel h-24 animate-pulse"
+                    />
+                  ))}
+                </div>
+                <div className="surface-panel h-[420px] animate-pulse" />
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </UserProvider>

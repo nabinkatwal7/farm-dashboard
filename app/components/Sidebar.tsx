@@ -163,19 +163,21 @@ export default function Sidebar({
       </div>
 
       <div
-        className={`border-b border-border px-5 py-3.5 ${
+        className={`border-b border-border px-5 py-4 ${
           collapsed ? "lg:hidden" : ""
         }`}
       >
-        <div className="mb-1.5 text-[0.7rem] uppercase tracking-widest text-muted">
-          Active Farm
-        </div>
-        <div className="text-sm font-semibold text-primary">
-          {user?.farm.name ?? "Farm workspace"}
-        </div>
-        <div className="text-xs text-muted">
-          {user?.farm.location ?? "Location not set"}
-          {user?.farm.acreage ? ` - ${user.farm.acreage} acres` : ""}
+        <div className="surface-inset px-4 py-3.5">
+          <div className="mb-1.5 text-[0.7rem] uppercase tracking-widest text-muted">
+            Active Farm
+          </div>
+          <div className="text-sm font-semibold text-primary">
+            {user?.farm.name ?? "Farm workspace"}
+          </div>
+          <div className="mt-1 text-xs leading-5 text-muted">
+            {user?.farm.location ?? "Location not set"}
+            {user?.farm.acreage ? ` - ${user.farm.acreage} acres` : ""}
+          </div>
         </div>
       </div>
 
@@ -194,7 +196,7 @@ export default function Sidebar({
               <button
                 type="button"
                 onClick={() => toggleSection(section.label)}
-                className={`flex w-full items-center justify-between rounded-lg border border-transparent px-2 py-1 text-left text-[0.65rem] font-semibold uppercase tracking-widest text-muted transition-colors hover:border-border hover:bg-card-hover hover:text-primary ${
+                className={`flex w-full items-center justify-between rounded-lg border border-transparent px-2 py-1.5 text-left text-[0.65rem] font-semibold uppercase tracking-widest text-muted transition-colors hover:border-border hover:bg-card-hover hover:text-primary ${
                   collapsed ? "lg:hidden" : ""
                 }`}
                 aria-expanded={sectionOpen}
@@ -219,7 +221,7 @@ export default function Sidebar({
                     collapsed ? "lg:justify-center lg:px-2.5" : ""
                   } ${
                     isActive
-                      ? "border-green/25 bg-green/10 font-semibold text-green"
+                      ? "border-green/20 bg-green/10 font-semibold text-green shadow-[0_10px_22px_rgba(45,83,57,0.1)]"
                       : href
                         ? "border-transparent bg-transparent text-secondary hover:border-border hover:bg-card-hover hover:text-primary"
                         : "cursor-not-allowed border-transparent bg-transparent text-muted/60"
@@ -292,7 +294,7 @@ export default function Sidebar({
       </Drawer>
 
       <aside
-        className={`hidden overflow-hidden border-b border-border bg-surface transition-[width] duration-200 lg:fixed lg:left-0 lg:top-0 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r ${
+        className={`hidden overflow-hidden border-b border-border bg-surface transition-[width] duration-200 lg:fixed lg:left-0 lg:top-0 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r lg:shadow-[12px_0_32px_rgba(30,41,33,0.04)] ${
           collapsed ? "lg:w-20" : "lg:w-[var(--sidebar-width)]"
         }`}
       >

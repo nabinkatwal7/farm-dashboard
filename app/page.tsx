@@ -1,7 +1,6 @@
-import PublicSiteShell from "@/app/components/public/PublicSiteShell";
 import PublicImage from "@/app/components/public/PublicImage";
+import PublicSiteShell from "@/app/components/public/PublicSiteShell";
 import {
-  formatCurrency,
   formatNumber,
   getPublicSiteData,
   portalModules,
@@ -9,109 +8,79 @@ import {
 } from "@/app/lib/public-site";
 import {
   ArrowRight,
-  BadgeCheck,
-  Beef,
   CloudSun,
   Fingerprint,
   Package,
-  Satellite,
   ShieldCheck,
   Sprout,
   Store,
+  Tractor,
+  Users,
   Wheat,
 } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-const showcase = [
+const trustSignals = [
   {
-    title: "Weather and crop timing",
-    copy:
-      "Field-level weather, GDD tracking, and growth stage forecasting for better operational timing.",
-    href: "/features",
-    Icon: CloudSun,
+    title: "Farm identity stays visible",
+    copy: "Every listing stays attached to a real producer, not a generic catalog entry.",
+    Icon: Store,
   },
   {
-    title: "Batch traceability",
-    copy:
-      "Consumer verification with product origin, processing history, and public lookup workflows.",
-    href: "/traceability",
-    Icon: Fingerprint,
-  },
-  {
-    title: "Drone scouting",
-    copy:
-      "Flights, orthomosaics, and observations linked back to fields and production decisions.",
-    href: "/features",
-    Icon: Satellite,
-  },
-  {
-    title: "Inventory and retail",
-    copy:
-      "Products, stock adjustments, low-stock alerts, and point-of-sale operations in one place.",
-    href: "/features",
+    title: "Operational data stays current",
+    copy: "Products, stock, and batch details come from the same workspace farms use every day.",
     Icon: Package,
   },
-] as const;
+  {
+    title: "Protected where it matters",
+    copy: "Buyers can browse freely while farm operations, edits, and internal records stay behind login.",
+    Icon: ShieldCheck,
+  },
+];
 
-const confidencePoints = [
+const workflow = [
   {
-    title: "Know who grew it",
-    copy:
-      "Every listing stays attached to a real farm profile with acreage, product mix, and operating context.",
+    title: "Onboard the farm",
+    copy: "Create the workspace, add the main location, and bring the first team members in without friction.",
+    Icon: Users,
   },
   {
-    title: "Follow the batch",
-    copy:
-      "When traceability matters, buyers can move from product to batch history without friction.",
+    title: "Map fields and production",
+    copy: "Define fields, acreage, crop plans, and the details operators need to run the season well.",
+    Icon: Wheat,
   },
   {
-    title: "See what is current",
-    copy:
-      "Listings are tied to the same operational records farms use to manage stock and readiness.",
-  },
-] as const;
-
-const questions = [
-  {
-    title: "Is this a marketplace or a farm management platform?",
-    copy:
-      "It is both. Buyers get a clean browsing experience, while farms manage the deeper operational side behind a secure sign-in.",
+    title: "Run the day cleanly",
+    copy: "Weather, operations, livestock, inventory, and sales stay connected instead of scattered.",
+    Icon: Tractor,
   },
   {
-    title: "Can more than one farm use it?",
-    copy:
-      "Yes. Each farm runs in its own workspace with separate users, fields, products, and records.",
+    title: "Publish what is ready",
+    copy: "Share products and traceable batches with buyers only when they are ready to go live.",
+    Icon: Fingerprint,
   },
-  {
-    title: "What stays public?",
-    copy:
-      "Farm profiles, product listings, and traceability lookups can be shared publicly. Editing tools and operational workflows stay protected.",
-  },
-] as const;
+];
 
 export default async function ConsumerHomePage() {
   const data = await getPublicSiteData();
-  const featuredProducts = data.products.slice(0, 4);
   const featuredFarms = data.farms.slice(0, 3);
+  const featuredProducts = data.products.slice(0, 4);
 
   return (
     <PublicSiteShell>
       <section className="border-b border-border bg-surface">
-        <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-12">
-          <div className="order-2 lg:order-1">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-green/20 bg-green/10 px-3 py-1.5 text-sm font-semibold text-green">
-              <BadgeCheck size={16} />
-              Built for buyers who care where food comes from
-            </div>
-            <h1 className="max-w-3xl text-4xl font-extrabold leading-tight text-primary sm:text-5xl lg:text-6xl">
-              Shop with a clearer line back to the farm.
+        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:py-12">
+          <div>
+            <div className="section-kicker">FieldPilot</div>
+            <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-primary sm:text-5xl lg:text-6xl">
+              Better farm operations make for better buying.
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-secondary sm:text-lg">
-              Browse farms, discover what is in season, and trace products with
-              confidence. Each listing is backed by the same system farmers use
-              to run the work behind the scenes.
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-secondary">
+              Browse farms, discover what is ready, and trace products with confidence.
+              Behind every listing is a workspace that keeps fields, stock, batches, and day-to-day
+              work in order.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link href="/products" className="btn-primary">
@@ -119,40 +88,27 @@ export default async function ConsumerHomePage() {
                 <ArrowRight size={16} />
               </Link>
               <Link href="/farms" className="btn-ghost">
-                Explore farms
-                <Store size={16} />
+                Meet the farms
               </Link>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-border bg-card p-4">
-                <div className="text-2xl font-extrabold text-primary">
-                  {formatNumber(data.totals.farms)}
-                </div>
-                <div className="mt-1 text-sm text-secondary">
-                  farms represented
-                </div>
+              <div className="surface-panel-soft p-4">
+                <div className="text-3xl font-semibold text-primary">{formatNumber(data.totals.farms)}</div>
+                <div className="mt-1 text-sm text-secondary">farm workspaces</div>
               </div>
-              <div className="rounded-xl border border-border bg-card p-4">
-                <div className="text-2xl font-extrabold text-primary">
-                  {formatNumber(data.totals.products)}
-                </div>
-                <div className="mt-1 text-sm text-secondary">
-                  products listed
-                </div>
+              <div className="surface-panel-soft p-4">
+                <div className="text-3xl font-semibold text-primary">{formatNumber(data.totals.products)}</div>
+                <div className="mt-1 text-sm text-secondary">listed products</div>
               </div>
-              <div className="rounded-xl border border-border bg-card p-4">
-                <div className="text-2xl font-extrabold text-primary">
-                  {formatNumber(data.totals.batches)}
-                </div>
-                <div className="mt-1 text-sm text-secondary">
-                  traceable batches
-                </div>
+              <div className="surface-panel-soft p-4">
+                <div className="text-3xl font-semibold text-primary">{formatNumber(data.totals.batches)}</div>
+                <div className="mt-1 text-sm text-secondary">tracked batches</div>
               </div>
             </div>
           </div>
 
-          <div className="order-1 grid gap-4 lg:order-2">
-            <div className="relative min-h-[340px] overflow-hidden rounded-[28px] border border-white/30 shadow-[0_24px_80px_rgba(24,40,30,0.16)]">
+          <div className="grid gap-4">
+            <div className="relative min-h-[360px] overflow-hidden rounded-[28px] border border-border shadow-[0_30px_70px_rgba(30,41,33,0.14)]">
               <PublicImage
                 src={publicSiteImages.homeHero}
                 alt="Aerial view of cultivated farmland"
@@ -160,35 +116,32 @@ export default async function ConsumerHomePage() {
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-black/20" />
-              <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                <div className="max-w-sm text-2xl font-bold leading-tight">
-                  Farm stories up front. The full operation behind every order.
+              <div className="absolute inset-0 bg-black/18" />
+              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+                <div className="max-w-md text-2xl font-semibold leading-tight">
+                  One place to run the farm. One clear story to share with buyers.
                 </div>
-                <div className="mt-2 text-sm text-white/80">
-                  Farmers publish what is ready to sell while keeping day-to-day
-                  work organized in the portal.
-                </div>
+                <p className="mt-3 max-w-md text-sm leading-6 text-white/80">
+                  Farms manage the hard operational work in the portal and publish the useful parts
+                  out front.
+                </p>
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <ShieldCheck className="mb-4 text-green" size={22} />
-                <div className="text-lg font-bold text-primary">
-                  Built for growing networks
-                </div>
+              <div className="surface-panel-soft p-5">
+                <CloudSun className="text-green" size={22} />
+                <div className="mt-4 text-lg font-semibold text-primary">Sharper timing</div>
                 <p className="mt-2 text-sm leading-6 text-secondary">
-                  Every farm gets its own team, records, listings, and field
-                  map without sharing operational data with anyone else.
+                  Weather, field conditions, and crop timing stay close to the decisions they affect.
                 </p>
               </div>
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <Wheat className="mb-4 text-amber" size={22} />
-                <div className="text-lg font-bold text-primary">
-                  {formatNumber(data.totals.acreage)}
+              <div className="surface-panel-soft p-5">
+                <Sprout className="text-amber" size={22} />
+                <div className="mt-4 text-lg font-semibold text-primary">
+                  {formatNumber(data.totals.acreage)} acres represented
                 </div>
                 <p className="mt-2 text-sm leading-6 text-secondary">
-                  acres represented across participating producers.
+                  A growing network of producers can operate separately without fragmenting the catalog.
                 </p>
               </div>
             </div>
@@ -196,289 +149,163 @@ export default async function ConsumerHomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-12">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-widest text-muted">
-              Platform modules
-            </div>
-            <h2 className="mt-1 text-3xl font-bold text-primary">
-              Explore what the platform can do
-            </h2>
-          </div>
-          <Link href="/features" className="text-sm font-semibold text-green no-underline">
-            View all features
-          </Link>
+      <section className="mx-auto max-w-7xl px-5 py-14">
+        <div className="mb-8 max-w-3xl">
+          <div className="section-kicker">What buyers notice</div>
+          <h2 className="mt-3 section-heading">The storefront feels calm because the operations behind it are disciplined.</h2>
         </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {showcase.map(({ title, copy, href, Icon }) => (
-            <Link
-              href={href}
-              key={title}
-              className="rounded-2xl border border-border bg-card p-5 no-underline transition-transform duration-200 hover:-translate-y-1"
-            >
-              <Icon className="mb-4 text-green" size={22} />
-              <div className="text-lg font-bold text-primary">{title}</div>
-              <p className="mt-2 text-sm leading-6 text-secondary">{copy}</p>
-            </Link>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {trustSignals.map(({ title, copy, Icon }) => (
+            <article key={title} className="surface-panel p-6">
+              <Icon className="text-green" size={22} />
+              <h3 className="mt-4 text-xl font-semibold text-primary">{title}</h3>
+              <p className="mt-2 text-sm leading-7 text-secondary">{copy}</p>
+            </article>
           ))}
         </div>
       </section>
 
       <section className="border-y border-border bg-card">
-        <div className="mx-auto max-w-7xl px-5 py-12">
-          <div className="mb-8 max-w-3xl">
-            <div className="text-xs font-semibold uppercase tracking-widest text-muted">
-              How it works
+        <div className="mx-auto max-w-7xl px-5 py-14">
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <div className="max-w-3xl">
+              <div className="section-kicker">How the platform works</div>
+              <h2 className="mt-3 section-heading">A straight path from setup to selling.</h2>
             </div>
-            <h2 className="mt-2 text-3xl font-bold text-primary">
-              A cleaner buying experience backed by disciplined farm operations.
-            </h2>
-            <p className="mt-4 text-base leading-7 text-secondary">
-              Farms set up their records once, keep stock current, and publish
-              batches that buyers can verify. That makes the storefront easier
-              to trust and the day-to-day workflow easier to manage.
-            </p>
+            <Link href="/features" className="hidden text-sm font-semibold text-green no-underline md:inline-flex">
+              See the full feature guide
+            </Link>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            <article className="rounded-2xl border border-border bg-surface p-5">
-              <div className="text-sm font-semibold text-green">01</div>
-              <h3 className="mt-3 text-xl font-bold text-primary">Set up the farm</h3>
-              <p className="mt-2 text-sm leading-6 text-secondary">
-                Add the farm, place the home location, map fields, and bring the
-                team into one workspace.
-              </p>
-            </article>
-            <article className="rounded-2xl border border-border bg-surface p-5">
-              <div className="text-sm font-semibold text-green">02</div>
-              <h3 className="mt-3 text-xl font-bold text-primary">Run the operation</h3>
-              <p className="mt-2 text-sm leading-6 text-secondary">
-                Track weather, field work, livestock, inventory, and sales
-                activity without juggling separate tools.
-              </p>
-            </article>
-            <article className="rounded-2xl border border-border bg-surface p-5">
-              <div className="text-sm font-semibold text-green">03</div>
-              <h3 className="mt-3 text-xl font-bold text-primary">Share with confidence</h3>
-              <p className="mt-2 text-sm leading-6 text-secondary">
-                Publish products, keep batches traceable, and give buyers a
-                direct path to origin details when they want them.
-              </p>
-            </article>
+          <div className="grid gap-4 lg:grid-cols-4">
+            {workflow.map(({ title, copy, Icon }, index) => (
+              <article key={title} className="surface-panel-soft p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <Icon size={20} className="text-green" />
+                  <span className="text-xs font-semibold text-muted">0{index + 1}</span>
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-primary">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-secondary">{copy}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-12">
-        <div className="mb-8 max-w-3xl">
-          <div className="text-xs font-semibold uppercase tracking-widest text-muted">
-            Why people return
+      <section className="mx-auto max-w-7xl px-5 py-14">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div className="max-w-3xl">
+            <div className="section-kicker">Management portal</div>
+            <h2 className="mt-3 section-heading">The buyer experience sits on top of a full operating layer.</h2>
+            <p className="mt-4 section-copy">
+              Teams use the portal to manage production, inventory, traceability, and sales without
+              making the buyer-facing experience feel technical.
+            </p>
           </div>
-          <h2 className="mt-2 text-3xl font-bold text-primary">
-            Clear sourcing should feel simple, not buried in paperwork.
-          </h2>
+          <Link href="/login" className="hidden btn-primary md:inline-flex">
+            Open portal
+          </Link>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {confidencePoints.map((point) => (
-            <article key={point.title} className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="text-lg font-bold text-primary">{point.title}</h3>
-              <p className="mt-2 text-sm leading-7 text-secondary">{point.copy}</p>
-            </article>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {portalModules.map((module) => (
+            <Link key={module.title} href={module.href} className="surface-panel p-5 no-underline transition-transform duration-150 hover:-translate-y-0.5">
+              <div className="text-lg font-semibold text-primary">{module.title}</div>
+              <p className="mt-2 text-sm leading-6 text-secondary">{module.description}</p>
+            </Link>
           ))}
         </div>
       </section>
 
       <section className="border-y border-border bg-surface">
-        <div className="mx-auto max-w-7xl px-5 py-12">
-          <div className="mb-6 flex items-end justify-between gap-4">
+        <div className="mx-auto max-w-7xl px-5 py-14">
+          <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted">
-                Featured farms
-              </div>
-              <h2 className="mt-1 text-3xl font-bold text-primary">
-                Producers with live operational data
-              </h2>
+              <div className="section-kicker">Featured now</div>
+              <h2 className="mt-3 section-heading">Live farms and current products.</h2>
             </div>
-            <Link href="/farms" className="text-sm font-semibold text-green no-underline">
-              View all farms
+            <Link href="/products" className="text-sm font-semibold text-green no-underline">
+              View all products
             </Link>
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-3">
-            {featuredFarms.map((farm, index) => (
-              <article
-                className="overflow-hidden rounded-[24px] border border-border bg-card"
-                key={farm.id}
-              >
-                <div className="relative aspect-[4/3]">
-                <PublicImage
-                  src={
-                    index === 0
-                      ? publicSiteImages.produce
-                        : index === 1
-                          ? publicSiteImages.livestock
-                          : publicSiteImages.soil
-                    }
-                    alt={farm.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-5">
-                  <div className="text-xl font-bold text-primary">
-                    {farm.name}
+          <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="grid gap-5 md:grid-cols-2">
+              {featuredProducts.map((product, index) => (
+                <article key={product.id} className="surface-panel overflow-hidden">
+                  <div className="relative aspect-[16/10]">
+                    <PublicImage
+                      src={index % 2 === 0 ? publicSiteImages.produce : publicSiteImages.productsHero}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                  <div className="mt-1 text-sm text-muted">
-                    {farm.location ?? "Location not listed"}
+                  <div className="p-5">
+                    <div className="badge-blue">{product.category}</div>
+                    <h3 className="mt-3 text-xl font-semibold text-primary">{product.name}</h3>
+                    <p className="mt-1 text-sm leading-6 text-secondary">
+                      Listed by {product.farm.name} with current stock and batch-ready tracking.
+                    </p>
+                    <Link href="/products" className="mt-4 inline-flex text-sm font-semibold text-green no-underline">
+                      View product directory
+                    </Link>
                   </div>
-                  <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                    <div className="rounded-lg bg-surface px-2 py-3">
-                      <div className="font-bold text-primary">
-                        {farm._count.products}
-                      </div>
-                      <div className="text-xs text-muted">products</div>
-                    </div>
-                    <div className="rounded-lg bg-surface px-2 py-3">
-                      <div className="font-bold text-primary">
-                        {farm._count.fields}
-                      </div>
-                      <div className="text-xs text-muted">fields</div>
-                    </div>
-                    <div className="rounded-lg bg-surface px-2 py-3">
-                      <div className="font-bold text-primary">
-                        {farm._count.weatherStations}
-                      </div>
-                      <div className="text-xs text-muted">stations</div>
+                </article>
+              ))}
+            </div>
+
+            <div className="grid gap-4">
+              {featuredFarms.map((farm, index) => (
+                <article key={farm.id} className="surface-panel flex flex-col overflow-hidden sm:flex-row">
+                  <div className="relative min-h-[180px] sm:w-44">
+                    <PublicImage
+                      src={
+                        index === 0
+                          ? publicSiteImages.produce
+                          : index === 1
+                            ? publicSiteImages.livestock
+                            : publicSiteImages.soil
+                      }
+                      alt={farm.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 p-5">
+                    <h3 className="text-xl font-semibold text-primary">{farm.name}</h3>
+                    <p className="mt-1 text-sm leading-6 text-secondary">
+                      {farm.location ?? "Location not listed"}{farm.acreage ? ` - ${formatNumber(farm.acreage)} acres` : ""}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted">
+                      <span className="badge-green">{farm._count.products} products</span>
+                      <span className="badge-amber">{farm._count.fields} fields</span>
+                      <span className="badge-purple">{farm._count.batches} batches</span>
                     </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-12">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-widest text-muted">
-              Featured products
-            </div>
-            <h2 className="mt-1 text-3xl font-bold text-primary">
-              Consumer-ready listings
-            </h2>
-          </div>
-          <Link href="/products" className="text-sm font-semibold text-green no-underline">
-            View all products
+      <section className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-14 md:flex-row md:items-center md:justify-between">
+        <div className="max-w-2xl">
+          <div className="section-kicker">For farm teams</div>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-primary">
+            Ready to run your own workspace?
+          </h2>
+          <p className="mt-3 text-sm leading-7 text-secondary">
+            Set up the farm, invite the team, map fields, and publish products when the operation is ready.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/features" className="btn-ghost">
+            Explore features
           </Link>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {featuredProducts.map((product, index) => (
-            <article
-              className="overflow-hidden rounded-2xl border border-border bg-card"
-              key={product.id}
-            >
-              <div className="relative aspect-[4/3]">
-                <PublicImage
-                  src={
-                    index % 2 === 0
-                      ? publicSiteImages.productsHero
-                      : publicSiteImages.produce
-                  }
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-5">
-                <div className="inline-flex rounded-full bg-blue/10 px-2.5 py-1 text-xs font-semibold text-blue">
-                  {product.category}
-                </div>
-                <div className="mt-3 text-lg font-bold text-primary">
-                  {product.name}
-                </div>
-                <div className="mt-1 text-sm text-muted">
-                  {product.farm.name}
-                </div>
-                <div className="mt-4 flex items-center justify-between text-sm">
-                  <span className="font-bold text-primary">
-                    {formatCurrency(product.price)}
-                  </span>
-                  <span className="text-secondary">
-                    {formatNumber(product.stock)} {product.unit}
-                  </span>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="border-t border-border bg-card">
-        <div className="mx-auto grid max-w-7xl gap-6 px-5 py-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-widest text-muted">
-              Management portal
-            </div>
-            <h2 className="mt-1 text-3xl font-bold text-primary">
-              Running the farm takes more than a product page.
-            </h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-secondary">
-              The portal handles field work, compliance, stock, traceability,
-              and daily decision-making. These links jump straight into the
-              workspace farmers use every day.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/login" className="btn-primary">
-                Sign in to portal
-                <ArrowRight size={16} />
-              </Link>
-              <Link href="/features" className="btn-ghost">
-                Explore features
-                <Sprout size={16} />
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            {portalModules.slice(0, 4).map((module) => (
-              <Link
-                href={module.href}
-                key={module.title}
-                className="rounded-2xl border border-border bg-surface p-4 no-underline transition-colors hover:bg-card"
-              >
-                <div className="text-base font-bold text-primary">
-                  {module.title}
-                </div>
-                <p className="mt-2 text-sm leading-6 text-secondary">
-                  {module.description}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-border bg-surface">
-        <div className="mx-auto max-w-7xl px-5 py-12">
-          <div className="mb-8 max-w-3xl">
-            <div className="text-xs font-semibold uppercase tracking-widest text-muted">
-              Questions
-            </div>
-            <h2 className="mt-2 text-3xl font-bold text-primary">
-              A few things people usually want to know first.
-            </h2>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {questions.map((question) => (
-              <article key={question.title} className="rounded-2xl border border-border bg-card p-5">
-                <h3 className="text-lg font-bold text-primary">{question.title}</h3>
-                <p className="mt-2 text-sm leading-7 text-secondary">{question.copy}</p>
-              </article>
-            ))}
-          </div>
+          <Link href="/login" className="btn-primary">
+            Open management portal
+            <ArrowRight size={16} />
+          </Link>
         </div>
       </section>
     </PublicSiteShell>
