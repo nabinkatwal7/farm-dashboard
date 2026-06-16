@@ -17,7 +17,15 @@ import {
 import { useCurrentUser } from "@/app/lib/user-context";
 import { Alert, Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { FileText, Map, Pencil, Plus, Trash2, TrendingUp, Wheat } from "lucide-react";
+import {
+  FileText,
+  Map,
+  Pencil,
+  Plus,
+  Trash2,
+  TrendingUp,
+  Wheat,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
@@ -203,7 +211,8 @@ export default function CropsPage() {
     } catch (error) {
       notifications.show({
         title: "Error",
-        message: error instanceof Error ? error.message : "Failed to save input log",
+        message:
+          error instanceof Error ? error.message : "Failed to save input log",
         color: "red",
       });
     }
@@ -236,7 +245,10 @@ export default function CropsPage() {
     } catch (error) {
       notifications.show({
         title: "Error",
-        message: error instanceof Error ? error.message : "Failed to save yield record",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to save yield record",
         color: "red",
       });
     }
@@ -251,9 +263,10 @@ export default function CropsPage() {
 
   const totalAcres = fields.reduce((s, f) => s + f.acres, 0);
   const computedFieldAcres = boundaryAcres(fieldForm.boundary ?? []);
+  const boundaryPointCount = fieldForm.boundary?.length ?? 0;
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="px-4 py-5 sm:px-6 lg:px-6">
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <h1
@@ -261,10 +274,9 @@ export default function CropsPage() {
           style={{
             fontSize: "1.6rem",
             fontWeight: 800,
-            letterSpacing: "-0.02em",
           }}
         >
-          🌾 Arable & Crop Management
+          Crop and field management
         </h1>
         <p
           className="text-muted"
@@ -273,20 +285,12 @@ export default function CropsPage() {
             marginTop: 4,
           }}
         >
-          Field mapping, input logs, and yield tracking across {totalAcres}{" "}
-          acres
+          Map fields, log inputs, and track yields across {totalAcres} acres.
         </p>
       </div>
 
       {/* Stats */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 14,
-          marginBottom: 24,
-        }}
-      >
+      <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total Fields"
           value={fields.length}
@@ -338,9 +342,9 @@ export default function CropsPage() {
       >
         {(
           [
-            ["map", "🗺️ Field Map"],
-            ["inputs", "📋 Input Logs"],
-            ["yields", "📊 Yield Tracking"],
+            ["map", "Field map"],
+            ["inputs", "Input logs"],
+            ["yields", "Yield tracking"],
           ] as [Tab, string][]
         ).map(([t, label]) => (
           <button
@@ -365,9 +369,7 @@ export default function CropsPage() {
 
       {/* Field Map Tab */}
       {tab === "map" && (
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}
-        >
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div
             className="bg-card border border-border"
             style={{
@@ -504,7 +506,14 @@ export default function CropsPage() {
                       ))}
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", marginTop: 8 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 6,
+                      justifyContent: "flex-end",
+                      marginTop: 8,
+                    }}
+                  >
                     <button
                       onClick={() => {
                         setEditingField(field);
@@ -545,7 +554,10 @@ export default function CropsPage() {
                         } catch (error) {
                           notifications.show({
                             title: "Error",
-                            message: error instanceof Error ? error.message : "Failed to delete field",
+                            message:
+                              error instanceof Error
+                                ? error.message
+                                : "Failed to delete field",
                             color: "red",
                           });
                         }
@@ -646,68 +658,71 @@ export default function CropsPage() {
                     </td>
                     <td>
                       <div style={{ display: "flex", gap: 4 }}>
-                      <button
-                        onClick={() => {
-                          setEditingInput(log);
-                          setInputForm({
-                            date: log.date,
-                            fieldId: log.fieldId,
-                            fieldName: log.fieldName,
-                            type: log.type,
-                            product: log.product,
-                            quantity: log.quantity,
-                            unit: log.unit,
-                            operator: log.operator,
-                            notes: log.notes,
-                          });
-                          setInputErrors({});
-                          setShowAddInput(true);
-                        }}
-                        style={{
-                          background: "rgba(96,165,250,0.15)",
-                          border: "1px solid rgba(96,165,250,0.3)",
-                          color: "#60a5fa",
-                          borderRadius: 6,
-                          padding: "4px 8px",
-                          fontSize: "0.72rem",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 3,
-                        }}
-                        title="Edit log"
-                      >
-                        <Pencil size={12} />
-                      </button>
-                      <button
-                        onClick={async () => {
-                          try {
-                            await deleteData("inputLogs", log.id);
-                            await load();
-                          } catch (error) {
-                            notifications.show({
-                              title: "Error",
-                              message: error instanceof Error ? error.message : "Failed to delete input log",
-                              color: "red",
+                        <button
+                          onClick={() => {
+                            setEditingInput(log);
+                            setInputForm({
+                              date: log.date,
+                              fieldId: log.fieldId,
+                              fieldName: log.fieldName,
+                              type: log.type,
+                              product: log.product,
+                              quantity: log.quantity,
+                              unit: log.unit,
+                              operator: log.operator,
+                              notes: log.notes,
                             });
-                          }
-                        }}
-                        style={{
-                          background: "rgba(248,113,113,0.15)",
-                          border: "1px solid rgba(248,113,113,0.3)",
-                          color: "#f87171",
-                          borderRadius: 6,
-                          padding: "4px 10px",
-                          fontSize: "0.8rem",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                        title="Delete record"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                            setInputErrors({});
+                            setShowAddInput(true);
+                          }}
+                          style={{
+                            background: "rgba(96,165,250,0.15)",
+                            border: "1px solid rgba(96,165,250,0.3)",
+                            color: "#60a5fa",
+                            borderRadius: 6,
+                            padding: "4px 8px",
+                            fontSize: "0.72rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 3,
+                          }}
+                          title="Edit log"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await deleteData("inputLogs", log.id);
+                              await load();
+                            } catch (error) {
+                              notifications.show({
+                                title: "Error",
+                                message:
+                                  error instanceof Error
+                                    ? error.message
+                                    : "Failed to delete input log",
+                                color: "red",
+                              });
+                            }
+                          }}
+                          style={{
+                            background: "rgba(248,113,113,0.15)",
+                            border: "1px solid rgba(248,113,113,0.3)",
+                            color: "#f87171",
+                            borderRadius: 6,
+                            padding: "4px 10px",
+                            fontSize: "0.8rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                          title="Delete record"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -845,68 +860,71 @@ export default function CropsPage() {
                         </span>
                       </td>
                       <td>
-                      <div style={{ display: "flex", gap: 4 }}>
-                      <button
-                        onClick={() => {
-                          setEditingYield(y);
-                          setYieldForm({
-                            fieldId: y.fieldId,
-                            fieldName: y.fieldName,
-                            crop: y.crop,
-                            year: y.year,
-                            projected: y.projected,
-                            actual: y.actual,
-                            unit: y.unit,
-                          });
-                          setYieldErrors({});
-                          setShowAddYield(true);
-                        }}
-                        style={{
-                          background: "rgba(96,165,250,0.15)",
-                          border: "1px solid rgba(96,165,250,0.3)",
-                          color: "#60a5fa",
-                          borderRadius: 6,
-                          padding: "4px 8px",
-                          fontSize: "0.72rem",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 3,
-                        }}
-                        title="Edit record"
-                      >
-                        <Pencil size={12} />
-                      </button>
-                      <button
-                        onClick={async () => {
-                          try {
-                            await deleteData("yieldRecords", y.id);
-                            await load();
-                          } catch (error) {
-                            notifications.show({
-                              title: "Error",
-                              message: error instanceof Error ? error.message : "Failed to delete yield record",
-                              color: "red",
-                            });
-                          }
-                        }}
-                        style={{
-                          background: "rgba(248,113,113,0.15)",
-                          border: "1px solid rgba(248,113,113,0.3)",
-                          color: "#f87171",
-                          borderRadius: 6,
-                          padding: "4px 10px",
-                          fontSize: "0.8rem",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                        title="Delete record"
-                      >
-                        <Trash2 size={14} />
-                        </button>
-                      </div>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          <button
+                            onClick={() => {
+                              setEditingYield(y);
+                              setYieldForm({
+                                fieldId: y.fieldId,
+                                fieldName: y.fieldName,
+                                crop: y.crop,
+                                year: y.year,
+                                projected: y.projected,
+                                actual: y.actual,
+                                unit: y.unit,
+                              });
+                              setYieldErrors({});
+                              setShowAddYield(true);
+                            }}
+                            style={{
+                              background: "rgba(96,165,250,0.15)",
+                              border: "1px solid rgba(96,165,250,0.3)",
+                              color: "#60a5fa",
+                              borderRadius: 6,
+                              padding: "4px 8px",
+                              fontSize: "0.72rem",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 3,
+                            }}
+                            title="Edit record"
+                          >
+                            <Pencil size={12} />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await deleteData("yieldRecords", y.id);
+                                await load();
+                              } catch (error) {
+                                notifications.show({
+                                  title: "Error",
+                                  message:
+                                    error instanceof Error
+                                      ? error.message
+                                      : "Failed to delete yield record",
+                                  color: "red",
+                                });
+                              }
+                            }}
+                            style={{
+                              background: "rgba(248,113,113,0.15)",
+                              border: "1px solid rgba(248,113,113,0.3)",
+                              color: "#f87171",
+                              borderRadius: 6,
+                              padding: "4px 10px",
+                              fontSize: "0.8rem",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                            title="Delete record"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -920,7 +938,11 @@ export default function CropsPage() {
       {/* Add Field Modal */}
       {showAddField && (
         <Modal
-          title={editingField ? `Edit Field — ${editingField.name}` : "Add New Field"}
+          title={
+            editingField
+              ? `Update field details: ${editingField.name}`
+              : "Map a new field"
+          }
           onClose={() => {
             setShowAddField(false);
             setEditingField(null);
@@ -931,6 +953,17 @@ export default function CropsPage() {
           maxWidth={760}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div className="rounded-xl border border-border bg-surface p-4">
+              <div className="text-sm font-semibold text-primary">
+                {editingField
+                  ? "Refine the field record"
+                  : "Start with the essentials"}
+              </div>
+              <p className="mt-1 text-sm leading-6 text-secondary">
+                Give the field a clear name, confirm the crop, then trace the
+                boundary on the map. Acreage updates automatically as you draw.
+              </p>
+            </div>
             {fieldSaveError && (
               <Alert color="red" variant="light" p="xs">
                 {fieldSaveError}
@@ -948,13 +981,7 @@ export default function CropsPage() {
                 setFieldForm((f) => ({ ...f, name: e.target.value }))
               }
             />
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 12,
-              }}
-            >
+            <div className="grid gap-3 sm:grid-cols-2">
               <FormField
                 label="Acres"
                 name="acres"
@@ -976,42 +1003,70 @@ export default function CropsPage() {
                 }
               />
             </div>
-            <FormField
-              as="select"
-              label="Current Crop"
-              name="currentCrop"
-              required
-              error={fieldErrors.currentCrop}
-              value={fieldForm.currentCrop ?? ""}
-              onChange={(e) =>
-                setFieldForm((f) => ({ ...f, currentCrop: e.target.value }))
-              }
-            >
-              <option value="">Select crop...</option>
-              {cropModels.map((cm) => (
-                <option key={cm.id} value={cm.crop}>
-                  {cm.crop}
-                </option>
-              ))}
-            </FormField>
-            <FormField
-              as="select"
-              label="Field status"
-              name="status"
-              value={fieldForm.status ?? "planted"}
-              onChange={(e) =>
-                setFieldForm((f) => ({
-                  ...f,
-                  status: e.target.value as CropField["status"],
-                }))
-              }
-            >
-              {["planted", "growing", "harvested", "fallow"].map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </FormField>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField
+                as="select"
+                label="Current Crop"
+                name="currentCrop"
+                required
+                error={fieldErrors.currentCrop}
+                value={fieldForm.currentCrop ?? ""}
+                onChange={(e) =>
+                  setFieldForm((f) => ({ ...f, currentCrop: e.target.value }))
+                }
+              >
+                <option value="">Select crop...</option>
+                {cropModels.map((cm) => (
+                  <option key={cm.id} value={cm.crop}>
+                    {cm.crop}
+                  </option>
+                ))}
+              </FormField>
+              <FormField
+                as="select"
+                label="Field status"
+                name="status"
+                value={fieldForm.status ?? "planted"}
+                onChange={(e) =>
+                  setFieldForm((f) => ({
+                    ...f,
+                    status: e.target.value as CropField["status"],
+                  }))
+                }
+              >
+                {["planted", "growing", "harvested", "fallow"].map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </FormField>
+            </div>
+            <div className="grid gap-3 rounded-xl border border-border bg-surface p-4 sm:grid-cols-3">
+              <div>
+                <div className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">
+                  Boundary points
+                </div>
+                <div className="mt-1 text-lg font-bold text-primary">
+                  {boundaryPointCount}
+                </div>
+              </div>
+              <div>
+                <div className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">
+                  Estimated acres
+                </div>
+                <div className="mt-1 text-lg font-bold text-primary">
+                  {computedFieldAcres ?? "--"}
+                </div>
+              </div>
+              <div>
+                <div className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">
+                  Crop status
+                </div>
+                <div className="mt-1 text-lg font-bold capitalize text-primary">
+                  {fieldForm.status ?? "planted"}
+                </div>
+              </div>
+            </div>
             <div>
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div>
@@ -1019,8 +1074,8 @@ export default function CropsPage() {
                     Field boundary
                   </div>
                   <div className="text-xs text-muted">
-                    Click the map to mark the field boundary. Use at least 3
-                    points.
+                    Tap or click around the field edge. Use at least three
+                    points for a complete outline.
                   </div>
                 </div>
                 <Group gap="xs">
@@ -1091,11 +1146,13 @@ export default function CropsPage() {
                 }`}
               >
                 {fieldErrors.boundary ??
-                  `${fieldForm.boundary?.length ?? 0} boundary points marked`}
+                  `${boundaryPointCount} boundary points marked`}
               </div>
             </div>
             <Group grow mt={4}>
-              <Button onClick={saveField}>{editingField ? "Update Field" : "Save Field"}</Button>
+              <Button onClick={saveField}>
+                {editingField ? "Update Field" : "Save Field"}
+              </Button>
               <Button
                 variant="default"
                 onClick={() => {
@@ -1116,7 +1173,11 @@ export default function CropsPage() {
       {/* Add Input Modal */}
       {showAddInput && (
         <Modal
-          title={editingInput ? `Edit Input Log — ${editingInput.product}` : "Log Input Application"}
+          title={
+            editingInput
+              ? `Edit Input Log — ${editingInput.product}`
+              : "Log Input Application"
+          }
           onClose={() => {
             setShowAddInput(false);
             setEditingInput(null);
@@ -1237,13 +1298,20 @@ export default function CropsPage() {
                 }
               >
                 <option value="">Select unit...</option>
-                {["kg/ha", "l/ha", "kg", "litres", "tonnes", "bags", "g", "ml"].map(
-                  (u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ),
-                )}
+                {[
+                  "kg/ha",
+                  "l/ha",
+                  "kg",
+                  "litres",
+                  "tonnes",
+                  "bags",
+                  "g",
+                  "ml",
+                ].map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
               </FormField>
             </div>
             <FormField
@@ -1287,7 +1355,11 @@ export default function CropsPage() {
       {/* Add Yield Modal */}
       {showAddYield && (
         <Modal
-          title={editingYield ? `Edit Yield Record — ${editingYield.fieldName}` : "Add Yield Record"}
+          title={
+            editingYield
+              ? `Edit Yield Record — ${editingYield.fieldName}`
+              : "Add Yield Record"
+          }
           onClose={() => {
             setShowAddYield(false);
             setEditingYield(null);

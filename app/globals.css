@@ -181,6 +181,62 @@ textarea {
   --accent-teal: var(--color-teal);
 }
 
+.public-site-shell {
+  color-scheme: light;
+  --canvas-base: #f7f6f1;
+  --canvas-surface-01: #ffffff;
+  --canvas-surface-02: #f4f1e8;
+  --stroke-subtle: #e7e0d1;
+  --stroke-strong: #d7cfbe;
+  --content-primary: #2f3129;
+  --content-secondary: #65685a;
+  --content-muted: #8a8c7a;
+  --interactive-default: #2f6a46;
+  --interactive-hover: #255539;
+  --interactive-active: #1e452f;
+  --interactive-disabled: #d9ddcf;
+  --feedback-success: #2f6a46;
+  --feedback-warning: #b86b1f;
+  --feedback-critical: #c44932;
+  --feedback-info: #2c65c8;
+  --utility-purple: #7c57c2;
+  --utility-teal: #19737a;
+  --color-glass: rgba(255, 255, 255, 0.94);
+  --color-background: var(--canvas-base);
+  --color-surface: var(--canvas-surface-01);
+  --color-card: var(--canvas-surface-01);
+  --color-text-main: var(--content-primary);
+  --color-text-muted: var(--content-secondary);
+  --color-border: var(--stroke-subtle);
+  --color-border-strong: var(--stroke-strong);
+  --color-card-hover: var(--canvas-surface-02);
+  --color-border-accent: color-mix(in oklab, var(--interactive-default) 26%, transparent);
+  --color-brand-green: var(--interactive-default);
+  --color-brand-earth: var(--feedback-warning);
+  --color-accent-blue: var(--feedback-info);
+  --color-green-dark: var(--interactive-hover);
+  --color-red: var(--feedback-critical);
+  --color-purple: var(--utility-purple);
+  --color-teal: var(--utility-teal);
+  --bg-base: var(--color-background);
+  --bg-surface: var(--color-surface);
+  --bg-card: var(--color-card);
+  --bg-card-hover: var(--color-card-hover);
+  --bg-glass: var(--color-glass);
+  --border: var(--color-border);
+  --border-accent: var(--color-border-accent);
+  --text-primary: var(--color-text-main);
+  --text-secondary: var(--color-text-muted);
+  --text-muted: var(--content-muted);
+  --accent-green: var(--color-brand-green);
+  --accent-green-dark: var(--color-green-dark);
+  --accent-blue: var(--color-accent-blue);
+  --accent-amber: var(--color-brand-earth);
+  --accent-red: var(--color-red);
+  --accent-purple: var(--color-purple);
+  --accent-teal: var(--color-teal);
+}
+
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-lg border border-transparent px-3.5 py-2 text-sm font-semibold text-white transition-colors duration-150 disabled:pointer-events-none disabled:opacity-60;

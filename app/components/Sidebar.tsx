@@ -1,5 +1,7 @@
 "use client";
 
+import { Drawer } from "@mantine/core";
+import FieldPilotLogo from "@/app/components/brand/FieldPilotLogo";
 import {
   Beef,
   Bluetooth,
@@ -10,28 +12,27 @@ import {
   ClipboardList,
   CloudSun,
   Droplets,
-  Eye,
   Fingerprint,
   LayoutDashboard,
   Leaf,
   Package,
   PanelLeftClose,
   PanelLeftOpen,
+  Satellite,
   Settings,
   ShieldCheck,
-  Satellite,
   ShoppingBag,
-  Sprout,
-  Warehouse,
   ShoppingCart,
+  Sprout,
   UsersRound,
+  Warehouse,
   Wheat,
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type NavItem = {
   href?: string;
@@ -44,7 +45,7 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
   {
     label: "Operations",
     items: [
-      { href: "/", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { label: "Tasks", icon: ClipboardList },
       { label: "Calendar", icon: CalendarDays },
       { href: "/operations", label: "Operations", icon: Wrench },
@@ -79,7 +80,6 @@ const navSections: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: "/finance", label: "Finance", icon: CircleDollarSign },
       { href: "/users", label: "Users", icon: ShieldCheck, adminOnly: true },
-      { href: "/traceability", label: "Public Portal", icon: Eye },
       { label: "Settings", icon: Settings },
     ],
   },
@@ -98,36 +98,41 @@ export default function Sidebar({
   user,
   collapsed,
   onToggleCollapsed,
+  mobileOpen,
+  onCloseMobile,
 }: {
   user: SidebarUser;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  mobileOpen: boolean;
+  onCloseMobile: () => void;
 }) {
   const pathname = usePathname();
   const canManageUsers =
     user?.role === "ADMIN" || user?.role === "FARM_MANAGER";
-  const [openSections, setOpenSections] = useState(() =>
-    new Set(navSections.map((section) => section.label))
+  const activeSection =
+    navSections.find((section) =>
+      section.items.some((item) =>
+        item.href ? pathname === item.href || pathname.startsWith(item.href + "/") : false,
+      ),
+    )?.label ?? navSections[0]?.label;
+  const [openSections, setOpenSections] = useState(
+    () => new Set(activeSection ? [activeSection] : []),
   );
 
+  useEffect(() => {
+    if (!activeSection) return;
+    setOpenSections(new Set([activeSection]));
+  }, [activeSection]);
+
   function toggleSection(label: string) {
-    setOpenSections((current) => {
-      const next = new Set(current);
-      if (next.has(label)) {
-        next.delete(label);
-      } else {
-        next.add(label);
-      }
-      return next;
-    });
+    setOpenSections((current) =>
+      current.has(label) ? new Set<string>() : new Set([label]),
+    );
   }
 
-  return (
-    <aside
-      className={`z-50 flex w-full flex-col overflow-hidden border-b border-border bg-surface transition-[width] duration-200 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:border-b-0 lg:border-r ${
-        collapsed ? "lg:w-20" : "lg:w-[var(--sidebar-width)]"
-      }`}
-    >
+  const sidebarInner = (
+    <>
       <div
         className={`relative border-b border-border px-5 py-4 lg:py-6 lg:pb-5 ${
           collapsed ? "lg:px-3" : ""
@@ -138,49 +143,43 @@ export default function Sidebar({
             collapsed ? "lg:justify-center" : ""
           }`}
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-green">
-            <Leaf size={20} strokeWidth={2.5} />
-          </div>
-          <div className={collapsed ? "lg:hidden" : ""}>
-            <div className="font-extrabold text-[1.1rem] text-primary leading-none">
-              FieldPilot
-            </div>
-            <div className="text-[0.7rem] text-muted font-medium">
-              Management Platform
-            </div>
-          </div>
+          <FieldPilotLogo
+            size="sm"
+            showTagline={!collapsed}
+            textClassName={collapsed ? "lg:hidden" : ""}
+          />
         </div>
         <button
           type="button"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           onClick={onToggleCollapsed}
-          className="hidden absolute right-3 top-4 h-8 w-8 place-items-center rounded-lg border border-border bg-card text-secondary transition-colors hover:bg-card-hover hover:text-primary lg:grid"
+          className="absolute right-3 top-4 hidden h-8 w-8 place-items-center rounded-lg border border-border bg-card text-secondary transition-colors hover:bg-card-hover hover:text-primary lg:grid"
         >
           {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </button>
       </div>
 
       <div
-        className={`hidden border-b border-border px-5 py-3.5 sm:block ${
+        className={`border-b border-border px-5 py-3.5 ${
           collapsed ? "lg:hidden" : ""
         }`}
       >
-        <div className="text-[0.7rem] text-muted uppercase tracking-widest mb-1.5">
+        <div className="mb-1.5 text-[0.7rem] uppercase tracking-widest text-muted">
           Active Farm
         </div>
-        <div className="font-semibold text-sm text-primary">
+        <div className="text-sm font-semibold text-primary">
           {user?.farm.name ?? "Farm workspace"}
         </div>
         <div className="text-xs text-muted">
           {user?.farm.location ?? "Location not set"}
-          {user?.farm.acreage ? ` · ${user.farm.acreage} acres` : ""}
+          {user?.farm.acreage ? ` - ${user.farm.acreage} acres` : ""}
         </div>
       </div>
 
       <nav
-        className={`flex flex-1 gap-4 overflow-x-auto p-3 lg:flex-col lg:overflow-x-visible ${
-          collapsed ? "lg:gap-3 lg:p-3" : "lg:gap-5 lg:p-4"
+        className={`flex flex-1 flex-col gap-5 overflow-y-auto p-4 ${
+          collapsed ? "lg:gap-3 lg:p-3" : ""
         }`}
       >
         {navSections.map((section) => {
@@ -189,11 +188,11 @@ export default function Sidebar({
           );
           const sectionOpen = collapsed || openSections.has(section.label);
           return (
-            <div key={section.label} className="flex shrink-0 flex-col lg:shrink">
+            <div key={section.label} className="flex flex-col">
               <button
                 type="button"
                 onClick={() => toggleSection(section.label)}
-                className={`hidden w-full items-center justify-between rounded-lg border border-transparent px-2 py-1 text-left text-[0.65rem] font-semibold uppercase tracking-widest text-muted transition-colors hover:border-border hover:bg-card-hover hover:text-primary lg:flex ${
+                className={`flex w-full items-center justify-between rounded-lg border border-transparent px-2 py-1 text-left text-[0.65rem] font-semibold uppercase tracking-widest text-muted transition-colors hover:border-border hover:bg-card-hover hover:text-primary ${
                   collapsed ? "lg:hidden" : ""
                 }`}
                 aria-expanded={sectionOpen}
@@ -206,21 +205,19 @@ export default function Sidebar({
                 )}
               </button>
               <div
-                className={`flex gap-2 lg:flex-col lg:gap-0.5 ${
-                  sectionOpen ? "" : "lg:hidden"
+                className={`mt-1 flex flex-col gap-0.5 ${
+                  sectionOpen ? "" : "hidden"
                 }`}
               >
                 {visibleItems.map(({ href, label, icon: Icon }) => {
                   const isActive = href
-                    ? href === "/"
-                      ? pathname === "/"
-                      : pathname === href || pathname.startsWith(href + "/")
+                    ? pathname === href || pathname.startsWith(href + "/")
                     : false;
-                  const className = `flex shrink-0 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm no-underline transition-all duration-150 lg:shrink ${
+                  const className = `flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm no-underline transition-all duration-150 ${
                     collapsed ? "lg:justify-center lg:px-2.5" : ""
                   } ${
                     isActive
-                      ? "border-green/25 bg-green/10 text-green font-semibold"
+                      ? "border-green/25 bg-green/10 font-semibold text-green"
                       : href
                         ? "border-transparent bg-transparent text-secondary hover:border-border hover:bg-card-hover hover:text-primary"
                         : "cursor-not-allowed border-transparent bg-transparent text-muted/60"
@@ -247,7 +244,12 @@ export default function Sidebar({
                   }
 
                   return (
-                    <Link key={`${section.label}-${label}`} href={href} className={className}>
+                    <Link
+                      key={`${section.label}-${label}`}
+                      href={href}
+                      className={className}
+                      onClick={onCloseMobile}
+                    >
                       <Icon size={18} strokeWidth={isActive ? 2.5 : 1.8} />
                       <span
                         className={`whitespace-nowrap lg:flex-1 ${
@@ -265,6 +267,35 @@ export default function Sidebar({
           );
         })}
       </nav>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      <Drawer
+        opened={mobileOpen}
+        onClose={onCloseMobile}
+        title="Navigation"
+        padding={0}
+        size="85%"
+        hiddenFrom="lg"
+        classNames={{
+          content: "bg-surface",
+          header: "border-b border-border bg-surface",
+          title: "text-base font-semibold text-primary",
+          body: "flex h-full flex-col overflow-hidden bg-surface p-0",
+        }}
+      >
+        <div className="flex h-full flex-col overflow-hidden">{sidebarInner}</div>
+      </Drawer>
+
+      <aside
+        className={`hidden overflow-hidden border-b border-border bg-surface transition-[width] duration-200 lg:fixed lg:left-0 lg:top-0 lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r ${
+          collapsed ? "lg:w-20" : "lg:w-[var(--sidebar-width)]"
+        }`}
+      >
+        {sidebarInner}
+      </aside>
+    </>
   );
 }

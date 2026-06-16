@@ -174,7 +174,7 @@ export default function FarmLocationPicker({
             Farm location
           </Text>
           <Text size="xs" c="var(--content-muted)">
-            Click the map to place the farm marker.
+            Drop a pin where the farm is based. You can fine-tune it later.
           </Text>
         </div>
         <Button
@@ -184,7 +184,7 @@ export default function FarmLocationPicker({
           loading={locating}
           onClick={useCurrentLocation}
         >
-          Use current
+          Use my location
         </Button>
       </Group>
       <div
@@ -193,7 +193,7 @@ export default function FarmLocationPicker({
         style={{ height: 240, width: "100%", position: "relative", zIndex: 0 }}
       />
       <Text size="xs" c="var(--content-secondary)" mt="xs">
-        {label || "No farm location selected"}
+        {label || "No location selected yet"}
       </Text>
     </div>
   );

@@ -1,10 +1,10 @@
 "use client";
 
+import { type CurrentUser, UserProvider } from "@/app/lib/user-context";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AppTopBar from "./AppTopBar";
 import Sidebar from "./Sidebar";
-import { type CurrentUser, UserProvider } from "@/app/lib/user-context";
 
 type MeResponse = {
   authenticated: boolean;
@@ -12,13 +12,32 @@ type MeResponse = {
   user: CurrentUser | null;
 };
 
+function isPublicPath(pathname: string) {
+  return (
+    pathname === "/" ||
+    pathname === "/about" ||
+    pathname === "/features" ||
+    pathname === "/farms" ||
+    pathname === "/products" ||
+    pathname === "/login" ||
+    pathname === "/onboard" ||
+    pathname === "/traceability" ||
+    pathname.startsWith("/traceability/") ||
+    pathname === "/roles" ||
+    pathname === "/pricing"
+  );
+}
+
 export default function AuthShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const isLogin = pathname === "/login";
+  const isOnboard = pathname === "/onboard";
+  const publicPath = isPublicPath(pathname);
 
   useEffect(() => {
     let active = true;
@@ -30,12 +49,12 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
 
       setMe(data);
 
-      if (!data.authenticated && !isLogin) {
-        router.replace("/login");
+      if (!data.authenticated && !publicPath) {
+        router.replace(data.setupRequired ? "/onboard" : "/login");
       }
 
-      if (data.authenticated && isLogin) {
-        router.replace("/");
+      if (data.authenticated && (isLogin || isOnboard)) {
+        router.replace("/dashboard");
       }
     }
 
@@ -44,11 +63,15 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [isLogin, router]);
+  }, [isLogin, isOnboard, publicPath, router]);
 
-  if (!me && !isLogin) return null;
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
 
-  if (isLogin) {
+  if (!me && !publicPath) return null;
+
+  if (publicPath) {
     return <>{children}</>;
   }
 
@@ -64,13 +87,18 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
           user={me?.user ?? null}
           collapsed={sidebarCollapsed}
           onToggleCollapsed={() => setSidebarCollapsed((current) => !current)}
+          mobileOpen={mobileNavOpen}
+          onCloseMobile={() => setMobileNavOpen(false)}
         />
         <main
           className={`min-h-screen flex-1 overflow-x-hidden transition-[margin] duration-200 ${
             sidebarCollapsed ? "lg:ml-20" : "lg:ml-[var(--sidebar-width)]"
           }`}
         >
-          <AppTopBar user={me?.user ?? null} />
+          <AppTopBar
+            user={me?.user ?? null}
+            onOpenNavigation={() => setMobileNavOpen(true)}
+          />
           {children}
         </main>
       </div>

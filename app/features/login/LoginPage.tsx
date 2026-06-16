@@ -1,6 +1,7 @@
 "use client";
 
-import { Leaf } from "lucide-react";
+import FieldPilotLogo from "@/app/components/brand/FieldPilotLogo";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
@@ -130,7 +131,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.replace("/");
+    router.replace("/dashboard");
   }
 
   if (loading) return null;
@@ -142,9 +143,7 @@ export default function LoginPage() {
         className="w-[min(460px,100%)] bg-card border border-border rounded-xl p-6 flex flex-col gap-3.5"
       >
         <div className="flex items-center gap-3">
-          <div className="grid h-[42px] w-[42px] place-items-center rounded-xl border border-border bg-card text-green">
-            <Leaf size={22} strokeWidth={2.5} />
-          </div>
+          <FieldPilotLogo size="md" showTagline={false} />
           <div>
             <h1 className="text-[1.35rem] font-extrabold text-primary">
               {isSetup ? "Create Farm Workspace" : "Sign in"}
@@ -233,6 +232,14 @@ export default function LoginPage() {
               ? "Create Workspace"
               : "Sign in"}
         </Button>
+        {!isSetup && (
+          <p className="m-0 text-center text-sm text-muted">
+            New farm?{" "}
+            <Link href="/onboard" className="font-semibold text-green no-underline">
+              Create a farm workspace
+            </Link>
+          </p>
+        )}
       </form>
     </main>
   );

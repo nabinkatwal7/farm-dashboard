@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   title: "FieldPilot - Farm Management Dashboard",
   description:
     "Complete farm management platform for crop tracking, livestock management, inventory control, retail POS, and field operations.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
