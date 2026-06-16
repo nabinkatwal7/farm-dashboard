@@ -405,3 +405,42 @@ textarea {
 .leaflet-container.leaflet-dragging {
   cursor: grabbing;
 }
+
+/* Force light mode for the public site regardless of system/theme preference */
+.public-site-shell {
+  --color-background: #f3f5f4;
+  --color-surface: #ffffff;
+  --color-card: #ffffff;
+  --color-card-hover: #fbfdfb;
+  --color-border: #e2eae3;
+  --color-border-strong: #c5d2c7;
+  --color-primary: #232b25;
+  --color-secondary: #556458;
+  --color-muted: #849688;
+  --color-text-main: #232b25;
+  --color-text-muted: #556458;
+  --color-green: #16a34a;
+  --color-green-dark: #213d29;
+  --color-blue: #2563eb;
+  --color-amber: #d97706;
+  --color-red: #dc2626;
+  --color-purple: #7c3aed;
+  --color-teal: #0f766e;
+  --bg-base: #f3f5f4;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fbfdfb;
+  --bg-glass: rgba(255, 255, 255, 0.88);
+  --border: #e2eae3;
+  --border-accent: color-mix(in oklab, #2d5339 24%, transparent);
+  --text-primary: #232b25;
+  --text-secondary: #556458;
+  --text-muted: #849688;
+  --accent-green: #2d5339;
+  --accent-green-dark: #213d29;
+  --accent-blue: #2563eb;
+  --accent-amber: #d97706;
+  --accent-red: #dc2626;
+  --accent-purple: #7c3aed;
+  --accent-teal: #0f766e;
+}
